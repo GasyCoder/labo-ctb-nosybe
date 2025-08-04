@@ -11,12 +11,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Ici tu déclares tes middlewares personnalisés
+        // Middlewares personnalisés
         $middleware->alias([
+            // Votre middleware existant
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            
+            // Middlewares complémentaires pour plus de flexibilité
+            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'secretaire' => \App\Http\Middleware\SecretaireMiddleware::class,
+            'technicien' => \App\Http\Middleware\TechnicienMiddleware::class,
+            'biologiste' => \App\Http\Middleware\BiologisteMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
-
