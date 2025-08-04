@@ -44,9 +44,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
-        // Vous pourriez ajouter d'autres routes de profil comme dans l'exemple
-        // Route::get('activity', ...)->name('activity');
-        // Route::get('settings', ...)->name('settings');
     });
 
     // Archives
