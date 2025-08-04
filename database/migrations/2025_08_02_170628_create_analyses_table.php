@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('analyses', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
+            $table->string('name');
             $table->enum('level', ['PARENT', 'CHILD', 'NORMAL']);
             $table->unsignedBigInteger('parent_id')->nullable(); 
             $table->string('designation')->nullable();
@@ -38,7 +39,11 @@ return new class extends Migration
             $table->index('parent_id');
             $table->index('examen_id');
             $table->index('type_id');
+
+           
+           
             
+
             // TOUTES LES CONTRAINTES FOREIGN KEY
             $table->foreign('parent_id')->references('id')->on('analyses')->onDelete('cascade');
             $table->foreign('examen_id')->references('id')->on('examens')->onDelete('set null');
