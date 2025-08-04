@@ -21,8 +21,7 @@
 
                     <div id="pagecontent" class="nk-content mt-16  px-1.5 sm:px-5 py-6 sm:py-8">
                         <div class="container {{ isset($container) ? '' : ' max-w-none' }}">
-                            @yield('content')
-
+                            {{ $slot }}
                         </div>
                     </div><!-- content -->
 
