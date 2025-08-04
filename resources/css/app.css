@@ -33,6 +33,22 @@
         transparent
     );
 }
+/* Dans votre fichier app.css ou le fichier CSS principal */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap; /* Ajoutez cette ligne */
+  src: url('../fonts/Roboto-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap; /* Ajoutez cette ligne */
+  src: url('../fonts/Nunito-Bold.woff2') format('woff2');
+}
 
 .entry{
     @apply last:[&>*]:mb-0 prose-p:mb-4 prose-h3:text-2xl lg:prose-h3:text-3xl prose-h4:text-xl lg:prose-h4:text-2xl prose-h5:text-lg lg:prose-h5:text-xl  prose-h6:text-base prose-headings:mb-2 prose-headings:font-heading prose-headings:font-bold prose-headings:leading-tighter prose-headings:text-slate-700 prose-headings:dark:text-white prose-headings:tracking-tight prose-h1:-tracking-snug prose-h2:-tracking-snug prose-ul:mb-4 prose-a:text-primary-500 prose-a:hover:text-primary-600 prose-img:rounded prose-img:my-8;

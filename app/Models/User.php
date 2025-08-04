@@ -48,9 +48,16 @@ class User extends Authenticatable
     /**
      * Obtenir le nom du type d'utilisateur
      */
-    public function getTypeNameAttribute(): string
+    // Dans app/Models/User.php
+
+    public function getTypeNameAttribute()
     {
-        return self::TYPES[$this->type] ?? 'Non défini';
+        return [
+            'admin' => 'Administrateur',
+            'secretaire' => 'Secrétaire',
+            'technicien' => 'Technicien',
+            'biologiste' => 'Biologiste',
+        ][$this->type] ?? 'Inconnu';
     }
 
     /**
