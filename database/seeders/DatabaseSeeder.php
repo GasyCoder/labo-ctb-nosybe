@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             TypeSeeder::class,
             ExamenSeeder::class,
             PrelevementSeeder::class,
+            BacterieFamilleSeeder::class,
+            AnalysesSeeder::class,
         ]);
     }
     
