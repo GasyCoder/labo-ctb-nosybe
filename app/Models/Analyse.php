@@ -19,9 +19,21 @@ class Analyse extends Model
         'is_bold',
         'examen_id',
         'type_id',
-        'valeur_reference',
+        'valeur_ref',
+        'unite',
+        'suffixe',
+        'valeurs_predefinies',
         'ordre',
         'status',
+    ];
+
+    // CASTS pour les types de données
+    protected $casts = [
+        'prix' => 'decimal:2',
+        'is_bold' => 'boolean',
+        'status' => 'boolean',
+        'valeurs_predefinies' => 'array', // JSON automatiquement converti en array
+        'ordre' => 'integer',
     ];
 
     // Relation parent : cette analyse appartient à un panel (si parent_id existe)
@@ -36,21 +48,67 @@ class Analyse extends Model
         return $this->hasMany(Analyse::class, 'parent_id');
     }
 
-    // Relation avec examen (si tu veux retrouver l’examen lié)
+    // Relation avec examen
     public function examen()
     {
         return $this->belongsTo(Examen::class, 'examen_id');
     }
 
-    // Relation avec type (si tu veux retrouver le type d’analyse)
+    // Relation avec type
     public function type()
     {
         return $this->belongsTo(Type::class, 'type_id');
     }
 
-    // Optionnel : scope pour les analyses actives
+    // Relation avec les résultats
+    public function resultats()
+    {
+        return $this->hasMany(Resultat::class);
+    }
+
+    // SCOPES utiles
     public function scopeActives($query)
     {
         return $query->where('status', true);
+    }
+
+    public function scopeParents($query)
+    {
+        return $query->where('level', 'PARENT');
+    }
+
+    public function scopeNormales($query)
+    {
+        return $query->where('level', 'NORMAL');
+    }
+
+    public function scopeEnfants($query)
+    {
+        return $query->where('level', 'CHILD');
+    }
+
+    // ACCESSEURS et MUTATEURS
+    public function getValeurCompleteAttribute()
+    {
+        if ($this->valeur_ref && $this->unite) {
+            return $this->valeur_ref . ' ' . $this->unite;
+        }
+        return $this->valeur_ref;
+    }
+
+    public function getEstParentAttribute()
+    {
+        return $this->level === 'PARENT';
+    }
+
+    public function getADesEnfantsAttribute()
+    {
+        return $this->enfants()->count() > 0;
+    }
+
+    // MÉTHODES utiles
+    public function getPrixFormate()
+    {
+        return number_format($this->prix, 0, ',', ' ') . ' Ar';
     }
 }
