@@ -24,94 +24,87 @@ use App\Livewire\Techniciens\IndexTechniciens;
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
 // ============================================
-Route::redirect('/', '/login');
-Route::redirect('/register', '/login');
+Route::redirect('/', '/login')->name('home');
+Route::redirect('/register', '/login')->name('register.redirect');
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
-});
+})->name('root');
 
 // ============================================
 // ROUTES COMMUNES (TOUS LES UTILISATEURS CONNECTÉS)
 // ============================================
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     // Dashboard principal
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
-    
-    // Profil utilisateur
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Profil utilisateur (inspiré de l'exemple avec plus de détails)
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+        // Vous pourriez ajouter d'autres routes de profil comme dans l'exemple
+        // Route::get('activity', ...)->name('activity');
+        // Route::get('settings', ...)->name('settings');
+    });
+
+    // Archives
     Route::get('/archives', Archives::class)->name('archives');
 });
-
-
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX SECRÉTAIRES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')->name('secretaire.')->group(function () {
-
-    Route::get('/prescriptions', Prescriptions::class)->name('prescriptions');
-    Route::get('/examens', Examens::class)->name('examens');
-    Route::get('/paiements', Paiements::class)->name('paiements');
-    Route::get('/patients', Patients::class)->name('patients');
-    Route::get('/prescripteurs', Prescripteurs::class)->name('prescripteurs');
+    Route::get('prescriptions', Prescriptions::class)->name('prescriptions');
+    Route::get('examens', Examens::class)->name('examens');
+    Route::get('paiements', Paiements::class)->name('paiements');
+    Route::get('patients', Patients::class)->name('patients');
+    Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
 });
-
-
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX TECHNICIENS
 // ============================================
-Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->group(function () {
-    
-    Route::get('/techniciens', IndexTechniciens::class)->name('techniciens');
-
+Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
+    Route::get('dashboard', IndexTechniciens::class)->name('dashboard');
 });
-
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX BIOLOGISTES
 // ============================================
-Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')->group(function () {
-    
-    Route::get('/biologistes', IndexBiologiste::class)->name('biologistes');
-
+Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')->name('biologiste.')->group(function () {
+    Route::get('dashboard', IndexBiologiste::class)->name('dashboard');
 });
-
-
-
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX ADMINS, BIOLOGISTES, TECHNICIENS
 // ============================================
-Route::middleware(['auth', 'verified', 'role:technicien,biologiste,admin'])->prefix('admin')->group(function () {
-    
+Route::middleware(['auth', 'verified', 'role:technicien,biologiste,admin'])->prefix('laboratoire')->name('laboratoire.')->group(function () {
     // Section Analyses
-    Route::get('/examens', Examens::class)->name('examens');
-    Route::get('/types-analyses', Types::class)->name('types-analyses');
-    Route::get('/listes-analyses', Analyses::class)->name('listes-analyses');
-    Route::get('/prelevements', Prelevements::class)->name('prelevements');
-    
+    Route::prefix('analyses')->name('analyses.')->group(function () {
+        Route::get('examens', Examens::class)->name('examens');
+        Route::get('types', Types::class)->name('types');
+        Route::get('listes', Analyses::class)->name('listes');
+        Route::get('prelevements', Prelevements::class)->name('prelevements');
+    });
+
     // Section Microbiologie
-    Route::get('/familles-bacteries', BacteryFamilies::class)->name('familles-bacteries');
-    Route::get('/bacteries', Bacteries::class)->name('bacteries');
-    Route::get('/antibiotiques', Antibiotiques::class)->name('antibiotiques');
+    Route::prefix('microbiologie')->name('microbiologie.')->group(function () {
+        Route::get('familles-bacteries', BacteryFamilies::class)->name('familles-bacteries');
+        Route::get('bacteries', Bacteries::class)->name('bacteries');
+        Route::get('antibiotiques', Antibiotiques::class)->name('antibiotiques');
+    });
 });
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX ADMINS
 // ============================================
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->group(function () {
-    
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Administration
-    Route::get('/users', UsersIndex::class)->name('users');
-    Route::get('/settings', Settings::class)->name('settings');
+    Route::get('utilisateurs', UsersIndex::class)->name('users');
+    Route::get('parametres', Settings::class)->name('settings');
 });
 
-
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
