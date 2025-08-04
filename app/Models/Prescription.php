@@ -45,4 +45,36 @@ class Prescription extends Model
         return $this->belongsToMany(Analyse::class, 'prescription_analyse')
             ->withTimestamps();
     }
+
+
+    public function tubes()
+    {
+        return $this->hasMany(Tube::class);
+    }
+
+    public function prelevements()
+    {
+        return $this->belongsToMany(Prelevement::class, 'prelevement_prescription')
+                    ->withPivot(['prix_unitaire', 'quantite', 'is_payer', 'type_tube_requis', 'volume_requis_ml', 'tubes_generes', 'tubes_generes_at'])
+                    ->withTimestamps();
+    }
+
+    // MÉTHODES MÉTIER
+    public function genererTousLestubes()
+    {
+        return Tube::genererPourPrescription($this->id);
+    }
+
+    public function getTubesParStatutAttribute()
+    {
+        return $this->tubes->groupBy('statut')->map->count();
+    }
+
+    public function getProgresAnalysesAttribute()
+    {
+        $total = $this->tubes->count();
+        $termines = $this->tubes->where('statut', 'ANALYSE_TERMINEE')->count();
+        
+        return $total > 0 ? round(($termines / $total) * 100) : 0;
+    }
 }
