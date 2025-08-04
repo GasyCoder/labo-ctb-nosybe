@@ -50,7 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Archives
-    Route::get('/archives', Archives::class)->name('archives');
+    // Route::get('/archives', Archives::class)->name('archives');
 });
 
 // ============================================
