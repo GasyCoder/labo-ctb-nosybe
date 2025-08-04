@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Archives;
 use App\Livewire\Dashboard;
 use App\Livewire\Admin\Types;
 use App\Livewire\Admin\Examens;
@@ -10,7 +11,6 @@ use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Admin\Prelevements;
 use Illuminate\Support\Facades\Auth;
 use App\Livewire\Admin\Antibiotiques;
-use App\Livewire\Secretaire\Archives;
 use App\Livewire\Secretaire\Patients;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Secretaire\Paiements;
@@ -20,6 +20,7 @@ use App\Livewire\Secretaire\Prescriptions;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Biologiste\IndexBiologiste;
 use App\Livewire\Techniciens\IndexTechniciens;
+use App\Livewire\Secretaire\Prescription\NouvellePrescription;
 
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
@@ -47,14 +48,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // Archives
-    // Route::get('/archives', Archives::class)->name('archives');
+    Route::get('/archives', Archives::class)->name('archives');
 });
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX SECRÉTAIRES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')->name('secretaire.')->group(function () {
-    Route::get('prescriptions', Prescriptions::class)->name('prescriptions');
+    Route::get('prescriptions', NouvellePrescription::class)->name('prescriptions');
     Route::get('examens', Examens::class)->name('examens');
     Route::get('paiements', Paiements::class)->name('paiements');
     Route::get('patients', Patients::class)->name('patients');
