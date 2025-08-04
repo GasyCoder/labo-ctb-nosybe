@@ -1,0 +1,45 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('resultats', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('prescription_id')->constrained('prescriptions')->onDelete('cascade');
+            $table->foreignId('analyse_id')->constrained('analyses')->onDelete('cascade');
+            $table->text('resultats')->nullable();
+            $table->foreignId('tube_id')->constrained('tubes')->onDelete('cascade');
+            $table->text('valeur')->nullable();
+            $table->enum('interpretation', ['NORMAL', 'PATHOLOGIQUE'])->nullable();
+            $table->text('conclusion')->nullable();
+            $table->enum('status', [
+                'EN_ATTENTE',    // Résultat non saisi
+                'EN_COURS',      // Saisie/validation en cours
+                'TERMINE',       // Résultat saisi, non validé
+                'VALIDE',        // Résultat validé par le biologiste
+                'A_REFAIRE',     // Résultat à refaire
+                'ARCHIVE',       // Résultat archivé
+            ])->default('EN_ATTENTE');
+            $table->foreignId('validated_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->timestamp('validated_at')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('resultats');
+    }
+};
