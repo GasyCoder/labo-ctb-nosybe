@@ -22,7 +22,13 @@ return new class extends Migration
             $table->boolean('is_bold')->default(false);
             $table->unsignedBigInteger('examen_id')->nullable();
             $table->unsignedBigInteger('type_id')->nullable();
-            $table->json('valeur_reference')->nullable();
+            
+            // Colonnes séparées pour les valeurs de référence (MEILLEURE APPROCHE)
+            $table->string('valeur_ref')->nullable();
+            $table->string('unite')->nullable();
+            $table->string('suffixe')->nullable();
+            $table->json('valeurs_predefinies')->nullable(); // Pour les listes comme ['Molle', 'Liquide', 'Normal']
+            
             $table->unsignedInteger('ordre')->nullable();
             $table->boolean('status')->default(true);
             $table->softDeletes();
@@ -32,7 +38,11 @@ return new class extends Migration
             $table->index('parent_id');
             $table->index('examen_id');
             $table->index('type_id');
+            
+            // TOUTES LES CONTRAINTES FOREIGN KEY
             $table->foreign('parent_id')->references('id')->on('analyses')->onDelete('cascade');
+            $table->foreign('examen_id')->references('id')->on('examens')->onDelete('set null');
+            $table->foreign('type_id')->references('id')->on('types')->onDelete('set null');
         });
 
     }
