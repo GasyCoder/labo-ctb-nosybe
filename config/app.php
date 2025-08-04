@@ -13,7 +13,14 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'DashWind'),
+    'desc' => env('APP_DESC', 'Tailwind CSS Admin Dashboard Template'),
+    'version' => env('APP_VERSION', '1.0.0'),
+    'build' => env('APP_RELEASE', '12122024'),
+
+    // Site Information
+    'site_name' => env('SITE_NAME', 'DashWind'),
+    'site_email' => env('SITE_EMAIL', 'info@softnio.com'),
 
     /*
     |--------------------------------------------------------------------------
@@ -65,7 +72,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------
@@ -101,7 +108,7 @@ return [
 
     'previous_keys' => [
         ...array_filter(
-            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
+            explode(',', env('APP_PREVIOUS_KEYS', ''))
         ),
     ],
 
