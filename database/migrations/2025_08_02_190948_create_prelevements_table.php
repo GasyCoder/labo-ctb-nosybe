@@ -30,6 +30,10 @@ return new class extends Migration
             $table->foreignId('prelevement_id')->constrained('prelevements')->onDelete('cascade')->comment('Clé étrangère vers prélèvements');
             $table->decimal('prix_unitaire', 10, 2)->comment('Prix unitaire du prélèvement dans la prescription');
             $table->integer('quantite')->default(1)->comment('Quantité commandée dans la prescription');
+            $table->string('type_tube_requis')->nullable();
+            $table->decimal('volume_requis_ml', 5, 2)->nullable();
+            $table->boolean('tubes_generes')->default(false);
+            $table->timestamp('tubes_generes_at')->nullable();
             $table->enum('is_payer', ['PAYE', 'NON_PAYE'])->default('NON_PAYE')->comment('Statut de paiement');
             $table->timestamps();
         });
