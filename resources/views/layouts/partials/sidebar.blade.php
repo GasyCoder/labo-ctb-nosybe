@@ -23,7 +23,7 @@
                         </a>
                     </li>
 
-                    {{-- <!-- Archives (accessible à tous les utilisateurs connectés) -->
+                    <!-- Archives (accessible à tous les utilisateurs connectés) -->
                     <li class="nk-menu-item py-0.5{{ request()->routeIs('archives') ? ' active' : '' }} group/item">
                         <a href="{{ route('archives') }}" class="nk-menu-link flex relative items-center align-middle py-2.5 ps-6 pe-10 font-heading font-bold tracking-snug group">
                             <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
@@ -31,7 +31,7 @@
                             </span>
                             <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Archives</span>
                         </a>
-                    </li> --}}
+                    </li>
 
                     {{-- Section Secrétaire --}}
                     @if(auth()->check() && auth()->user()->type === 'secretaire')
@@ -122,7 +122,7 @@
                                 <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                     <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-coins"></em>
                                 </span>
-                                <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Microbiologie</span>
+                                <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Germes</span>
                                 <em class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 text-base leading-none text-slate-400 group-[.active]/item:text-primary-500 absolute end-5 top-1/2 -translate-y-1/2 rtl:-scale-x-100 group-[.active]/item:rotate-90 group-[.active]/item:rtl:-rotate-90 transition-all duration-300 icon ni ni-chevron-right"></em>
                             </a>
 
