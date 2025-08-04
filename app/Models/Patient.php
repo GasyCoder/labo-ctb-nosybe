@@ -6,27 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Paiement extends Model
+class Patient extends Model
 {
     use HasFactory, SoftDeletes;
-
+    
     protected $fillable = [
-        'prescription_id',
-        'montant',
-        'mode_paiement',
-        'recu_par',
+        'reference', 'nom', 'prenom', 'sexe', 'telephone', 'email', 'is_fidele'
     ];
 
-    // Relations
-
-    public function prescription()
+    // Optionnel : un scope pour filtrer les fidèles
+    public function scopeFideles($query)
     {
-        return $this->belongsTo(Prescription::class);
-    }
-
-    public function utilisateur()
-    {
-        // Le user qui a encaissé le paiement
-        return $this->belongsTo(User::class, 'recu_par');
+        return $query->where('is_fidele', true);
     }
 }
