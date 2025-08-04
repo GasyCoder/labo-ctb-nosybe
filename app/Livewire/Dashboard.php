@@ -3,13 +3,17 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
 
 class Dashboard extends Component
 {
     public function render()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
-        return view('livewire.dashboard', ['user' => $user])->layout('layouts.app');
+        return view('livewire.dashboard', [
+            'user' => $user
+        ]);
     }
 }
+
