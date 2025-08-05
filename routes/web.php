@@ -16,11 +16,11 @@ use Illuminate\Support\Facades\Route;
 use App\Livewire\Secretaire\Paiements;
 use App\Livewire\Admin\BacteryFamilies;
 use App\Livewire\Secretaire\Prescripteurs;
-use App\Livewire\Secretaire\Prescriptions;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Biologiste\IndexBiologiste;
 use App\Livewire\Techniciens\IndexTechniciens;
-use App\Livewire\Secretaire\Prescription\NouvellePrescription;
+use App\Livewire\Secretaire\Prescription\AddPrescription;
+use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
 
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
@@ -55,7 +55,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // ROUTES SPÉCIFIQUES AUX SECRÉTAIRES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')->name('secretaire.')->group(function () {
-    Route::get('prescriptions', NouvellePrescription::class)->name('prescriptions');
+    Route::get('prescriptions', PrescriptionIndex::class)->name('prescriptions');
+    Route::get('nouvel-prescription', AddPrescription::class)->name('add-prescription');
+    Route::get('prescriptions/{prescription}/edit', AddPrescription::class)->name('prescriptions.edit');
     Route::get('examens', Examens::class)->name('examens');
     Route::get('paiements', Paiements::class)->name('paiements');
     Route::get('patients', Patients::class)->name('patients');
@@ -106,3 +108,5 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 });
 
 require __DIR__ . '/auth.php';
+
+
