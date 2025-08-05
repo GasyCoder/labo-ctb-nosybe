@@ -24,6 +24,12 @@ class Prescription extends Model
         'status',
     ];
 
+    // Ajouter les casts pour les décimaux
+    protected $casts = [
+        'remise' => 'decimal:2',
+        'poids' => 'decimal:2',
+    ];
+
     public function secretaire()
     {
         return $this->belongsTo(User::class, 'secretaire_id');
@@ -46,7 +52,6 @@ class Prescription extends Model
             ->withTimestamps();
     }
 
-
     public function tubes()
     {
         return $this->hasMany(Tube::class);
@@ -57,6 +62,11 @@ class Prescription extends Model
         return $this->belongsToMany(Prelevement::class, 'prelevement_prescription')
                     ->withPivot(['prix_unitaire', 'quantite', 'is_payer', 'type_tube_requis', 'volume_requis_ml', 'tubes_generes', 'tubes_generes_at'])
                     ->withTimestamps();
+    }
+
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class);
     }
 
     // MÉTHODES MÉTIER
@@ -76,5 +86,88 @@ class Prescription extends Model
         $termines = $this->tubes->where('statut', 'ANALYSE_TERMINEE')->count();
         
         return $total > 0 ? round(($termines / $total) * 100) : 0;
+    }
+
+    // CORRECTION: Méthode améliorée pour calculer le montant des analyses
+    public function getMontantAnalysesAttribute()
+    {
+        $total = 0;
+        $parentsTraites = [];
+
+        foreach ($this->analyses as $analyse) {
+            // Si l'analyse a un parent et qu'on ne l'a pas encore traité
+            if ($analyse->parent_id && !in_array($analyse->parent_id, $parentsTraites)) {
+                $parent = Analyse::find($analyse->parent_id);
+                
+                if ($parent && $parent->prix > 0) {
+                    // Ajouter le prix du parent une seule fois
+                    $total += $parent->prix;
+                    $parentsTraites[] = $analyse->parent_id;
+                    continue;
+                }
+            }
+            
+            // Si pas de parent ou parent sans prix, utiliser le prix de l'analyse
+            if (!$analyse->parent_id || !in_array($analyse->parent_id, $parentsTraites)) {
+                $total += $analyse->prix;
+            }
+        }
+
+        return $total;
+    }
+
+    // Méthode pour calculer le montant total payé (analyses + prélèvements - remise)
+    public function getMontantTotalAttribute()
+    {
+        $montantAnalyses = $this->montant_analyses;
+        $montantPrelevements = $this->prelevements->sum(function($prelevement) {
+            return $prelevement->pivot->prix_unitaire * $prelevement->pivot->quantite;
+        });
+
+        return max(0, $montantAnalyses + $montantPrelevements - $this->remise);
+    }
+
+    // COMMISSION PRESCRIPTEUR: 10% du montant des analyses
+    public function getPartPrescripteurAttribute()
+    {
+        return round($this->montant_analyses * 0.10, 2);
+    }
+
+    // Vérifier si la prescription est payée
+    public function getEstPayeeAttribute()
+    {
+        return $this->paiements()->where('montant', '>=', $this->montant_total)->exists();
+    }
+
+    // Méthode pour calculer la commission seulement si payée et réalisée
+    public function getCommissionPrescripteurAttribute()
+    {
+        // Commission seulement si prescription payée et analyses terminées
+        if ($this->est_payee && in_array($this->status, ['ANALYSE_TERMINEE', 'TERMINE', 'ARCHIVE'])) {
+            return $this->part_prescripteur;
+        }
+        
+        return 0;
+    }
+
+    // SCOPES utiles
+    public function scopePayees($query)
+    {
+        return $query->whereHas('paiements');
+    }
+
+    public function scopeTerminees($query)
+    {
+        return $query->whereIn('status', ['ANALYSE_TERMINEE', 'TERMINE', 'ARCHIVE']);
+    }
+
+    public function scopeParPrescripteur($query, $prescripteurId)
+    {
+        return $query->where('prescripteur_id', $prescripteurId);
+    }
+
+    public function scopeParPeriode($query, $dateDebut, $dateFin)
+    {
+        return $query->whereBetween('created_at', [$dateDebut, $dateFin]);
     }
 }
