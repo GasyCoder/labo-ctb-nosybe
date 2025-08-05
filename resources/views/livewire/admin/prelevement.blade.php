@@ -1,12 +1,12 @@
 <div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
-    {{-- Toggle Dark/Light  currentView --}}
+    {{-- Toggle Dark/Light Mode --}}
     <div class="fixed top-4 right-4 z-50">
-        <button wire:click="toggleDark currentView" 
+        <button wire:click="toggleDarkMode" 
                 class="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
-            <svg x-show="!dark currentView" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg x-show="!darkMode" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
             </svg>
-            <svg x-show="dark currentView" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg x-show="darkMode" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
         </button>
@@ -78,7 +78,7 @@
                 <div class="flex items-center space-x-2">
                     <div class="relative">
                         <input type="text" 
-                               wire: currentViewl.live.debounce.300ms="search"
+                               wire:model.live.debounce.300ms="search"
                                placeholder="Rechercher un prélèvement..."
                                class="pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 w-64 bg-white dark:bg-gray-800 text-gray-900 dark:text-white transition-colors duration-200">
                         <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@
         @endif
     </div>
 
-    {{--  currentView Liste --}}
+    {{-- Vue Liste --}}
     @if($currentView === 'list')
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl transition-colors duration-200">
@@ -273,7 +273,7 @@
         </div>
     @endif
 
-    {{--  currentView Création --}}
+    {{-- Vue Création --}}
     @if($currentView === 'create')
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="bg-emerald-50 dark:bg-emerald-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl transition-colors duration-200">
@@ -294,7 +294,7 @@
                             <input type="text" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('nom') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                    id="nom" 
-                                   wire: currentViewl="nom"
+                                   wire:model="nom"
                                    placeholder="Ex: Prélèvement sang">
                             @error('nom')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -309,7 +309,7 @@
                                    step="0.01"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('prix') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                    id="prix" 
-                                   wire: currentViewl="prix"
+                                   wire:model="prix"
                                    placeholder="0.00">
                             @error('prix')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -321,7 +321,7 @@
                         <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                             Description <span class="text-red-500">*</span>
                         </label>
-                        <textarea wire: currentViewl="description" 
+                        <textarea wire:model="description" 
                                   id="description"
                                   rows="3"
                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror"
@@ -340,7 +340,7 @@
                                    min="1"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('quantite') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                    id="quantite" 
-                                   wire: currentViewl="quantite"
+                                   wire:model="quantite"
                                    placeholder="1">
                             @error('quantite')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -351,7 +351,7 @@
                             <div class="flex items-center">
                                 <input type="checkbox" 
                                        id="is_active" 
-                                       wire: currentViewl="is_active"
+                                       wire:model="is_active"
                                        class="w-4 h-4 text-emerald-600 bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded focus:ring-emerald-500 focus:ring-2 transition-colors duration-200"
                                        checked>
                                 <label for="is_active" class="ml-2 text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200">
@@ -380,7 +380,7 @@
         </div>
     @endif
 
-    {{--  currentView Édition --}}
+    {{-- Vue Édition --}}
     @if($currentView === 'edit' && $prelevement)
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="bg-yellow-50 dark:bg-yellow-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl transition-colors duration-200">
@@ -401,7 +401,7 @@
                             <input type="text" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('nom') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                    id="edit_nom" 
-                                   wire: currentViewl="nom">
+                                   wire:model="nom">
                             @error('nom')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -415,7 +415,7 @@
                                    step="0.01"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('prix') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                    id="edit_prix" 
-                                   wire: currentViewl="prix">
+                                   wire:model="prix">
                             @error('prix')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -426,7 +426,7 @@
                         <label for="edit_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
                             Description <span class="text-red-500">*</span>
                         </label>
-                        <textarea wire: currentViewl="description" 
+                        <textarea wire:model="description" 
                                   id="edit_description"
                                   rows="3"
                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('description') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror"></textarea>
@@ -444,7 +444,7 @@
                                    min="1"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200 @error('quantite') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                    id="edit_quantite" 
-                                   wire: currentViewl="quantite">
+                                   wire:model="quantite">
                             @error('quantite')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -454,7 +454,7 @@
                             <div class="flex items-center">
                                 <input type="checkbox" 
                                        id="edit_is_active" 
-                                       wire: currentViewl="is_active"
+                                       wire:model="is_active"
                                        class="w-4 h-4 text-yellow-600 bg-gray-100 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded focus:ring-yellow-500 focus:ring-2 transition-colors duration-200"
                                        {{ $prelevement->is_active ? 'checked' : '' }}>
                                 <label for="edit_is_active" class="ml-2 text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200">
@@ -483,7 +483,7 @@
         </div>
     @endif
 
-    {{--  currentView Affichage --}}
+    {{-- Vue Affichage --}}
     @if($currentView === 'show' && $prelevement)
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="bg-indigo-50 dark:bg-indigo-900/20 px-6 py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl transition-colors duration-200">
@@ -573,4 +573,3 @@
         </div>
     @endif
 </div>
-
