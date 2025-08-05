@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('analyses', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
-            $table->string('name');
             $table->enum('level', ['PARENT', 'CHILD', 'NORMAL']);
             $table->unsignedBigInteger('parent_id')->nullable(); 
             $table->string('designation')->nullable();
