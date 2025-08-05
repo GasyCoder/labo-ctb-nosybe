@@ -19,7 +19,7 @@ return [
     'build' => env('APP_RELEASE', '12122024'),
 
     // Site Information
-    'site_name' => env('SITE_NAME', 'DashWind'),
+    'site_name' => env('SITE_NAME', 'GASYCODER'),
     'site_email' => env('SITE_EMAIL', 'info@softnio.com'),
 
     /*
