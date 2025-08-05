@@ -5,11 +5,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Prelevement;
 
-class Prelevements extends Component  // Nom corrigé pour correspondre au fichier original
+class Prelevements extends Component
 {
     use WithPagination;
 
-    public $currentView = 'list';  // Renommé pour éviter les conflits avec sidebar
+    public $currentView = 'list';
     public $prelevement;
     public $darkMode = false;
 
@@ -144,7 +144,7 @@ class Prelevements extends Component  // Nom corrigé pour correspondre au fichi
         $prelevement = Prelevement::findOrFail($id);
 
         // Vérifier s'il y a des prescriptions liées
-        if ($prelevement->prescriptions()->count() > 0) {
+        if (method_exists($prelevement, 'prescriptions') && $prelevement->prescriptions()->count() > 0) {
             session()->flash('error', 'Impossible de supprimer ce prélèvement car il est utilisé dans des prescriptions.');
             return;
         }

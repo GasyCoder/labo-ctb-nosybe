@@ -14,7 +14,7 @@ use App\Livewire\Admin\Antibiotiques;
 use App\Livewire\Secretaire\Patients;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Secretaire\Paiements;
-use App\Livewire\Admin\BacteryFamilies;
+use App\Livewire\Admin\BacterieFamilies; // ✅ Corrigé : BacterieFamilies au lieu de BacteryFamilies
 use App\Livewire\Secretaire\Prescripteurs;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Biologiste\IndexBiologiste;
@@ -92,7 +92,7 @@ Route::middleware(['auth', 'verified', 'role:technicien,biologiste,admin'])->pre
 
     // Section Microbiologie
     Route::prefix('microbiologie')->name('microbiologie.')->group(function () {
-        Route::get('familles-bacteries', BacteryFamilies::class)->name('familles-bacteries');
+        Route::get('familles-bacteries', BacterieFamilies::class)->name('familles-bacteries');
         Route::get('bacteries', Bacteries::class)->name('bacteries');
         Route::get('antibiotiques', Antibiotiques::class)->name('antibiotiques');
     });
