@@ -30,7 +30,7 @@ class AddPrescription extends Component
     // Données nouveau patient
     public string $nom = '';
     public string $prenom = '';
-    public string $sexe = 'M';
+    public string $sexe = '';
     public string $telephone = '';
     public string $email = '';
     
@@ -99,7 +99,7 @@ class AddPrescription extends Component
         $this->validate([
             'nom' => 'required|min:2|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']+$/',
             'prenom' => 'nullable|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']*$/',
-            'sexe' => 'required|in:M,F',
+            'sexe' => 'required',
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
             'email' => 'nullable|email|max:255'
         ], [
@@ -218,6 +218,7 @@ class AddPrescription extends Component
                 'prix_original' => $analyse->prix,
                 'prix_effectif' => $prixEffectif,
                 'prix_affiche' => $prixAffiche,
+                'prix' => $prixAffiche, // ← AJOUTER CETTE LIGNE !
                 'parent_nom' => $parentNom,
                 'code' => $analyse->code,
                 'parent_id' => $analyse->parent_id,
@@ -541,7 +542,7 @@ class AddPrescription extends Component
             }
 
             // Marquer la prescription comme ayant des tubes générés
-            $prescription->update(['status' => 'PRELEVEMENTS_GENERES']);
+            $prescription->update(['status' => 'EN_ATTENTE']);
             
         } catch (\Exception $e) {
             Log::error('Erreur génération tubes', ['error' => $e->getMessage()]);
