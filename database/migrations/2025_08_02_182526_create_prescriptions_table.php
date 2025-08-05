@@ -29,7 +29,6 @@ return new class extends Migration
                 'VALIDE',        // Toutes les analyses validées par le biologiste
                 'A_REFAIRE',     // Prélèvement ou analyse à refaire
                 'ARCHIVE',       // Prescription archivée
-                'PRELEVEMENTS_GENERES'
             ])->default('EN_ATTENTE');
             $table->softDeletes();
             $table->timestamps();
