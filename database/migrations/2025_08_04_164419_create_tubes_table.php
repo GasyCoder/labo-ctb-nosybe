@@ -20,8 +20,8 @@ return new class extends Migration
             $table->foreignId('prelevement_id')->constrained('prelevements')->onDelete('cascade');
             
             // IDENTIFICATION UNIQUE
-            $table->string('code_barre')->unique()->comment('Code-barre unique du tube');
-            $table->string('numero_tube')->comment('Numéro séquentiel lisible (ex: T-2024-001234)');
+            $table->string('code_barre')->nullable()->unique()->comment('Code-barre unique du tube');
+            $table->string('numero_tube')->nullable()->comment('Numéro séquentiel lisible (ex: T-2024-001234)');
             
             // STATUT ET TRAÇABILITÉ
             $table->enum('statut', [
