@@ -39,21 +39,14 @@
                             <h6 class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 text-slate-400 dark:text-slate-300 whitespace-nowrap uppercase font-bold text-xs tracking-relaxed leading-tight">Secrétaire</h6>
                         </li>
 
-                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.prescriptions') ? ' active' : '' }} group/item">
+                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.prescriptions', 'secretaire.add-prescription') ? ' active' : '' }} group/item">
                             <a href="{{ route('secretaire.prescriptions') }}" class="nk-menu-link flex relative items-center align-middle py-2.5 ps-6 pe-10 font-heading font-bold tracking-snug group">
                                 <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                     <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-edit-alt"></em>
                                 </span>
-                                <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Prescriptions</span>
-                            </a>
-                        </li>
-
-                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.paiements') ? ' active' : '' }} group/item">
-                            <a href="{{ route('secretaire.paiements') }}" class="nk-menu-link flex relative items-center align-middle py-2.5 ps-6 pe-10 font-heading font-bold tracking-snug group">
-                                <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
-                                    <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-cc-alt2"></em>
+                                <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
+                                    Prescriptions
                                 </span>
-                                <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Paiements</span>
                             </a>
                         </li>
 
