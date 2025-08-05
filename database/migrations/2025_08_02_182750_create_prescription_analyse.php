@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('prescription_id')->constrained('prescriptions')->onDelete('cascade');
             $table->foreignId('analyse_id')->constrained('analyses')->onDelete('cascade');
             $table->timestamps();
+
+            $table->unique(['prescription_id', 'analyse_id']);
         });
     }
 
