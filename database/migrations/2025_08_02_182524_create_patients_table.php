@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
-            $table->string('reference');
             $table->string('nom');
             $table->string('prenom')->nullable();
-            $table->string('sexe');
+            $table->string('civilite');
+            $table->string('date_naissance')->nullable();
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
             $table->enum('statut', ['NOUVEAU', 'FIDELE', 'VIP'])->default('NOUVEAU');
