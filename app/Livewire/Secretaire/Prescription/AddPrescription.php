@@ -34,9 +34,10 @@ class AddPrescription extends Component
     // Données nouveau patient
     public string $nom = '';
     public string $prenom = '';
-    public string $sexe = 'Monsieur';
+    public string $civilite = 'Monsieur';
     public string $telephone = '';
     public string $email = '';
+    public string $date_naissance = '';
     
     // 📋 INFORMATIONS CLINIQUES
     public ?int $prescripteurId = null;
@@ -69,8 +70,8 @@ class AddPrescription extends Component
     public function mount()
     {
         // S'assurer que le genre a une valeur par défaut
-        if (empty($this->sexe)) {
-            $this->sexe = 'Monsieur';
+        if (empty($this->civilite)) {
+            $this->civilite = 'Monsieur';
         }
         
         // Valider l'étape depuis l'URL
@@ -155,9 +156,10 @@ class AddPrescription extends Component
         // Pré-remplir les informations du patient pour modification
         $this->nom = $this->patient->nom;
         $this->prenom = $this->patient->prenom;
-        $this->sexe = $this->patient->sexe;
+        $this->civilite = $this->patient->civilite;
         $this->telephone = $this->patient->telephone;
         $this->email = $this->patient->email;
+        $this->date_naissance = $this->patient->date_naissance;
         
         // Passer en mode modification du patient
         $this->nouveauPatient = true;
@@ -182,7 +184,7 @@ class AddPrescription extends Component
     public function nouveauPrescription()
     {
         $this->reset([
-            'patient', 'nouveauPatient', 'nom', 'prenom', 'telephone', 'email',
+            'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'date_naissance', 'telephone', 'email',
             'prescripteurId', 'age', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
             'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
@@ -195,7 +197,7 @@ class AddPrescription extends Component
         $this->uniteAge = 'Ans';
         $this->patientType = 'EXTERNE';
         $this->modePaiement = 'ESPECES';
-        $this->sexe = 'Monsieur';
+        $this->civilite = 'Monsieur';
         $this->calculerTotaux();
 
         flash()->info('Nouvelle prescription initialisée');
@@ -206,9 +208,10 @@ class AddPrescription extends Component
         $this->validate([
             'nom' => 'required|min:2|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']+$/',
             'prenom' => 'nullable|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']*$/',
-            'sexe' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
+            'civilite' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
-            'email' => 'nullable|email|max:255'
+            'email' => 'nullable|email|max:255',
+            'date_naissance' => 'nullable|string|max:250'
         ], [
             'nom.required' => 'Le nom est obligatoire',
             'nom.regex' => 'Le nom ne doit contenir que des lettres',
@@ -222,21 +225,22 @@ class AddPrescription extends Component
                 $this->patient->update([
                     'nom' => ucwords(strtolower(trim($this->nom))),
                     'prenom' => ucwords(strtolower(trim($this->prenom))),
-                    'sexe' => $this->sexe,
+                    'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
+                    'date_naissance' => $this->date_naissance
                 ]);
                 
                 flash()->success("Informations du patient « {$this->patient->nom} {$this->patient->prenom} » mises à jour");
             } else {
                 // Création d'un nouveau patient
                 $this->patient = Patient::create([
-                    'reference' => $this->genererReferencePatient(),
                     'nom' => ucwords(strtolower(trim($this->nom))),
                     'prenom' => ucwords(strtolower(trim($this->prenom))),
-                    'sexe' => $this->sexe,
+                    'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
+                    'date_naissance' => $this->date_naissance
                 ]);
                 
                 flash()->success("Nouveau patient « {$this->patient->nom} {$this->patient->prenom} » créé avec succès");
@@ -770,28 +774,19 @@ class AddPrescription extends Component
     // 🧪 ÉTAPE 6: TUBES ET ÉTIQUETTES
     // =====================================
     
-    public function imprimerEtiquettes()
+    public function terminerPrescription()
     {
-        flash()->success('Étiquettes envoyées à l\'impression');
         $this->allerEtape('confirmation');
-    }
-    
-    public function ignorerEtiquettes()
-    {
-        flash()->info('Impression des étiquettes ignorée');
-        $this->allerEtape('confirmation');
+        
+        $message = 'Nouvelle prescription enregistrée';
+        
+        if (!empty($this->tubesGeneres)) {
+            $message .= ' - ' . count($this->tubesGeneres) . ' tube(s) généré(s)';
+        }
+        
+        session()->flash('success', $message);
     }
 
-    // =====================================
-    // 🔧 MÉTHODES UTILITAIRES
-    // =====================================
-    
-    private function genererReferencePatient(): string
-    {
-        $annee = date('Y');
-        $numero = str_pad(Patient::count() + 1, 5, '0', STR_PAD_LEFT);
-        return "PAT{$annee}{$numero}";
-    }
 
     // =====================================
     // 📊 COMPUTED PROPERTIES
@@ -808,7 +803,6 @@ class AddPrescription extends Component
         return Patient::where(function($query) use ($terme) {
                     $query->where('nom', 'like', "%{$terme}%")
                           ->orWhere('prenom', 'like', "%{$terme}%")
-                          ->orWhere('reference', 'like', "%{$terme}%")
                           ->orWhere('telephone', 'like', "%{$terme}%");
                 })
                 ->orderBy('nom')
