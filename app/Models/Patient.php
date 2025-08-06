@@ -11,7 +11,7 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
     
     protected $fillable = [
-        'reference', 'nom', 'prenom', 'sexe', 'telephone', 'email', 'statut'
+        'nom', 'prenom', 'civilite', 'date_naissance', 'telephone', 'email', 'statut'
     ];
 
     // Relations
