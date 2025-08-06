@@ -3,7 +3,10 @@
     <div class="flex items-center min-w-full w-72 h-16 border-b border-e bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 px-6 py-3 overflow-hidden">
         <!-- ... (contenu inchangé) ... -->
     </div>
-
+@php
+    $countArchive = \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)
+        ->count();
+@endphp
     <div class="nk-sidebar-body max-h-full relative overflow-hidden w-full bg-white dark:bg-gray-950 border-e border-gray-200 dark:border-gray-900">
         <div class="flex flex-col w-full h-[calc(100vh-theme(spacing.16))]">
             <div class="h-full pt-4 pb-10" data-simplebar>
@@ -29,7 +32,7 @@
                             <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                 <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-archived"></em>
                             </span>
-                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Archives</span>
+                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Archives {{ $countArchive }}</span>
                         </a>
                     </li>
 
