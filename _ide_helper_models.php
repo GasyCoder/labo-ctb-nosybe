@@ -384,6 +384,7 @@ namespace App\Models{
  * @property-read mixed $montant_total
  * @property-read mixed $part_prescripteur
  * @property-read mixed $progres_analyses
+ * @property-read mixed $status_label
  * @property-read mixed $tubes_par_statut
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Paiement> $paiements
  * @property-read int|null $paiements_count
@@ -391,9 +392,13 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prelevement> $prelevements
  * @property-read int|null $prelevements_count
  * @property-read \App\Models\Prescripteur|null $prescripteur
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Resultat> $resultats
+ * @property-read int|null $resultats_count
  * @property-read \App\Models\User $secretaire
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tube> $tubes
  * @property-read int|null $tubes_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription actives()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription archivees()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription onlyTrashed()
