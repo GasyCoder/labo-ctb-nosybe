@@ -2,57 +2,50 @@
     <div class="h-16 border-b bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 px-1.5 sm:px-5">
         <div class="container max-w-none">
             <div class="relative flex items-center -mx-1">
+                <!-- Mobile Toggle Button -->
                 <div class="px-1 me-4 -ms-1.5 xl:hidden">
-                    <a href="#" class="sidebar-toggle *:pointer-events-none inline-flex items-center isolate relative h-9 w-9 px-1.5 before:content-[''] before:absolute before:-z-[1] before:h-5 before:w-5 hover:before:h-10 hover:before:w-10 before:rounded-full before:opacity-0 hover:before:opacity-100 before:transition-all before:duration-300 before:-translate-x-1/2  before:-translate-y-1/2 before:top-1/2 before:left-1/2 before:bg-gray-200 dark:before:bg-gray-900">
+                    <a href="#" class="sidebar-toggle *:pointer-events-none inline-flex items-center isolate relative h-9 w-9 px-1.5 before:content-[''] before:absolute before:-z-[1] before:h-5 before:w-5 hover:before:h-10 hover:before:w-10 before:rounded-full before:opacity-0 hover:before:opacity-100 before:transition-all before:duration-300 before:-translate-x-1/2 before:-translate-y-1/2 before:top-1/2 before:left-1/2 before:bg-gray-200 dark:before:bg-gray-900">
                         <em class="text-2xl text-slate-600 dark:text-slate-300 ni ni-menu"></em>
                     </a>
                 </div>
+
+                <!-- Mobile Logo -->
                 <div class="px-1 py-3.5 flex xl:hidden">
                     <a href="{{ url('/') }}" class="relative inline-block transition-opacity duration-300 h-9">
                         <img class="h-full opacity-0 dark:opacity-100" src="{{ asset('images/logo.png') }}" srcset="{{ asset('images/logo2x.png 2x') }}" alt="{{ site_info('name') }}">
                         <img class="h-full opacity-100 dark:opacity-0 absolute start-0 top-0" src="{{ asset('images/logo-dark.png') }}" srcset="{{ asset('images/logo-dark2x.png 2x') }}" alt="{{ site_info('name') }}">
                     </a>
                 </div>
+
+                <!-- Desktop Notification -->
                 <div class="px-1 py-2 hidden xl:block">
                     <a class="flex items-center transition-all duration-300" href="#">
                         <div class="w-8 inline-flex flex-shrink-0">
                             <em class="text-2xl leading-none text-primary-600 ni ni-card-view"></em>
                         </div>
                         <div class="flex items-center max-w-[calc(100%-theme(spacing.8))]">
-                            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium text-ellipsis overflow-hidden whitespace-nowrap w-[calc(100%-theme(spacing.8))]">Do you know the latest update of 2022? <span class="text-slate-400 dark:text-slate-500 font-normal"> A overview of our is now available on YouTube</span></p>
+                            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium text-ellipsis overflow-hidden whitespace-nowrap w-[calc(100%-theme(spacing.8))]">
+                                Do you know the latest update of 2022? 
+                                <span class="text-slate-400 dark:text-slate-500 font-normal">A overview of our is now available on YouTube</span>
+                            </p>
                             <em class="text-slate-400 ms-1 ni ni-external"></em>
                         </div>
                     </a>
                 </div>
+
+                <!-- Right Side Controls -->
                 <div class="px-1 py-3.5 ms-auto">
                     <ul class="flex item-center -mx-1.5 sm:-mx-2.5">
+                        <!-- Notification Bell -->
                         <li class="dropdown px-1.5 sm:px-2.5 relative inline-flex">
-                            <a tabindex="0" href="#" class="dropdown-toggle *:pointer-events-none peer inline-flex items-center isolate relative h-9 w-9 px-1.5 before:content-[''] before:absolute before:-z-[1] before:h-5 before:w-5 hover:before:h-10 hover:before:w-10  [&.show]:before:h-10 [&.show]:before:w-10 before:rounded-full before:opacity-0 hover:before:opacity-100 [&.show]:before:opacity-100 before:transition-all before:duration-300 before:-translate-x-1/2  before:-translate-y-1/2 before:top-1/2 before:left-1/2 before:bg-gray-200 dark:before:bg-gray-900 -me-1.5" data-offset="0,10" data-placement="bottom-end"  data-rtl-placement="bottom-start">
+                            <a tabindex="0" href="#" class="dropdown-toggle *:pointer-events-none peer inline-flex items-center isolate relative h-9 w-9 px-1.5 before:content-[''] before:absolute before:-z-[1] before:h-5 before:w-5 hover:before:h-10 hover:before:w-10 [&.show]:before:h-10 [&.show]:before:w-10 before:rounded-full before:opacity-0 hover:before:opacity-100 [&.show]:before:opacity-100 before:transition-all before:duration-300 before:-translate-x-1/2 before:-translate-y-1/2 before:top-1/2 before:left-1/2 before:bg-gray-200 dark:before:bg-gray-900 -me-1.5" data-offset="0,10" data-placement="bottom-end" data-rtl-placement="bottom-start">
                                 <div class="relative inline-flex after:content-[''] after:absolute after:rounded-full after:end-0 after:top-px after:h-2.5 after:w-2.5 after:border-2 after:border-white after:bg-sky-400">
                                     <em class="text-2xl leading-none text-slate-600 dark:text-slate-300 ni ni-bell"></em>
                                 </div>
                             </a>
-                            {{-- <div tabindex="0" class="dropdown-menu absolute max-xs:min-w-[240px] max-xs:max-w-[240px] min-w-[360px] max-w-[360px] border border-t-3 border-gray-200 dark:border-gray-800 border-t-primary-600 dark:border-t-primary-600 bg-white dark:bg-gray-950 rounded shadow hidden peer-[.show]:block z-[1000]">
-                                <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 dark:border-gray-800">
-                                    <span class="text-sm font-normal">Notifications</span>
-                                    <a class="text-sm font-normal text-primary-600 hover:text-primary-700" href="#">Mark All as Read</a>
-                                </div>
-                                <div class="flex flex-col">
-                                    <div class="flex items-center p-5 border-b last:border-b-0 border-gray-200 dark:border-gray-800">
-                                        <div class="flex-shrink-0 me-3 h-9 w-9 inline-flex items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-950 text-yellow-600">
-                                            <em class="text-lg leading-none ni ni-curve-down-right"></em>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm text-slate-600 dark:text-slate-300">You have requested to <span>Widthdrawl</span></div>
-                                            <div class="text-xs text-slate-400">2 hrs ago</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-center px-5 py-3 border-t border-gray-200 dark:border-gray-800">
-                                    <a class="text-sm font-normal text-primary-600 hover:text-primary-700" href="#">View All</a>
-                                </div>
-                            </div> --}}
                         </li>
+
+                        <!-- User Dropdown -->
                         <li class="dropdown px-1.5 sm:px-2.5 relative inline-flex">
                             <a tabindex="0" href="#" class="dropdown-toggle *:pointer-events-none peer inline-flex items-center group" data-offset="0,10" data-placement="bottom-end" data-rtl-placement="bottom-start">
                                 <div class="flex items-center">
@@ -61,37 +54,40 @@
                                     </div>
                                     <div class="hidden md:block ms-4">
                                         <div class="text-xs font-medium leading-none pt-0.5 pb-1.5 text-primary-500 group-hover:text-primary-600">
-                                            @if(auth()->check() && auth()->user()->type === 'admin')
-                                                Administrator
-                                            @elseif(auth()->check() && auth()->user()->type === 'secretaire')
-                                                Secrétaire
-                                            @elseif(auth()->check() && auth()->user()->type === 'technicien')
-                                                Technicien
-                                            @elseif(auth()->check() && auth()->user()->type === 'biologiste')
-                                                Biologiste
-                                            @else
-                                                Utilisateur
-                                            @endif
+                                            @auth
+                                                @switch(auth()->user()->type)
+                                                    @case('admin') Administrator @break
+                                                    @case('secretaire') Secrétaire @break
+                                                    @case('technicien') Technicien @break
+                                                    @case('biologiste') Biologiste @break
+                                                    @default Utilisateur
+                                                @endswitch
+                                            @endauth
                                         </div>
                                         <div class="text-slate-600 dark:text-slate-400 text-xs font-bold flex items-center">
-                                            {{ Auth::user()->name }}
+                                            {{ Auth::user()->name ?? 'Guest' }}
                                             <em class="text-sm leading-none ms-1 ni ni-chevron-down"></em>
                                         </div>
                                     </div>
                                 </div>
                             </a>
+
+                            <!-- Dropdown Menu -->
                             <div tabindex="0" class="dropdown-menu clickable absolute max-xs:min-w-[240px] max-xs:max-w-[240px] min-w-[280px] max-w-[280px] border border-t-3 border-gray-200 dark:border-gray-800 border-t-primary-600 dark:border-t-primary-600 bg-white dark:bg-gray-950 rounded shadow hidden peer-[.show]:block z-[1000]">
+                                <!-- User Profile -->
                                 <div class="hidden sm:block px-7 py-5 bg-slate-50 dark:bg-slate-900 border-b border-gray-200 dark:border-gray-800">
                                     <div class="flex items-center">
                                         <div class="relative flex-shrink-0 flex items-center justify-center text-sm text-white bg-primary-500 h-10 w-10 rounded-full font-medium">
-                                            <span>{{ Str::upper(Str::substr(Auth::user()->name, 0, 2)) }}</span>
+                                            <span>{{ Str::upper(Str::substr(Auth::user()->name ?? 'GU', 0, 2)) }}</span>
                                         </div>
                                         <div class="ms-4 flex flex-col">
-                                            <span class="text-sm font-bold text-slate-700 dark:text-white">{{ Auth::user()->name }}</span>
-                                            <span class="text-xs text-slate-400 mt-1">{{ Auth::user()->email }}</span>
+                                            <span class="text-sm font-bold text-slate-700 dark:text-white">{{ Auth::user()->name ?? 'Guest User' }}</span>
+                                            <span class="text-xs text-slate-400 mt-1">{{ Auth::user()->email ?? 'guest@example.com' }}</span>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Menu Items -->
                                 <ul class="py-3">
                                     <li>
                                         <a class="relative px-7 py-2.5 flex items-center rounded-[inherit] text-sm leading-5 font-medium text-slate-600 dark:text-slate-400 hover:text-primary-600 hover:dark:text-primary-600 transition-all duration-300" href="{{ route('profile.edit') }}">

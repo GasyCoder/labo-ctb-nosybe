@@ -2,7 +2,7 @@
     <!-- En-tête compact -->
     <div class="flex items-center min-w-full w-60 h-14 border-b border-e bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 px-4 py-2 overflow-hidden">
         <div class="flex items-center justify-between w-full">
-            <span class="text-xl font-bold text-primary-500 whitespace-nowrap group-[&.is-compact:not(.has-hover)]/sidebar:hidden">LaboApp</span>
+            <span class="text-xl font-bold text-primary-500 whitespace-nowrap group-[&.is-compact:not(.has-hover)]/sidebar:hidden">Labo-CTB-Nosy-Be</span>
             <span class="text-xl font-bold text-primary-500 hidden group-[&.is-compact:not(.has-hover)]/sidebar:block">L</span>
         </div>
     </div>
@@ -42,7 +42,7 @@
                             <h6 class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 text-slate-400 dark:text-slate-300 whitespace-nowrap uppercase font-bold text-xs tracking-relaxed leading-tight">Secrétaire</h6>
                         </li>
 
-                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.prescriptions', 'secretaire.prescription.create', 'secretaire.prescription.edit') ? ' active' : '' }} group/item">
+                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.prescription.index', 'secretaire.prescription.create', 'secretaire.prescription.edit') ? ' active' : '' }} group/item">
                             <a href="{{ route('secretaire.prescription.index') }}" class="nk-menu-link flex relative items-center align-middle py-2.5 ps-6 pe-10 font-heading font-bold tracking-snug group">
                                 <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                     <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-edit-alt"></em>
