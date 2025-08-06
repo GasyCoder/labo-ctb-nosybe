@@ -7,9 +7,8 @@
         <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
 
         <title>@isset($title) {{ $title }} | @endisset{{ config('app.desc') }}</title>
-
         @vite(['resources/css/app.css'])
-        {!! ToastMagic::styles() !!}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </head>  
     <body class="bg-gray-50 font-body text-sm leading-relaxed text-slate-600 dark:text-slate-300 dark:bg-gray-1000 font-normal min-w-[320px]" dir="{{ gcs('direction', 'ltr') }}">
         <div class="nk-app-root overflow-hidden">
@@ -32,7 +31,8 @@
         </div><!-- root -->
         @stack('modals')
         @include('layouts.partials.off-canvas')
-        {!! ToastMagic::scripts() !!}
+
+        
         <!-- JavaScript -->
         @vite(['resources/js/scripts.js'])
         @stack('scripts')

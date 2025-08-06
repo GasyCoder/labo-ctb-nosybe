@@ -24,12 +24,10 @@
                    class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg 
                           bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                           focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-slate-400
-                          transition-all duration-200"
-                   aria-label="Rechercher des prescriptions">
+                          transition-all duration-200">
             @if($search)
                 <button wire:click="clearSearch"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Effacer la recherche">
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     <em class="ni ni-cross text-base"></em>
                 </button>
             @endif
@@ -66,19 +64,6 @@
                     </div>
                 </button>
 
-                <button wire:click.prevent="switchTab('archived')"
-                        class="relative py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200
-                               {{ $tab === 'archived' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300' }}">
-                    <div class="flex items-center gap-2">
-                        <em class="ni ni-archive"></em>
-                        <span>Archivées</span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                   {{ $tab === 'archived' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200' }}">
-                            {{ $archivedPrescriptions->total() }}
-                        </span>
-                    </div>
-                </button>
-
                 <button wire:click.prevent="switchTab('deleted')"
                         class="relative py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200
                                {{ $tab === 'deleted' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300' }}">
@@ -98,17 +83,56 @@
     {{-- Tab Content --}}
     <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
         @if($tab === 'actives')
-            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $activePrescriptions])
+            @include('livewire.secretaire.prescription.prescription-table', [
+                'prescriptions' => $activePrescriptions,
+                'currentTab' => 'actives'
+            ])
         @elseif($tab === 'valide')
-            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $validePrescriptions])
-        @elseif($tab === 'archived')
-            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $archivedPrescriptions])
+            @include('livewire.secretaire.prescription.prescription-table', [
+                'prescriptions' => $validePrescriptions,
+                'currentTab' => 'valide'
+            ])
         @elseif($tab === 'deleted')
-            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $deletedPrescriptions])
+            @include('livewire.secretaire.prescription.prescription-table', [
+                'prescriptions' => $deletedPrescriptions,
+                'currentTab' => 'deleted'
+            ])
         @endif
     </div>
 </div>
 
 @push('scripts')
-
+<script>
+document.addEventListener('livewire:initialized', () => {
+    Livewire.on('swal:confirm', (data) => {
+        console.log('=== DEBUG SWEETALERT ===');
+        console.log('Données reçues:', data[0]);
+        console.log('Méthode à appeler:', data[0].method);
+        console.log('Paramètres:', data[0].params);
+        
+        Swal.fire({
+            title: 'Confirmation',
+            text: data[0].message,
+            icon: data[0].type,
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: data[0].confirmButtonText,
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('=== CONFIRMATION UTILISATEUR ===');
+                console.log('Appel de la méthode:', data[0].method);
+                console.log('Avec les paramètres:', data[0].params);
+                
+                // Appel direct de la méthode
+                @this.call(data[0].method, data[0].params);
+                
+                // Log après appel
+                console.log('Méthode appelée avec succès');
+            }
+        });
+    });
+});
+</script>
 @endpush

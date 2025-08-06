@@ -9,9 +9,7 @@
                 <th class="px-6 py-4">Analyses</th>
                 <th class="px-6 py-4">Statut</th>
                 <th class="px-6 py-4">Date création</th>
-                @if(isset($showActions) && $showActions || isset($showRestore) && $showRestore)
-                    <th class="px-6 py-4">Actions</th>
-                @endif
+                <th class="px-6 py-4">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -55,7 +53,7 @@
                     </td>
 
                     {{-- Statut --}}
-                    <td>
+                    <td class="px-6 py-4">
                         <x-prescription-status :status="$prescription->status" />
                     </td>
 
@@ -68,53 +66,48 @@
                     </td>
 
                     {{-- Actions --}}
-                    <td>
-                        <div class="d-flex gap-2 justify-content-end">
-                            @if($prescription->trashed())
-                                {{-- Actions pour les prescriptions dans la corbeille --}}
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2 justify-end">
+                            @if(isset($currentTab) && $currentTab === 'deleted')
+                                {{-- Actions pour la corbeille --}}
                                 <button wire:click="confirmRestore({{ $prescription->id }})"
-                                        class="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
-                                        title="Restaurer" style="width: 32px; height: 32px;">
-                                    <i class="fas fa-undo-alt"></i>
+                                        class="inline-flex items-center justify-center w-8 h-8 text-amber-600 bg-amber-100 rounded-lg hover:bg-amber-200 transition-colors"
+                                        title="Récupérer">
+                                    <em class="ni ni-undo"></em>
                                 </button>
-                                @if(auth()->user()->type === 'admin')
+                                @if(auth()->check() && auth()->user()->type === 'secretaire')
                                     <button wire:click="confirmPermanentDelete({{ $prescription->id }})"
-                                            class="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
-                                            title="Supprimer définitivement" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-trash-alt"></i>
+                                            class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                                            title="Supprimer définitivement">
+                                       <em class="ni ni-delete-fill"></em>
                                     </button>
                                 @endif
-                            @else
-                                {{-- Actions selon le statut --}}
-                                @if(in_array($prescription->status, ['EN_ATTENTE', 'EN_COURS', 'TERMINE']))
-                                    <a href="{{ route('secretaire.prescription.edit', ['prescriptionId' => $prescription->id]) }}"
-                                    class="btn btn-sm btn-success d-flex align-items-center justify-content-center"
-                                    title="Modifier" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button wire:click="confirmDelete({{ $prescription->id }})"
-                                            class="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
-                                            title="Corbeille" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                @endif
-
-                                @if($prescription->status === 'VALIDE')
+                            @elseif(isset($currentTab) && $currentTab === 'actives')
+                                {{-- Actions pour les prescriptions actives --}}
+                                <a href="{{ route('secretaire.prescription.edit', ['prescriptionId' => $prescription->id]) }}"
+                                   class="inline-flex items-center justify-center w-8 h-8 text-green-600 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                                   title="Modifier">
+                                    <em class="ni ni-edit"></em>
+                                </a>
+                                <button wire:click="confirmDelete({{ $prescription->id }})"
+                                        class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                                        title="Corbeille">
+                                    <em class="ni ni-trash"></em>
+                                </button>
+                                @elseif(isset($currentTab) && $currentTab === 'valide')
+                                    {{-- Actions pour les prescriptions validées (VALIDE seulement maintenant) --}}
                                     <button wire:click="confirmArchive({{ $prescription->id }})"
-                                            class="btn btn-sm btn-secondary d-flex align-items-center justify-content-center"
-                                            title="Archiver" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-archive"></i>
+                                            class="inline-flex items-center justify-center w-8 h-8 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                                            title="Archiver">
+                                        <em class="ni ni-archive"></em>
+                                    </button>
+                                    
+                                    <button wire:click="confirmDelete({{ $prescription->id }})"
+                                            class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
+                                            title="Corbeille">
+                                        <em class="ni ni-trash"></em>
                                     </button>
                                 @endif
-
-                                @if($prescription->status === 'ARCHIVE')
-                                    <button wire:click="confirmUnarchive({{ $prescription->id }})"
-                                            class="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
-                                            title="Désarchiver" style="width: 32px; height: 32px;">
-                                        <i class="fas fa-undo-alt"></i>
-                                    </button>
-                                @endif
-                            @endif
                         </div>
                     </td>
                 </tr>
@@ -124,7 +117,7 @@
                         <div class="flex flex-col items-center">
                             <em class="ni ni-info text-4xl mb-4 text-slate-300 dark:text-slate-600"></em>
                             <p class="text-base font-medium">Aucune prescription trouvée</p>
-                            @if($search)
+                            @if($search ?? false)
                                 <p class="text-sm mt-2">Essayez de modifier vos critères de recherche</p>
                             @endif
                         </div>
