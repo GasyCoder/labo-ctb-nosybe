@@ -37,7 +37,6 @@ class AddPrescription extends Component
     public string $civilite = 'Monsieur';
     public string $telephone = '';
     public string $email = '';
-    public string $date_naissance = '';
     
     // 📋 INFORMATIONS CLINIQUES
     public ?int $prescripteurId = null;
@@ -63,6 +62,7 @@ class AddPrescription extends Component
     public float $remise = 0;
     public float $total = 0;
     public float $monnaieRendue = 0;
+    public $reference;
     
     // 🧪 TUBES
     public array $tubesGeneres = [];
@@ -78,9 +78,18 @@ class AddPrescription extends Component
         $this->validateEtape();
         
         $this->calculerTotaux();
+        $this->reference = (new Prescription())->genererReferenceUnique();
 
         $this->isEditMode = false;
     }
+
+    public function getTitle()
+    {
+        return $this->reference 
+            ? 'Référence: ' . $this->reference 
+            : 'Nouvelle prescription';
+    }
+
 
     // =====================================
     // 🌐 GESTION URL ET NAVIGATION
@@ -159,7 +168,6 @@ class AddPrescription extends Component
         $this->civilite = $this->patient->civilite;
         $this->telephone = $this->patient->telephone;
         $this->email = $this->patient->email;
-        $this->date_naissance = $this->patient->date_naissance;
         
         // Passer en mode modification du patient
         $this->nouveauPatient = true;
@@ -184,7 +192,7 @@ class AddPrescription extends Component
     public function nouveauPrescription()
     {
         $this->reset([
-            'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'date_naissance', 'telephone', 'email',
+            'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'age', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
             'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
@@ -211,7 +219,6 @@ class AddPrescription extends Component
             'civilite' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
             'email' => 'nullable|email|max:255',
-            'date_naissance' => 'nullable|string|max:250'
         ], [
             'nom.required' => 'Le nom est obligatoire',
             'nom.regex' => 'Le nom ne doit contenir que des lettres',
@@ -228,7 +235,6 @@ class AddPrescription extends Component
                     'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
-                    'date_naissance' => $this->date_naissance
                 ]);
                 
                 flash()->success("Informations du patient « {$this->patient->nom} {$this->patient->prenom} » mises à jour");
@@ -240,7 +246,6 @@ class AddPrescription extends Component
                     'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
-                    'date_naissance' => $this->date_naissance
                 ]);
                 
                 flash()->success("Nouveau patient « {$this->patient->nom} {$this->patient->prenom} » créé avec succès");
@@ -701,7 +706,8 @@ class AddPrescription extends Component
             } else {
                 $this->allerEtape('confirmation');
             }
-            
+             // Mise à jour avec la référence définitive
+            $this->reference = $prescription->reference;
             DB::commit();
             
             flash()->success('Prescription enregistrée avec succès!');

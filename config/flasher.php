@@ -6,7 +6,7 @@ use Flasher\Prime\Configuration;
 
 return Configuration::from([
     // Default notification library (e.g., 'flasher', 'toastr', 'noty', 'notyf', 'sweetalert')
-    'default' => 'flasher',
+    'default' => 'toastr',
 
     // Path to the main PHPFlasher JavaScript file
     'main_script' => '/vendor/flasher/flasher.min.js',
@@ -17,10 +17,10 @@ return Configuration::from([
     ],
 
     // Set global options for all notifications (optional)
-    // 'options' => [
-    //     'timeout' => 5000, // Time in milliseconds before the notification disappears
-    //     'position' => 'top-right', // Where the notification appears on the screen
-    // ],
+    'options' => [
+        'timeout' => 1200, // Time in milliseconds before the notification disappears
+        'position' => 'top-right', // Where the notification appears on the screen
+    ],
 
     // Automatically inject JavaScript and CSS assets into your HTML pages
     'inject_assets' => true,
@@ -40,9 +40,9 @@ return Configuration::from([
     ],
 
     // Set criteria to filter which notifications are displayed (optional)
-    // 'filter' => [
-    //     'limit' => 5, // Maximum number of notifications to show at once
-    // ],
+    'filter' => [
+        'limit' => 2, // Maximum number of notifications to show at once
+    ],
 
     // Define notification presets to simplify notification creation (optional)
     // 'presets' => [

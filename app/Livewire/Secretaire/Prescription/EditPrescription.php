@@ -34,7 +34,6 @@ class EditPrescription extends Component
     public string $civilite = 'Monsieur';
     public string $telephone = '';
     public string $email = '';
-    public string $date_naissance = '';
 
     public ?int $prescripteurId = null;
     public string $patientType = 'EXTERNE';
@@ -70,6 +69,11 @@ class EditPrescription extends Component
         $this->isEditMode = true;
     }
 
+    public function getTitle()
+    {
+        return 'Référence #' . $this->prescription->reference;
+    }
+
     private function loadPrescription()
     {
         $this->prescription = Prescription::with([
@@ -83,7 +87,6 @@ class EditPrescription extends Component
         $this->civilite = $this->patient->civilite;
         $this->telephone = $this->patient->telephone ?? '';
         $this->email = $this->patient->email ?? '';
-        $this->date_naissance = $this->patient->date_naissance ?? '';
 
         // CLINIQUE
         $this->prescripteurId = $this->prescription->prescripteur_id;
@@ -196,7 +199,6 @@ class EditPrescription extends Component
         $this->civilite = $this->patient->civilite;
         $this->telephone = $this->patient->telephone ?? '';
         $this->email = $this->patient->email ?? '';
-        $this->date_naissance = $this->patient->date_naissance ?? '';
 
         flash()->success("Patient « {$this->patient->nom} {$this->patient->prenom} » sélectionné - Vous pouvez modifier ses informations");
         
@@ -220,7 +222,6 @@ class EditPrescription extends Component
             'civilite' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
             'email' => 'nullable|email|max:255',
-            'date_naissance' => 'nullable|string|max:250'
         ], [
             'nom.required' => 'Le nom est obligatoire',
             'nom.regex' => 'Le nom ne doit contenir que des lettres',
@@ -248,7 +249,6 @@ class EditPrescription extends Component
                     'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
-                    'date_naissance' => $this->date_naissance
                 ]);
                 
                 flash()->success("Nouveau patient « {$this->patient->nom} {$this->patient->prenom} » créé avec succès");
@@ -821,6 +821,28 @@ class EditPrescription extends Component
                          ->get();
     }
 
+    public function nouveauPrescription()
+    {
+        $this->reset([
+            'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
+            'prescripteurId', 'age', 'poids', 'renseignementClinique',
+            'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
+            'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
+            'rechercheAnalyse', 'recherchePrelevement'
+        ]);
+        
+        // Réinitialiser l'étape et l'URL
+        $this->etape = 'patient';
+        $this->age = 0;
+        $this->uniteAge = 'Ans';
+        $this->patientType = 'EXTERNE';
+        $this->modePaiement = 'ESPECES';
+        $this->civilite = 'Monsieur';
+        $this->calculerTotaux();
+
+        flash()->info('Nouvelle prescription initialisée');
+    }
+
     public function render()
     {
         return view('livewire.secretaire.prescription.form-prescription', [
@@ -830,6 +852,7 @@ class EditPrescription extends Component
             'prescripteurs' => $this->prescripteurs,
             'prelevementsDisponibles' => $this->prelevementsDisponibles,
             'prelevementsRecherche' => $this->prelevementsRecherche,
+            'prescription' => $this->prescription, 
         ]);
     }
 }

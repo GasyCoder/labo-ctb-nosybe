@@ -75,7 +75,7 @@
                                         title="Récupérer">
                                     <em class="ni ni-undo"></em>
                                 </button>
-                                @if(auth()->check() && auth()->user()->type === 'secretaire')
+                                @if(auth()->check() && auth()->user()->type === 'admin')
                                     <button wire:click="confirmPermanentDelete({{ $prescription->id }})"
                                             class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
                                             title="Supprimer définitivement">

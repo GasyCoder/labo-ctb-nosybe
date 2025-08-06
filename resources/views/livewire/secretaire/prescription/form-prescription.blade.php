@@ -266,77 +266,7 @@
     @include('livewire.secretaire.prescription.partials.tubes')              
 
     {{-- ===== ÉTAPE 7: CONFIRMATION ===== --}}
-    @if($etape === 'confirmation')
-        <div class="mx-auto">
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border {{ $isEditMode ? 'border-orange-200 dark:border-orange-800' : 'border-green-200 dark:border-green-800' }} p-5 text-center">
-                <div class="w-12 h-12 {{ $isEditMode ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-green-50 dark:bg-green-900/20' }} rounded-full flex items-center justify-center mx-auto mb-3">
-                    <em class="ni ni-{{ $isEditMode ? 'edit' : 'check-circle' }} text-xl {{ $isEditMode ? 'text-orange-500 dark:text-orange-400' : 'text-green-500 dark:text-green-400' }}"></em>
-                </div>
-                
-                <h2 class="text-lg font-semibold {{ $isEditMode ? 'text-orange-900 dark:text-orange-100' : 'text-green-900 dark:text-green-100' }} mb-3">
-                    @if($isEditMode)
-                        ✏️ Prescription Modifiée avec Succès !
-                    @else
-                        🎉 Prescription Enregistrée avec Succès !
-                    @endif
-                </h2>
-                
-             <div class="text-slate-600 dark:text-slate-300 mb-4 space-y-0.75 text-sm">
-                @if($isEditMode && isset($prescription))
-                    <p><span class="font-medium">Prescription ID:</span> #{{ $prescription->id }}</p>
-                @endif
-                
-                <p>
-                    <span class="font-medium">Patient:</span> 
-                    @isset($patient)
-                        {{ $patient->nom }} {{ $patient->prenom }}
-                        @if(!empty($patient->date_naissance))
-                            ({{ \Carbon\Carbon::parse($patient->date_naissance)->age }} ans)
-                        @endif
-                    @else
-                        <span class="text-red-500 dark:text-red-400">Veuillez sélectionner un patient</span>
-                    @endisset
-                </p>
-
-                <p><span class="font-medium">Analyses:</span> {{ count($analysesPanier) }} sélectionnée(s)</p>
-                
-                @if(!empty($prelevementsSelectionnes))
-                    <p><span class="font-medium">Prélèvements:</span> {{ count($prelevementsSelectionnes) }}</p>
-                @endif
-                
-                @if(!empty($tubesGeneres))
-                    <p>
-                        <span class="font-medium">Tubes {{ $isEditMode ? 'régénérés' : 'générés' }}:</span> 
-                        {{ count($tubesGeneres) }}
-                    </p>
-                @endif
-                
-                <p>
-                    <span class="font-medium">Montant {{ $isEditMode ? 'total' : 'payé' }}:</span> 
-                    <span class="{{ $isEditMode ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400' }} font-semibold">
-                        {{ number_format($total, 0) }} Ar
-                    </span>
-                </p>
-            </div>
-                
-                {{-- ACTIONS FINALES --}}
-                <div class="flex flex-col sm:flex-row justify-center gap-2">
-                    <button wire:click="nouveauPrescription" 
-                            class="px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors text-sm">
-                        <em class="ni ni-plus mr-1.5 text-xs"></em>Nouvelle prescription
-                    </button>
-                    <button class="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors text-sm">
-                        <em class="ni ni-printer mr-1.5 text-xs"></em>Facture patient
-                    </button>
-                    <a href="{{ route('secretaire.prescription.index') }}" 
-                       wire:navigate
-                       class="px-3 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors text-sm">
-                        <em class="ni ni-list mr-1.5 text-xs"></em>Voir toutes les prescriptions
-                    </a>
-                </div>
-            </div>
-        </div>
-    @endif
+    @include('livewire.secretaire.prescription.partials.confirmation') 
 
     {{-- NAVIGATION CLAVIER (Shortcuts) --}}
     <div x-data="{}" 
@@ -354,7 +284,26 @@
          class="hidden">
     </div>
 </div>
-
+@push('styles')
+<style>
+@media print {
+        body * {
+            visibility: hidden;
+        }
+        .ticket, .ticket * {
+            visibility: visible;
+        }
+        .ticket {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-width: 100%;
+            box-shadow: none;
+        }
+    }
+</style>
+@endpush
 {{-- SCRIPT POUR AMÉLIORER LA NAVIGATION --}}
 @push('scripts')
 <script>

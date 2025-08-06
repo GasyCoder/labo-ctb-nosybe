@@ -20,7 +20,6 @@ class PrescriptionIndex extends Component
     use WithPagination, AuthorizesRequests;
 
     public ?Prescription $prescription = null;
-    protected $paginationTheme = 'bootstrap';
 
     protected $queryString = [
         'search' => ['except' => ''],

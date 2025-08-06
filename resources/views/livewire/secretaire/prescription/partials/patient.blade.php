@@ -163,181 +163,53 @@
                     </div>
                     
                     {{-- CIVILITÉ - COMPACT ET LOGIQUE --}}
-                    <div class="space-y-2">
+                    <div class="space-y-1.5">
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            <em class="ni ni-users mr-1.5 text-slate-500 text-xs"></em>
                             Civilité <span class="text-red-500">*</span>
                         </label>
-                        <div class="grid grid-cols-4 gap-1.5">
-                            {{-- MADAME --}}
-                            <label class="block cursor-pointer group">
-                                <input type="radio" 
-                                       wire:model.live="civilite" 
-                                       value="Madame" 
-                                       name="civilite"
-                                       class="sr-only">
-                                <div class="p-2 border rounded-md text-center transition-all duration-150 
-                                           border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700
-                                           hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-slate-600
-                                           group-has-[:checked]:border-blue-500 group-has-[:checked]:bg-blue-100 dark:group-has-[:checked]:bg-blue-900/30
-                                           group-has-[:checked]:shadow-sm">
-                                    <div class="text-sm mb-0.5">👩</div>
-                                    <div class="text-xxs font-medium text-slate-600 dark:text-slate-400 
-                                               group-has-[:checked]:text-blue-700 dark:group-has-[:checked]:text-blue-300 group-has-[:checked]:font-semibold">
-                                        Mme
+                        <div class="flex space-x-2">
+                            @foreach(['Madame' => '👩 Mme', 'Monsieur' => '👨 M.', 'Mademoiselle' => '👧 Mlle', 'Enfant' => '👶 Enfant'] as $value => $label)
+                                <label class="flex-1 cursor-pointer">
+                                    <input type="radio" 
+                                           wire:model="civilite" 
+                                           value="{{ $value }}" 
+                                           class="sr-only peer">
+                                    <div class="w-full p-2 text-center border rounded-lg text-sm
+                                               peer-checked:border-{{ $isEditMode ? 'orange' : 'primary' }}-500 peer-checked:bg-{{ $isEditMode ? 'orange' : 'primary' }}-50 dark:peer-checked:bg-slate-700
+                                               border-gray-200 dark:border-slate-600">
+                                        {{ $label }}
                                     </div>
-                                </div>
-                            </label>
-
-                            {{-- MONSIEUR --}}
-                            <label class="block cursor-pointer group">
-                                <input type="radio" 
-                                       wire:model.live="civilite" 
-                                       value="Monsieur" 
-                                       name="civilite"
-                                       class="sr-only">
-                                <div class="p-2 border rounded-md text-center transition-all duration-150 
-                                           border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700
-                                           hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-slate-600
-                                           group-has-[:checked]:border-blue-500 group-has-[:checked]:bg-blue-100 dark:group-has-[:checked]:bg-blue-900/30
-                                           group-has-[:checked]:shadow-sm">
-                                    <div class="text-sm mb-0.5">👨</div>
-                                    <div class="text-xxs font-medium text-slate-600 dark:text-slate-400 
-                                               group-has-[:checked]:text-blue-700 dark:group-has-[:checked]:text-blue-300 group-has-[:checked]:font-semibold">
-                                        M.
-                                    </div>
-                                </div>
-                            </label>
-
-                            {{-- MADEMOISELLE --}}
-                            <label class="block cursor-pointer group">
-                                <input type="radio" 
-                                       wire:model.live="civilite" 
-                                       value="Mademoiselle" 
-                                       name="civilite"
-                                       class="sr-only">
-                                <div class="p-2 border rounded-md text-center transition-all duration-150 
-                                           border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700
-                                           hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-slate-600
-                                           group-has-[:checked]:border-blue-500 group-has-[:checked]:bg-blue-100 dark:group-has-[:checked]:bg-blue-900/30
-                                           group-has-[:checked]:shadow-sm">
-                                    <div class="text-sm mb-0.5">⭐</div>
-                                    <div class="text-xxs font-medium text-slate-600 dark:text-slate-400 
-                                               group-has-[:checked]:text-blue-700 dark:group-has-[:checked]:text-blue-300 group-has-[:checked]:font-semibold">
-                                        Mlle
-                                    </div>
-                                </div>
-                            </label>
-
-                            {{-- ENFANT --}}
-                            <label class="block cursor-pointer group">
-                                <input type="radio" 
-                                       wire:model.live="civilite" 
-                                       value="Enfant" 
-                                       name="civilite"
-                                       class="sr-only">
-                                <div class="p-2 border rounded-md text-center transition-all duration-150 
-                                           border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700
-                                           hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-slate-600
-                                           group-has-[:checked]:border-blue-500 group-has-[:checked]:bg-blue-100 dark:group-has-[:checked]:bg-blue-900/30
-                                           group-has-[:checked]:shadow-sm">
-                                    <div class="text-sm mb-0.5">👶</div>
-                                    <div class="text-xxs font-medium text-slate-600 dark:text-slate-400 
-                                               group-has-[:checked]:text-blue-700 dark:group-has-[:checked]:text-blue-300 group-has-[:checked]:font-semibold">
-                                        Enfant
-                                    </div>
-                                </div>
-                            </label>
+                                </label>
+                            @endforeach
                         </div>
-                        @error('civilite') 
-                            <p class="flex items-center text-red-600 dark:text-red-400 text-xs mt-1">
-                                <em class="ni ni-alert-circle mr-1 text-xs"></em>{{ $message }}
-                            </p> 
-                        @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        {{-- DATE DE NAISSANCE --}}
-                        <div class="space-y-1.5">
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                <em class="ni ni-calendar mr-1.5 text-slate-500 text-xs"></em>
-                                Date de naissance
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <em class="ni ni-calendar text-slate-400 dark:text-slate-500 text-sm"></em>
-                                </div>
-                                <input type="text" 
-                                       wire:model="date_naissance" 
-                                       placeholder="jj/mm/aaaa"
-                                       class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
-                                              bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                              focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'primary' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'primary' }}-500 
-                                              transition-all duration-200
-                                              hover:border-{{ $isEditMode ? 'orange' : 'primary' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'primary' }}-600
-                                              @error('date_naissance') border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500 @enderror">
-                            </div>
-                            @error('date_naissance') 
-                                <p class="flex items-center text-red-600 dark:text-red-400 text-xs mt-1">
-                                    <em class="ni ni-alert-circle mr-1 text-xs"></em>{{ $message }}
-                                </p> 
-                            @enderror
-                        </div>
-
+                    {{-- TÉLÉPHONE ET EMAIL --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {{-- TÉLÉPHONE --}}
                         <div class="space-y-1.5">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                <em class="ni ni-call mr-1.5 text-slate-500 text-xs"></em>
                                 Téléphone
                             </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <em class="ni ni-call text-slate-400 dark:text-slate-500 text-sm"></em>
-                                </div>
-                                <input type="tel" 
-                                       wire:model="telephone" 
-                                       placeholder="+261 34 12 345 67"
-                                       class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
-                                              bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                              placeholder-slate-400 dark:placeholder-slate-500
-                                              focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'primary' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'primary' }}-500 
-                                              transition-all duration-200
-                                              hover:border-{{ $isEditMode ? 'orange' : 'primary' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'primary' }}-600
-                                              @error('telephone') border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500 @enderror">
-                            </div>
-                            @error('telephone') 
-                                <p class="flex items-center text-red-600 dark:text-red-400 text-xs mt-1">
-                                    <em class="ni ni-alert-circle mr-1 text-xs"></em>{{ $message }}
-                                </p> 
-                            @enderror
+                            <input type="tel" 
+                                   wire:model="telephone" 
+                                   placeholder="+261 34 12 345 67"
+                                   class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
+                                          bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
+                                          focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'primary' }}-500">
                         </div>
                         
                         {{-- EMAIL --}}
                         <div class="space-y-1.5">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                <em class="ni ni-emails mr-1.5 text-slate-500 text-xs"></em>
                                 Email
                             </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <em class="ni ni-emails text-slate-400 dark:text-slate-500 text-sm"></em>
-                                </div>
-                                <input type="email" 
-                                       wire:model="email" 
-                                       placeholder="exemple@email.com"
-                                       class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
-                                              bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                              placeholder-slate-400 dark:placeholder-slate-500
-                                              focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'primary' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'primary' }}-500 
-                                              transition-all duration-200
-                                              hover:border-{{ $isEditMode ? 'orange' : 'primary' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'primary' }}-600
-                                              @error('email') border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500 @enderror">
-                            </div>
-                            @error('email') 
-                                <p class="flex items-center text-red-600 dark:text-red-400 text-xs mt-1">
-                                    <em class="ni ni-alert-circle mr-1 text-xs"></em>{{ $message }}
-                                </p> 
-                            @enderror
+                            <input type="email" 
+                                   wire:model="email" 
+                                   placeholder="email@exemple.com"
+                                   class="w-full px-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
+                                          bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
+                                          focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'primary' }}-500">
                         </div>
                     </div>
                     

@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Patient extends Model
 {
     use HasFactory, SoftDeletes;
     
     protected $fillable = [
-        'nom', 'prenom', 'civilite', 'date_naissance', 'telephone', 'email', 'statut'
+        'nom', 'prenom', 'civilite', 'telephone', 'email', 'statut'
     ];
 
     // Relations
@@ -34,5 +35,11 @@ class Patient extends Model
     public function scopeNouveaux($query)
     {
         return $query->where('statut', 'NOUVEAU');
+    }
+
+    public function getLatestAgeAttribute()
+    {
+        $latestPrescription = $this->prescriptions()->latest()->first();
+        return $latestPrescription ? $latestPrescription->age : null;
     }
 }

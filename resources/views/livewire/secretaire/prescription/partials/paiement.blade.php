@@ -319,7 +319,7 @@
                                     </label>
 
                                     <!-- Mobile Money -->
-                                    <input type="radio" id="mode_mobilemoney" wire:model.live="modePaiement" value="MOBILE_MONEY" class="hidden peer/mobilemoney">
+                                    <input type="radio" id="mode_mobilemoney" wire:model.live="modePaiement" value="MOBILEMONEY" class="hidden peer/mobilemoney">
                                     <label for="mode_mobilemoney"
                                         class="peer-checked/mobilemoney:bg-yellow-400 peer-checked/mobilemoney:text-white
                                             peer-checked/mobilemoney:ring-2 peer-checked/mobilemoney:ring-yellow-300
@@ -327,7 +327,7 @@
                                             rounded-lg px-2 py-1.5 cursor-pointer flex items-center gap-1.5
                                             transition-colors text-xs
                                             text-slate-700 dark:text-slate-300 hover:border-yellow-400">
-                                        📱 Mobile
+                                        📱 MobileMoney
                                     </label>
                                 </div>
                             </div>
