@@ -271,7 +271,7 @@ class PrescriptionIndex extends Component
         $search = '%' . $this->search . '%';
 
         $baseQuery = Prescription::with([
-            'patient:id,reference,nom,prenom,telephone',
+            'patient:id,nom,prenom,telephone',
             'prescripteur:id,nom',
             'analyses',
             'resultats'
@@ -281,6 +281,7 @@ class PrescriptionIndex extends Component
         $searchCondition = function ($query) use ($search) {
             $query->where('renseignement_clinique', 'like', $search)
                 ->orWhere('status', 'like', $search)
+                ->orWhere('reference', 'like', $search) // ✅ Recherche dans prescriptions.reference
                 ->orWhereHas('patient', function ($q) use ($search) {
                     $q->where('nom', 'like', $search)
                         ->orWhere('prenom', 'like', $search)
