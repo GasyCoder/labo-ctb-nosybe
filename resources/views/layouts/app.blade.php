@@ -9,7 +9,7 @@
         <title>@isset($title) {{ $title }} | @endisset{{ config('app.desc') }}</title>
 
         @vite(['resources/css/app.css'])
-
+        {!! ToastMagic::styles() !!}
     </head>  
     <body class="bg-gray-50 font-body text-sm leading-relaxed text-slate-600 dark:text-slate-300 dark:bg-gray-1000 font-normal min-w-[320px]" dir="{{ gcs('direction', 'ltr') }}">
         <div class="nk-app-root overflow-hidden">
@@ -19,7 +19,7 @@
                     
                     @include('layouts.partials.header')
 
-                    <div id="pagecontent" class="nk-content mt-16  px-1.5 sm:px-5 py-6 sm:py-8">
+                    <div id="pagecontent" class="nk-content mt-8  px-1.5 sm:px-5 py-6 sm:py-8">
                         <div class="container {{ isset($container) ? '' : ' max-w-none' }}">
                             {{ $slot }}
                         </div>
@@ -32,6 +32,7 @@
         </div><!-- root -->
         @stack('modals')
         @include('layouts.partials.off-canvas')
+        {!! ToastMagic::scripts() !!}
         <!-- JavaScript -->
         @vite(['resources/js/scripts.js'])
         @stack('scripts')

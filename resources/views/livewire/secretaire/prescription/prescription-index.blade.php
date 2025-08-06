@@ -7,7 +7,7 @@
                 Liste des prescriptions
             </h1>
         </div>
-        <a href="{{ route('secretaire.add-prescription') }}"
+        <a href="{{ route('secretaire.prescription.create') }}"
            wire:navigate
            class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-200 text-sm font-medium">
             <em class="ni ni-plus mr-2 text-base"></em> Nouvelle prescription
@@ -69,7 +69,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="relative flex-shrink-0 flex items-center justify-center text-xxs text-white bg-primary-600 h-7 w-7 rounded-full font-medium">
-                                        <span>{{ strtoupper(substr($prescription->prescripteur->nom, 2, 3)) }}</span>
+                                        <span>{{ strtoupper(substr($prescription->prescripteur->nom, 3, 3)) }}</span>
                                     </div>
                                     <span>{{ $prescription->prescripteur->nom }}</span>
                                 </div>
@@ -92,13 +92,7 @@
                             </td>
                             <td class="px-6 py-4">{{ $prescription->created_at ? $prescription->created_at->diffForHumans() : 'N/A' }}</td>
                             <td class="px-6 py-4 flex gap-2">
-                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
-                                   wire:navigate
-                                   class="p-1 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-200"
-                                   aria-label="Voir la prescription">
-                                    <em class="ni ni-user text-base"></em>
-                                </a>
-                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
+                                <a href="{{ route('secretaire.prescription.edit', $prescription->id) }}"
                                    wire:navigate
                                    class="p-1 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-200"
                                    aria-label="Modifier la prescription">

@@ -14,13 +14,15 @@ use App\Livewire\Admin\Antibiotiques;
 use App\Livewire\Secretaire\Patients;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Secretaire\Paiements;
-use App\Livewire\Admin\BacterieFamilies; // ✅ Corrigé : BacterieFamilies au lieu de BacteryFamilies
+use App\Livewire\Secretaire\PatientDetail;
 use App\Livewire\Secretaire\Prescripteurs;
 use App\Http\Controllers\ProfileController;
 use App\Livewire\Biologiste\IndexBiologiste;
 use App\Livewire\Techniciens\IndexTechniciens;
 use App\Livewire\Secretaire\Prescription\AddPrescription;
+use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
+use App\Livewire\Admin\BacterieFamilies; // ✅ Corrigé : BacterieFamilies au lieu de BacteryFamilies
 
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
@@ -56,11 +58,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // ============================================
 Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')->name('secretaire.')->group(function () {
     Route::get('prescriptions', PrescriptionIndex::class)->name('prescriptions');
-    Route::get('nouvel-prescription', AddPrescription::class)->name('add-prescription');
-    Route::get('prescriptions/{prescription}/edit', AddPrescription::class)->name('prescriptions.edit');
-    Route::get('examens', Examens::class)->name('examens');
-    Route::get('paiements', Paiements::class)->name('paiements');
+    Route::get('nouvel-prescription', AddPrescription::class)->name('prescription.create');
+    Route::get('/prescriptions/edit/{prescriptionId}', EditPrescription::class)->name('prescription.edit');
     Route::get('patients', Patients::class)->name('patients');
+    Route::get('/secretaire/patients/{patient}', PatientDetail::class)->name('patient.detail');
     Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
 });
 

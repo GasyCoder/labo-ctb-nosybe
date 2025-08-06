@@ -39,7 +39,7 @@
                             <h6 class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 text-slate-400 dark:text-slate-300 whitespace-nowrap uppercase font-bold text-xs tracking-relaxed leading-tight">Secrétaire</h6>
                         </li>
 
-                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.prescriptions', 'secretaire.add-prescription') ? ' active' : '' }} group/item">
+                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.prescriptions', 'secretaire.add-prescription', 'secretaire.prescription.edit') ? ' active' : '' }} group/item">
                             <a href="{{ route('secretaire.prescriptions') }}" class="nk-menu-link flex relative items-center align-middle py-2.5 ps-6 pe-10 font-heading font-bold tracking-snug group">
                                 <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                     <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-edit-alt"></em>
@@ -50,7 +50,7 @@
                             </a>
                         </li>
 
-                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.patients') ? ' active' : '' }} group/item">
+                        <li class="nk-menu-item py-0.5{{ request()->routeIs('secretaire.patients', 'secretaire.patient.detail') ? ' active' : '' }} group/item">
                             <a href="{{ route('secretaire.patients') }}" class="nk-menu-link flex relative items-center align-middle py-2.5 ps-6 pe-10 font-heading font-bold tracking-snug group">
                                 <span class="font-normal tracking-normal w-9 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                     <em class="text-2xl leading-none text-current transition-all duration-300 icon ni ni-users"></em>

@@ -22,7 +22,6 @@ class AnalysesSeeder extends Seeder
         $data = [
             [
                 'code' => 'NFS',
-                'name' => 'Numération Formule Sanguine',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'HEMOGRAMME',
@@ -39,7 +38,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'ASAT',
-                'name' => 'Aspartate Aminotransférase',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'ASAT',
@@ -56,7 +54,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'ALAT',
-                'name' => 'Alanine Aminotransférase',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'ALAT',
@@ -73,7 +70,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'GGT',
-                'name' => 'Gamma-Glutamyl Transférase',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'GGT',
@@ -90,7 +86,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'BILI',
-                'name' => 'Bilirubine Totale',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'BILIRUBINE',
@@ -107,7 +102,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'BT',
-                'name' => 'Bilirubine Totale',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BILI',
                 'designation' => 'Bilirubine totale',
@@ -124,7 +118,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'BC',
-                'name' => 'Bilirubine Conjuguée',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BILI',
                 'designation' => 'Bilirubine conjuguée (directe)',
@@ -141,7 +134,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'PAL',
-                'name' => 'Phosphatase Alcaline',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Phosphatase alcaline',
@@ -158,7 +150,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'PSA total',
-                'name' => 'Antigène Spécifique de la Prostate',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'PSA total',
@@ -175,7 +166,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Fe',
-                'name' => 'Fer Sérique',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Fer sérique',
@@ -192,7 +182,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'CHOL',
-                'name' => 'Bilan Lipidique',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'BILAN LIPIDIQUE',
@@ -209,7 +198,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'CholTotal',
-                'name' => 'Cholestérol Total',
                 'level' => 'NORMAL',
                 'parent_abr' => 'CHOL',
                 'designation' => 'Cholestérol Total',
@@ -226,7 +214,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'CHOL_HDL',
-                'name' => 'HDL Cholestérol',
                 'level' => 'NORMAL',
                 'parent_abr' => 'CHOL',
                 'designation' => 'HDL Cholestérol',
@@ -243,7 +230,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'COL_LDL',
-                'name' => 'LDL Cholestérol',
                 'level' => 'NORMAL',
                 'parent_abr' => 'CHOL',
                 'designation' => 'LDL Cholestérol',
@@ -260,7 +246,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'TRIG',
-                'name' => 'Triglycérides',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Triglycéridémie',
@@ -277,7 +262,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'T4',
-                'name' => 'Thyroxine Libre',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'T4 libre',
@@ -294,7 +278,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'IONO',
-                'name' => 'Ionogramme Sanguin',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'IONOGRAMME SANGUIN',
@@ -311,7 +294,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Na',
-                'name' => 'Sodium',
                 'level' => 'NORMAL',
                 'parent_abr' => 'IONO',
                 'designation' => 'Sodium',
@@ -328,7 +310,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'K',
-                'name' => 'Potassium',
                 'level' => 'NORMAL',
                 'parent_abr' => 'IONO',
                 'designation' => 'Potassium',
@@ -345,7 +326,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Cl',
-                'name' => 'Chlore',
                 'level' => 'NORMAL',
                 'parent_abr' => 'IONO',
                 'designation' => 'Chlore',
@@ -362,7 +342,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'BU',
-                'name' => 'Biochimie Urinaire',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'BIOCHIMIE URINAIRE',
@@ -379,7 +358,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'protéine-bu',
-                'name' => 'Protéinurie',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Protéinurie',
@@ -396,7 +374,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Glucose-u',
-                'name' => 'Glucose Urinaire',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Glucose',
@@ -413,7 +390,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Acétone',
-                'name' => 'Acétone Urinaire',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Acétone',
@@ -430,7 +406,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Nitrites',
-                'name' => 'Nitrites Urinaires',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Nitrites',
@@ -447,7 +422,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Sang-u',
-                'name' => 'Sang dans les Urines',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Sang',
@@ -464,7 +438,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Urobiline',
-                'name' => 'Urobiline Urinaire',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Urobiline',
@@ -481,7 +454,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Leucocyte-u',
-                'name' => 'Leucocytes Urinaires',
                 'level' => 'NORMAL',
                 'parent_abr' => 'BU',
                 'designation' => 'Leucocyte',
@@ -498,7 +470,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'HG',
-                'name' => 'Hémoglobine',
                 'level' => 'NORMAL',
                 'parent_abr' => 'NFS',
                 'designation' => 'Hémoglobine',
@@ -515,7 +486,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'HEMATOCRITE',
-                'name' => 'Hématocrite',
                 'level' => 'NORMAL',
                 'parent_abr' => 'NFS',
                 'designation' => 'Hématocrite',
@@ -532,7 +502,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'VGM',
-                'name' => 'Volume Globulaire Moyen',
                 'level' => 'NORMAL',
                 'parent_abr' => 'NFS',
                 'designation' => 'VGM',
@@ -549,7 +518,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'GB0',
-                'name' => 'Globules Blancs',
                 'level' => 'CHILD',
                 'parent_abr' => null,
                 'designation' => 'Globules blancs',
@@ -566,7 +534,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'TCMH',
-                'name' => 'Teneur Corpusculaire Moyenne en Hémoglobine',
                 'level' => 'NORMAL',
                 'parent_abr' => 'NFS',
                 'designation' => 'TCMH',
@@ -583,7 +550,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'FT',
-                'name' => 'Ferritine',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'FT',
@@ -600,7 +566,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'HB',
-                'name' => 'Hépatite B',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'HEPATITE  B',
@@ -617,7 +582,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Ag HBs',
-                'name' => 'Antigène HBs',
                 'level' => 'NORMAL',
                 'parent_abr' => 'HB',
                 'designation' => 'Antigène HBs',
@@ -634,7 +598,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Ag HBe',
-                'name' => 'Antigène HBe',
                 'level' => 'NORMAL',
                 'parent_abr' => 'HB',
                 'designation' => 'Antigène HBe',
@@ -651,7 +614,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'AcAnti-HBc',
-                'name' => 'Anticorps anti-HBc',
                 'level' => 'NORMAL',
                 'parent_abr' => 'HB',
                 'designation' => 'Anticorps anti-HBc',
@@ -668,7 +630,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Ac antiHBe',
-                'name' => 'Anticorps anti-HBe',
                 'level' => 'NORMAL',
                 'parent_abr' => 'HB',
                 'designation' => 'Anticorps anti-HBe',
@@ -685,7 +646,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Ac antiHBs',
-                'name' => 'Anticorps anti-HBs',
                 'level' => 'NORMAL',
                 'parent_abr' => 'HB',
                 'designation' => 'Anticorps anti-HBs',
@@ -702,7 +662,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'KAOP',
-                'name' => 'Examen Parasitologique des Selles',
                 'level' => 'PARENT',
                 'parent_abr' => null,
                 'designation' => 'Recherche des Kystes, Oeufs, Parasites dans les selles',
@@ -719,7 +678,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'SKMacroscopique',
-                'name' => 'Aspect Macroscopique des Selles',
                 'level' => 'NORMAL',
                 'parent_abr' => 'KAOP',
                 'designation' => 'Aspect macroscopique',
@@ -736,7 +694,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'GLY',
-                'name' => 'Glycémie',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Glycémie',
@@ -753,7 +710,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'CREAT',
-                'name' => 'Créatinine',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Créatininémie',
@@ -770,7 +726,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'CA',
-                'name' => 'Calcémie',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Calcémie',
@@ -787,7 +742,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'MG',
-                'name' => 'Magnésémie',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Magnésémie',
@@ -804,7 +758,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'URIC',
-                'name' => 'Acide Urique',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Uricémie',
@@ -821,7 +774,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Protidémie',
-                'name' => 'Protidémie',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Protidémie',
@@ -838,7 +790,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Alb',
-                'name' => 'Albumine',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Albuminémie',
@@ -855,7 +806,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Urée',
-                'name' => 'Urée Sanguine',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Azotémie',
@@ -872,7 +822,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Amylasémie',
-                'name' => 'Amylase Sérique',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Amylasémie',
@@ -889,7 +838,6 @@ class AnalysesSeeder extends Seeder
             ],
             [
                 'code' => 'Amyl',
-                'name' => 'Amylase Urinaire',
                 'level' => 'NORMAL',
                 'parent_abr' => null,
                 'designation' => 'Amylasurie',
@@ -914,7 +862,6 @@ class AnalysesSeeder extends Seeder
             if ($analyse['level'] === 'PARENT') {
                 $id = DB::table('analyses')->insertGetId([
                     'code' => $analyse['code'],
-                    'name' => $analyse['name'],
                     'level' => $analyse['level'],
                     'parent_id' => null,
                     'designation' => $analyse['designation'],
@@ -948,7 +895,6 @@ class AnalysesSeeder extends Seeder
 
                 DB::table('analyses')->insert([
                     'code' => $analyse['code'],
-                    'name' => $analyse['name'],
                     'level' => $analyse['level'],
                     'parent_id' => $parentId,
                     'designation' => $analyse['designation'],

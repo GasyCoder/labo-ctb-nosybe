@@ -11,12 +11,28 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
     
     protected $fillable = [
-        'reference', 'nom', 'prenom', 'sexe', 'telephone', 'email', 'is_fidele'
+        'reference', 'nom', 'prenom', 'sexe', 'telephone', 'email', 'statut'
     ];
 
-    // Optionnel : un scope pour filtrer les fidèles
+    // Relations
+    public function prescriptions()
+    {
+        return $this->hasMany(Prescription::class);
+    }
+
+    // Optionnel : des scopes pour filtrer par statut
     public function scopeFideles($query)
     {
-        return $query->where('is_fidele', true);
+        return $query->where('statut', 'FIDELE');
+    }
+
+    public function scopeVip($query)
+    {
+        return $query->where('statut', 'VIP');
+    }
+
+    public function scopeNouveaux($query)
+    {
+        return $query->where('statut', 'NOUVEAU');
     }
 }

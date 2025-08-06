@@ -1,15 +1,19 @@
 {{-- livewire.secretaire.prescription.partials.clinique --}}
 @if($etape === 'clinique')
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 overflow-hidden">
-        {{-- HEADER SECTION --}}
-        <div class="bg-gradient-to-r from-cyan-50 to-blue-100 dark:from-slate-700 dark:to-slate-800 px-6 py-5 border-b border-gray-200 dark:border-slate-600">
+        {{-- HEADER SECTION ADAPTATIF --}}
+        <div class="bg-gradient-to-r {{ $isEditMode ? 'from-orange-50 to-amber-100' : 'from-cyan-50 to-blue-100' }} dark:from-slate-700 dark:to-slate-800 px-6 py-5 border-b border-gray-200 dark:border-slate-600">
             <div class="flex items-center">
-                <div class="w-12 h-12 bg-cyan-600 dark:bg-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                <div class="w-12 h-12 {{ $isEditMode ? 'bg-orange-600' : 'bg-cyan-600' }} dark:bg-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
                     <em class="ni ni-notes text-white text-xl"></em>
                 </div>
                 <div class="ml-4">
-                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">Informations Cliniques</h2>
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Renseignements médicaux et prescription</p>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">
+                        {{ $isEditMode ? 'Modification Informations Cliniques' : 'Informations Cliniques' }}
+                    </h2>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">
+                        {{ $isEditMode ? 'Modifier les renseignements médicaux et prescription' : 'Renseignements médicaux et prescription' }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -20,7 +24,7 @@
                 {{-- PRESCRIPTEUR --}}
                 <div class="space-y-3">
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        <em class="ni ni-user-md mr-2 text-cyan-500"></em>
+                        <em class="ni ni-user-md mr-2 {{ $isEditMode ? 'text-orange-500' : 'text-cyan-500' }}"></em>
                         Prescripteur <span class="text-red-500">*</span>
                     </label>
                     <div class="relative">
@@ -30,9 +34,9 @@
                         <select wire:model="prescripteurId" 
                                 class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl 
                                        bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                       focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 
+                                       focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'cyan' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'cyan' }}-500 
                                        transition-all duration-200 shadow-sm
-                                       hover:border-cyan-300 dark:hover:border-cyan-600
+                                       hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-600
                                        @error('prescripteurId') border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500 @enderror">
                             <option value="" class="text-slate-400">Sélectionner un prescripteur...</option>
                             @foreach($prescripteurs as $prescripteur)
@@ -65,9 +69,9 @@
                         <select wire:model="patientType" 
                                 class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl 
                                        bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                       focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 
+                                       focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'cyan' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'cyan' }}-500 
                                        transition-all duration-200 shadow-sm
-                                       hover:border-cyan-300 dark:hover:border-cyan-600">
+                                       hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-600">
                             <option value="EXTERNE" class="text-slate-900 dark:text-slate-100">🏠 Externe</option>
                             <option value="HOSPITALISE" class="text-slate-900 dark:text-slate-100">🏥 Hospitalisé</option>
                             <option value="URGENCE-JOUR" class="text-slate-900 dark:text-slate-100">🚨 Urgence Jour</option>
@@ -101,18 +105,18 @@
                                    class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl 
                                           bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                                           placeholder-slate-400 dark:placeholder-slate-500
-                                          focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 
+                                          focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'cyan' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'cyan' }}-500 
                                           transition-all duration-200 shadow-sm
-                                          hover:border-cyan-300 dark:hover:border-cyan-600
+                                          hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-600
                                           @error('age') border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500 @enderror">
                         </div>
                         <div class="relative min-w-[100px]">
                             <select wire:model="uniteAge" 
                                     class="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl 
                                            bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                           focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 
+                                           focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'cyan' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'cyan' }}-500 
                                            transition-all duration-200 shadow-sm
-                                           hover:border-cyan-300 dark:hover:border-cyan-600">
+                                           hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-600">
                                 <option value="Ans">Ans</option>
                                 <option value="Mois">Mois</option>
                                 <option value="Jours">Jours</option>
@@ -147,9 +151,9 @@
                                class="w-full pl-12 pr-16 py-3 border border-gray-300 dark:border-slate-600 rounded-xl 
                                       bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                                       placeholder-slate-400 dark:placeholder-slate-500
-                                      focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 
+                                      focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'cyan' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'cyan' }}-500 
                                       transition-all duration-200 shadow-sm
-                                      hover:border-cyan-300 dark:hover:border-cyan-600">
+                                      hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-600">
                         <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                             <span class="text-sm font-medium text-slate-500 dark:text-slate-400">kg</span>
                         </div>
@@ -174,9 +178,9 @@
                               class="w-full px-4 py-4 border border-gray-300 dark:border-slate-600 rounded-xl 
                                      bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                                      placeholder-slate-400 dark:placeholder-slate-500
-                                     focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 
+                                     focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'cyan' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'cyan' }}-500 
                                      transition-all duration-200 shadow-sm resize-none
-                                     hover:border-cyan-300 dark:hover:border-cyan-600"></textarea>
+                                     hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'cyan' }}-600"></textarea>
                     <div class="absolute top-4 right-4 text-xs text-slate-400 dark:text-slate-500 pointer-events-none">
                         <em class="ni ni-edit"></em>
                     </div>
@@ -205,30 +209,31 @@
                     </div>
                     <div>
                         <h4 class="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">
-                            Conseils pour une prescription optimale
+                            {{ $isEditMode ? 'Conseils pour une modification optimale' : 'Conseils pour une prescription optimale' }}
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-indigo-700 dark:text-indigo-300">
                             <div class="flex items-center">
                                 <em class="ni ni-check-circle text-green-500 mr-2 flex-shrink-0"></em>
-                                <span>Vérifiez les allergies connues</span>
+                                <span>{{ $isEditMode ? 'Vérifiez les nouvelles allergies' : 'Vérifiez les allergies connues' }}</span>
                             </div>
                             <div class="flex items-center">
                                 <em class="ni ni-check-circle text-green-500 mr-2 flex-shrink-0"></em>
-                                <span>Notez les traitements en cours</span>
+                                <span>{{ $isEditMode ? 'Mettez à jour les traitements' : 'Notez les traitements en cours' }}</span>
                             </div>
                             <div class="flex items-center">
                                 <em class="ni ni-check-circle text-green-500 mr-2 flex-shrink-0"></em>
-                                <span>Précisez la durée des symptômes</span>
+                                <span>{{ $isEditMode ? 'Adaptez l\'évolution clinique' : 'Précisez la durée des symptômes' }}</span>
                             </div>
                             <div class="flex items-center">
                                 <em class="ni ni-check-circle text-green-500 mr-2 flex-shrink-0"></em>
-                                <span>Indiquez l'intensité de la douleur</span>
+                                <span>{{ $isEditMode ? 'Réajustez si nécessaire' : 'Indiquez l\'intensité de la douleur' }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
+
             {{-- BOUTONS DE NAVIGATION --}}
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-gray-200 dark:border-slate-600">
                 <button wire:click="allerEtape('patient')" 
@@ -243,18 +248,18 @@
                 <div class="flex items-center text-sm text-slate-500 dark:text-slate-400">
                     <div class="flex space-x-2">
                         <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <div class="w-2 h-2 bg-cyan-500 rounded-full"></div>
+                        <div class="w-2 h-2 {{ $isEditMode ? 'bg-orange-500' : 'bg-cyan-500' }} rounded-full"></div>
                         <div class="w-2 h-2 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
                     </div>
-                    <span class="ml-2">Étape 2/3</span>
+                    <span class="ml-2">Étape 2/7</span>
                 </div>
                 
                 <button wire:click="validerInformationsCliniques" 
-                        class="w-full sm:w-auto inline-flex items-center px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-700 
-                        hover:from-cyan-700 hover:to-blue-800 text-white font-semibold rounded-xl 
-                        shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                    <em class="ni ni-flask mr-2"></em>
-                    Continuer vers Analyses
+                        class="w-full sm:w-auto inline-flex items-center px-8 py-3 {{ $isEditMode ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' : 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-500' }} 
+                        text-white font-semibold rounded-xl transition-colors
+                        focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800
+                        disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ $isEditMode ? 'Modifier les Analyses' : 'Continuer vers Analyses' }}
                     <em class="ni ni-arrow-right ml-2"></em>
                 </button>
             </div>

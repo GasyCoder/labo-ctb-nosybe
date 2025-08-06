@@ -20,6 +20,33 @@
 @import "./custom/keyframes.css";
 @import "./custom/font-faces.css";
 
+body > #flasher-container,
+body > .fl-wrapper {
+  position: fixed !important;
+  top: calc(4rem + 1rem) !important; /* ajuste selon hauteur navbar */
+  right: 1.25rem !important;
+  z-index: 9999 !important; /* ou encore plus élevé */
+}
+
+
+:root {
+  /* Base appearance */
+  --amber-bg-light: #ffffff;          /* Light mode background */
+  --amber-bg-dark: #1e293b;           /* Dark mode background */
+  --amber-text-light: #4b5563;        /* Light mode text */
+  --amber-text-dark: #f1f5f9;         /* Dark mode text */
+  --amber-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Light mode shadow */
+  --amber-border-radius: 0.4rem;      /* Border radius */
+
+  /* Type-specific colors */
+  --amber-success: #10b981;           /* Success color */
+  --amber-info: #3b82f6;              /* Info color */
+  --amber-warning: #f59e0b;           /* Warning color */
+  --amber-error: #ef4444;             /* Error color */
+  
+  /* Dark mode shadows */
+  --amber-shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.25);
+}
 
 .stripe{
     background-image: linear-gradient(
