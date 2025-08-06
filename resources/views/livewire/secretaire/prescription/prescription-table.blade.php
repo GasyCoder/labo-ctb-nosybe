@@ -18,9 +18,7 @@
             @forelse($prescriptions as $prescription)
                 <tr class="border-t border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-200">
                     {{-- Référence --}}
-                    <td class="px-6 py-4 font-medium text-slate-900 dark:text-slate-100">
-                        {{ $prescription->patient->reference ?? 'N/A' }}
-                    </td>
+                    <td class="px-6 py-4 font-medium">{{ $prescription->patient->reference }}</td>
 
                     {{-- Patient --}}
                     <td class="px-6 py-4">
@@ -43,7 +41,7 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="relative flex-shrink-0 flex items-center justify-center text-xs text-white bg-primary-600 h-8 w-8 rounded-full font-medium">
-                                <span>{{ strtoupper(substr($prescription->prescripteur->nom ?? 'Dr', 0, 2)) }}</span>
+                                <span>{{ strtoupper(substr($prescription->prescripteur->nom ?? '', 3, 3)) }}</span>
                             </div>
                             <span class="text-slate-900 dark:text-slate-100">{{ $prescription->prescripteur->nom ?? 'N/A' }}</span>
                         </div>
@@ -100,13 +98,7 @@
                     @if(isset($showActions) && $showActions)
                         <td class="px-6 py-4">
                             <div class="flex gap-2">
-                                <a href="{{ route('secretaire.prescriptions.show', $prescription->id) }}"
-                                   wire:navigate
-                                   class="p-2 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-all duration-200"
-                                   title="Voir la prescription">
-                                    <em class="ni ni-eye text-base"></em>
-                                </a>
-                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
+                                <a href="{{ route('secretaire.prescription.edit', $prescription->id) }}"
                                    wire:navigate
                                    class="p-2 text-slate-600 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
                                    title="Modifier la prescription">
@@ -167,7 +159,7 @@
                 sur {{ $prescriptions->total() }} résultats
             </div>
             <div class="flex space-x-1">
-                {{ $prescriptions->links('pagination::tailwind') }}
+                {{ $prescriptions->links() }}
             </div>
         </div>
     </div>
