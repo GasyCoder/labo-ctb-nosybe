@@ -10,6 +10,15 @@ class Prescription extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Constantes pour les statuts
+    const STATUS_EN_ATTENTE = 'EN_ATTENTE';
+    const STATUS_EN_COURS = 'EN_COURS';
+    const STATUS_TERMINE = 'TERMINE';
+    const STATUS_VALIDE = 'VALIDE';
+    const STATUS_A_REFAIRE = 'A_REFAIRE';
+    const STATUS_ARCHIVE = 'ARCHIVE';
+    const STATUS_PRELEVEMENTS_GENERES = 'PRELEVEMENTS_GENERES';
+
     protected $fillable = [
         'secretaire_id',
         'patient_id',
@@ -20,7 +29,7 @@ class Prescription extends Model
         'poids',
         'renseignement_clinique',
         'remise',
-        'is_archive',
+        'is_archive', // Si vous ajoutez la colonne
         'status',
     ];
 
@@ -28,8 +37,10 @@ class Prescription extends Model
     protected $casts = [
         'remise' => 'decimal:2',
         'poids' => 'decimal:2',
+        'is_archive' => 'boolean',
     ];
 
+    // RELATIONS
     public function secretaire()
     {
         return $this->belongsTo(User::class, 'secretaire_id');
@@ -52,6 +63,16 @@ class Prescription extends Model
             ->withTimestamps();
     }
 
+    public function resultats()
+    {
+        return $this->hasManyThrough(Resultat::class, Analyse::class, 'id', 'analyse_id', 'id', 'id')
+            ->whereIn('analyse_id', function ($query) {
+                $query->select('analyse_id')
+                    ->from('prescription_analyse')
+                    ->where('prescription_id', $this->id);
+            });
+    }
+
     public function tubes()
     {
         return $this->hasMany(Tube::class);
@@ -60,8 +81,8 @@ class Prescription extends Model
     public function prelevements()
     {
         return $this->belongsToMany(Prelevement::class, 'prelevement_prescription')
-                    ->withPivot(['prix_unitaire', 'quantite', 'is_payer', 'type_tube_requis', 'volume_requis_ml', 'tubes_generes', 'tubes_generes_at'])
-                    ->withTimestamps();
+            ->withPivot(['prix_unitaire', 'quantite', 'is_payer', 'type_tube_requis', 'volume_requis_ml', 'tubes_generes', 'tubes_generes_at'])
+            ->withTimestamps();
     }
 
     public function paiements()
@@ -84,7 +105,7 @@ class Prescription extends Model
     {
         $total = $this->tubes->count();
         $termines = $this->tubes->where('statut', 'ANALYSE_TERMINEE')->count();
-        
+
         return $total > 0 ? round(($termines / $total) * 100) : 0;
     }
 
@@ -98,7 +119,7 @@ class Prescription extends Model
             // Si l'analyse a un parent et qu'on ne l'a pas encore traité
             if ($analyse->parent_id && !in_array($analyse->parent_id, $parentsTraites)) {
                 $parent = Analyse::find($analyse->parent_id);
-                
+
                 if ($parent && $parent->prix > 0) {
                     // Ajouter le prix du parent une seule fois
                     $total += $parent->prix;
@@ -106,7 +127,7 @@ class Prescription extends Model
                     continue;
                 }
             }
-            
+
             // Si pas de parent ou parent sans prix, utiliser le prix de l'analyse
             if (!$analyse->parent_id || !in_array($analyse->parent_id, $parentsTraites)) {
                 $total += $analyse->prix;
@@ -120,7 +141,7 @@ class Prescription extends Model
     public function getMontantTotalAttribute()
     {
         $montantAnalyses = $this->montant_analyses;
-        $montantPrelevements = $this->prelevements->sum(function($prelevement) {
+        $montantPrelevements = $this->prelevements->sum(function ($prelevement) {
             return $prelevement->pivot->prix_unitaire * $prelevement->pivot->quantite;
         });
 
@@ -143,11 +164,42 @@ class Prescription extends Model
     public function getCommissionPrescripteurAttribute()
     {
         // Commission seulement si prescription payée et analyses terminées
-        if ($this->est_payee && in_array($this->status, ['ANALYSE_TERMINEE', 'TERMINE', 'ARCHIVE'])) {
+        if ($this->est_payee && in_array($this->status, [self::STATUS_TERMINE, self::STATUS_VALIDE, self::STATUS_ARCHIVE])) {
             return $this->part_prescripteur;
         }
-        
+
         return 0;
+    }
+
+    // MÉTHODES D'ARCHIVAGE
+    public function archive()
+    {
+        if ($this->hasValidatedResultsByBiologiste()) {
+            $this->update([
+                'status' => self::STATUS_ARCHIVE,
+                'is_archive' => true // Si vous ajoutez la colonne
+            ]);
+            return true;
+        }
+        return false;
+    }
+
+    public function unarchive()
+    {
+        $this->update([
+            'status' => self::STATUS_VALIDE,
+            'is_archive' => false // Si vous ajoutez la colonne
+        ]);
+    }
+
+    public function hasValidatedResultsByBiologiste()
+    {
+        // Vérifier que tous les résultats sont validés
+        return $this->analyses->every(function ($analyse) {
+            return $analyse->resultats->every(function ($resultat) {
+                return !is_null($resultat->validated_by);
+            });
+        });
     }
 
     // SCOPES utiles
@@ -158,7 +210,22 @@ class Prescription extends Model
 
     public function scopeTerminees($query)
     {
-        return $query->whereIn('status', ['ANALYSE_TERMINEE', 'TERMINE', 'ARCHIVE']);
+        return $query->whereIn('status', [self::STATUS_TERMINE, self::STATUS_VALIDE, self::STATUS_ARCHIVE]);
+    }
+
+    public function scopeActives($query)
+    {
+        return $query->whereNotIn('status', [self::STATUS_ARCHIVE])
+            ->where(function ($q) {
+                $q->whereNull('is_archive')
+                    ->orWhere('is_archive', false);
+            });
+    }
+
+    public function scopeArchivees($query)
+    {
+        return $query->where('status', self::STATUS_ARCHIVE)
+            ->orWhere('is_archive', true);
     }
 
     public function scopeParPrescripteur($query, $prescripteurId)
@@ -169,5 +236,21 @@ class Prescription extends Model
     public function scopeParPeriode($query, $dateDebut, $dateFin)
     {
         return $query->whereBetween('created_at', [$dateDebut, $dateFin]);
+    }
+
+    // Méthode pour obtenir le libellé du statut
+    public function getStatusLabelAttribute()
+    {
+        $labels = [
+            self::STATUS_EN_ATTENTE => 'En attente',
+            self::STATUS_EN_COURS => 'En cours',
+            self::STATUS_TERMINE => 'Terminé',
+            self::STATUS_VALIDE => 'Validé',
+            self::STATUS_A_REFAIRE => 'À refaire',
+            self::STATUS_ARCHIVE => 'Archivé',
+            self::STATUS_PRELEVEMENTS_GENERES => 'Prélèvements générés',
+        ];
+
+        return $labels[$this->status] ?? $this->status;
     }
 }
