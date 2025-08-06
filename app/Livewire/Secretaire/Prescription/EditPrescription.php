@@ -31,9 +31,10 @@ class EditPrescription extends Component
 
     public string $nom = '';
     public string $prenom = '';
-    public string $sexe = 'Monsieur';
+    public string $civilite = 'Monsieur';
     public string $telephone = '';
     public string $email = '';
+    public string $date_naissance = '';
 
     public ?int $prescripteurId = null;
     public string $patientType = 'EXTERNE';
@@ -79,9 +80,10 @@ class EditPrescription extends Component
         $this->patient = $this->prescription->patient;
         $this->nom = $this->patient->nom;
         $this->prenom = $this->patient->prenom;
-        $this->sexe = $this->patient->sexe;
+        $this->civilite = $this->patient->civilite;
         $this->telephone = $this->patient->telephone ?? '';
         $this->email = $this->patient->email ?? '';
+        $this->date_naissance = $this->patient->date_naissance ?? '';
 
         // CLINIQUE
         $this->prescripteurId = $this->prescription->prescripteur_id;
@@ -191,9 +193,10 @@ class EditPrescription extends Component
         // Pré-remplir avec données du patient pour modification
         $this->nom = $this->patient->nom;
         $this->prenom = $this->patient->prenom;
-        $this->sexe = $this->patient->sexe;
+        $this->civilite = $this->patient->civilite;
         $this->telephone = $this->patient->telephone ?? '';
         $this->email = $this->patient->email ?? '';
+        $this->date_naissance = $this->patient->date_naissance ?? '';
 
         flash()->success("Patient « {$this->patient->nom} {$this->patient->prenom} » sélectionné - Vous pouvez modifier ses informations");
         
@@ -214,9 +217,10 @@ class EditPrescription extends Component
         $this->validate([
             'nom' => 'required|min:2|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']+$/',
             'prenom' => 'nullable|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']*$/',
-            'sexe' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
+            'civilite' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
-            'email' => 'nullable|email|max:255'
+            'email' => 'nullable|email|max:255',
+            'date_naissance' => 'nullable|string|max:250'
         ], [
             'nom.required' => 'Le nom est obligatoire',
             'nom.regex' => 'Le nom ne doit contenir que des lettres',
@@ -230,7 +234,7 @@ class EditPrescription extends Component
                 $this->patient->update([
                     'nom' => ucwords(strtolower(trim($this->nom))),
                     'prenom' => ucwords(strtolower(trim($this->prenom))),
-                    'sexe' => $this->sexe,
+                    'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
                 ]);
@@ -239,12 +243,12 @@ class EditPrescription extends Component
             } else {
                 // Création d'un nouveau patient (normalement ne devrait pas arriver en mode édition)
                 $this->patient = Patient::create([
-                    'reference' => $this->genererReferencePatient(),
                     'nom' => ucwords(strtolower(trim($this->nom))),
                     'prenom' => ucwords(strtolower(trim($this->prenom))),
-                    'sexe' => $this->sexe,
+                    'civilite' => $this->civilite,
                     'telephone' => trim($this->telephone),
                     'email' => strtolower(trim($this->email)),
+                    'date_naissance' => $this->date_naissance
                 ]);
                 
                 flash()->success("Nouveau patient « {$this->patient->nom} {$this->patient->prenom} » créé avec succès");
@@ -515,16 +519,17 @@ class EditPrescription extends Component
     // 🧪 ÉTAPE 6: TUBES ET ÉTIQUETTES
     // =====================================
 
-    public function imprimerEtiquettes()
+    public function terminerPrescription()
     {
-        flash()->success('Étiquettes envoyées à l\'impression');
         $this->allerEtape('confirmation');
-    }
-
-    public function ignorerEtiquettes()
-    {
-        flash()->info('Impression des étiquettes ignorée');
-        $this->allerEtape('confirmation');
+        
+        $message = 'Prescription mise à jour avec succès';
+        
+        if (!empty($this->tubesGeneres)) {
+            $message .= ' - ' . count($this->tubesGeneres) . ' nouveau(x) tube(s) généré(s)';
+        }
+        
+        session()->flash('success', $message);
     }
 
     // =====================================
@@ -592,10 +597,20 @@ class EditPrescription extends Component
         try {
             DB::beginTransaction();
 
-            if (!$this->patient) throw new \Exception('Patient non défini');
-            if (!Prescripteur::find($this->prescripteurId)) throw new \Exception('Prescripteur invalide');
+            // Validation des données requises
+            if (!$this->patient) {
+                throw new \Exception('Patient non sélectionné');
+            }
 
-            // 1. Mettre à jour la prescription
+            if (!Prescripteur::find($this->prescripteurId)) {
+                throw new \Exception('Prescripteur invalide');
+            }
+
+            if (empty($this->analysesPanier)) {
+                throw new \Exception('Aucune analyse sélectionnée');
+            }
+
+            // 1. Mettre à jour la prescription (sans toucher à la référence)
             $this->prescription->update([
                 'patient_id' => $this->patient->id,
                 'prescripteur_id' => $this->prescripteurId,
@@ -606,57 +621,85 @@ class EditPrescription extends Component
                 'poids' => $this->poids,
                 'renseignement_clinique' => $this->renseignementClinique,
                 'remise' => $this->remise,
-                'status' => 'EN_ATTENTE'
+                'status' => 'EN_ATTENTE',
+                'updated_at' => now()
             ]);
 
-            // 2. Analyses : sync
+            // 2. Synchroniser les analyses
             $analyseIds = array_keys($this->analysesPanier);
-            $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
-            if (count($analysesExistantes) !== count($analyseIds)) throw new \Exception('Certaines analyses sélectionnées n\'existent plus');
-            $this->prescription->analyses()->sync($analysesExistantes);
+            $existingAnalyses = Analyse::whereIn('id', $analyseIds)->pluck('id');
+            
+            if ($existingAnalyses->count() !== count($analyseIds)) {
+                throw new \Exception('Certaines analyses sélectionnées sont introuvables');
+            }
 
-            // 3. Prélèvements : detach/attach
+            $this->prescription->analyses()->sync($existingAnalyses);
+
+            // 3. Gérer les prélèvements
             $this->prescription->prelevements()->detach();
+            
             if (!empty($this->prelevementsSelectionnes)) {
                 foreach ($this->prelevementsSelectionnes as $prelevement) {
-                    if (!Prelevement::find($prelevement['id'])) throw new \Exception('Prélèvement ID ' . $prelevement['id'] . ' invalide');
+                    $prelevementModel = Prelevement::find($prelevement['id']);
+                    if (!$prelevementModel) {
+                        throw new \Exception("Prélèvement {$prelevement['id']} introuvable");
+                    }
+
                     $this->prescription->prelevements()->attach($prelevement['id'], [
-                        'prix_unitaire' => $prelevement['prix'] ?? 0,
+                        'prix_unitaire' => $prelevement['prix'] ?? $prelevementModel->prix ?? 0,
                         'quantite' => max(1, $prelevement['quantite'] ?? 1),
                         'type_tube_requis' => $prelevement['type_tube_requis'] ?? 'SEC',
                         'volume_requis_ml' => $prelevement['volume_requis_ml'] ?? 5.0,
-                        'is_payer' => 'PAYE'
+                        'is_payer' => 'PAYE',
+                        'created_at' => now(),
+                        'updated_at' => now()
                     ]);
                 }
             }
 
-            // 4. Paiement : detach/attach
-            $this->prescription->paiements()->delete();
+            // 4. Mettre à jour le paiement
+            $this->prescription->paiements()->delete(); // Supprime les anciens paiements
+            
             Paiement::create([
                 'prescription_id' => $this->prescription->id,
                 'montant' => $this->total,
                 'mode_paiement' => $this->modePaiement,
-                'recu_par' => Auth::id()
+                'recu_par' => Auth::id(),
+                'created_at' => now(),
+                'updated_at' => now()
             ]);
 
-            // 5. Tubes : régénérer à chaque édition
+            // 5. Régénérer les tubes si nécessaire
             $this->prescription->tubes()->delete();
-            $this->tubesGeneres = $this->genererTubesPourPrescription($this->prescription);
+            $this->tubesGeneres = [];
+            
+            if (!empty($this->prelevementsSelectionnes)) {
+                $this->tubesGeneres = $this->genererTubesPourPrescription($this->prescription);
+            }
 
             DB::commit();
 
+            // Redirection et message de succès
             $this->allerEtape('confirmation');
-            flash()->success('Prescription modifiée avec succès !');
+            
+            $message = 'Prescription mise à jour avec succès';
+            if (!empty($this->tubesGeneres)) {
+                $message .= ' - ' . count($this->tubesGeneres) . ' nouveau(x) tube(s) généré(s)';
+            }
+            
+            session()->flash('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Erreur édition prescription', [
+            Log::error('Erreur modification prescription', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'patient_id' => $this->patient?->id,
-                'prescripteur_id' => $this->prescripteurId
+                'prescripteur_id' => $this->prescripteurId,
+                'prescription_id' => $this->prescriptionId
             ]);
-            flash()->error('Erreur lors de la modification : ' . $e->getMessage());
+            
+            session()->flash('error', 'Erreur lors de la modification : ' . $e->getMessage());
         }
     }
 
@@ -675,7 +718,6 @@ class EditPrescription extends Component
         return Patient::where(function($query) use ($terme) {
                     $query->where('nom', 'like', "%{$terme}%")
                           ->orWhere('prenom', 'like', "%{$terme}%")
-                          ->orWhere('reference', 'like', "%{$terme}%")
                           ->orWhere('telephone', 'like', "%{$terme}%");
                 })
                 ->orderBy('nom')
