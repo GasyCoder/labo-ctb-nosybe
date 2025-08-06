@@ -36,7 +36,7 @@
         </div>
     </div>
 
- {{-- Tabs Navigation --}}
+    {{-- Tabs Navigation --}}
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 mb-8">
         <div class="border-b border-gray-200 dark:border-slate-700">
             <nav class="flex space-x-8 px-6" aria-label="Tabs">
@@ -61,7 +61,20 @@
                         <span>Validées</span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                    {{ $tab === 'valide' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200' }}">
-                            {{ $analyseValides->total() }}
+                            {{ $validePrescriptions->total() }}
+                        </span>
+                    </div>
+                </button>
+
+                <button wire:click.prevent="switchTab('archived')"
+                        class="relative py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200
+                               {{ $tab === 'archived' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300' }}">
+                    <div class="flex items-center gap-2">
+                        <em class="ni ni-archive"></em>
+                        <span>Archivées</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                   {{ $tab === 'archived' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' : 'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200' }}">
+                            {{ $archivedPrescriptions->total() }}
                         </span>
                     </div>
                 </button>
@@ -82,31 +95,20 @@
         </div>
     </div>
 
-{{-- Tab Content --}}
-<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
-    @include('livewire.secretaire.prescription.prescription-table', [
-        'prescriptions' => match($tab) {
-            'actives' => $activePrescriptions,
-            'valide' => $analyseValides,
-            'archive' => $archivedPrescriptions,
-            'deleted' => $deletedPrescriptions,
-            default => $activePrescriptions,
-        },
-        'showActions' => $tab === 'actives',
-        'showRestore' => $tab === 'deleted',
-        'showForceDelete' => $tab === 'deleted',
-        'showUnarchive' => $tab === 'archive',
-    ])
-</div>
+    {{-- Tab Content --}}
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
+        @if($tab === 'actives')
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $activePrescriptions])
+        @elseif($tab === 'valide')
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $validePrescriptions])
+        @elseif($tab === 'archived')
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $archivedPrescriptions])
+        @elseif($tab === 'deleted')
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $deletedPrescriptions])
+        @endif
+    </div>
 </div>
 
 @push('scripts')
-<script>
-    // Confirmation de suppression avec SweetAlert ou confirmation native
-    function confirmDelete(prescriptionId) {
-        if (confirm('Voulez-vous vraiment supprimer cette prescription ?')) {
-            @this.call('deletePrescription', prescriptionId);
-        }
-    }
-</script>
+
 @endpush
