@@ -60,7 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')->name('secretaire.')->group(function () {
     Route::get('prescription/listes', PrescriptionIndex::class)->name('prescription.index');
     Route::get('nouvel-prescription', AddPrescription::class)->name('prescription.create');
-    Route::get('/prescriptions/edit/{prescriptionId}', EditPrescription::class)->name('prescription.edit');
+    Route::get('/prescription/edit/{prescriptionId}', EditPrescription::class)->name('prescription.edit');
     Route::get('patients', Patients::class)->name('patients');
     Route::get('/secretaire/patients/{patient}', PatientDetail::class)->name('patient.detail');
     Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
