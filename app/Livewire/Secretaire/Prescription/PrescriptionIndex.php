@@ -79,7 +79,7 @@ class PrescriptionIndex extends Component
         $search = '%' . $this->search . '%';
 
         $baseQuery = Prescription::with([
-            'patient:id,ref,nom,prenom,telephone',
+            'patient:id,reference,nom,prenom,telephone',
             'prescripteur:id,nom',
             'analyses',
             'resultats'
@@ -141,7 +141,7 @@ class PrescriptionIndex extends Component
             'activePrescriptions',
             'analyseValides',
             'archivedPrescriptions',
-            'deletedPrescriptions'
+            'deletedPrescriptions',
         ));
     }
 
