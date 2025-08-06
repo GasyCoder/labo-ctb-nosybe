@@ -40,7 +40,6 @@ class PrescriptionIndex extends Component
         'VALIDE' => 'Validé',
         'A_REFAIRE' => 'À refaire',
         'ARCHIVE' => 'Archivé',
-        'PRELEVEMENTS_GENERES' => 'Prélèvements générés',
     ];
 
     protected $listeners = [
@@ -55,7 +54,7 @@ class PrescriptionIndex extends Component
 
     public function mount()
     {
-        $this->tab = request()->query('tab', 'actives'); // Par défaut : 'actives'
+        $this->tab = request()->query('tab', 'actives');
     }
 
     public function switchTab($tab)
@@ -73,77 +72,6 @@ class PrescriptionIndex extends Component
     {
         $this->search = '';
         $this->resetPage();
-    }
-
-    public function render()
-    {
-        $search = '%' . $this->search . '%';
-
-        $baseQuery = Prescription::with([
-            'patient:id,reference,nom,prenom,telephone',
-            'prescripteur:id,nom',
-            'analyses',
-            'resultats'
-        ])
-            ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
-
-        $searchCondition = function ($query) use ($search) {
-            $query->where('renseignement_clinique', 'like', $search)
-                ->orWhere('status', 'like', $search)
-                ->orWhereHas('patient', function ($q) use ($search) {
-                    $q->where('nom', 'like', $search)
-                        ->orWhere('prenom', 'like', $search)
-                        ->orWhere('telephone', 'like', $search);
-                })
-                ->orWhereHas('prescripteur', function ($q) use ($search) {
-                    $q->where('nom', 'like', $search)
-                        ->where('is_active', true);
-                });
-        };
-
-        // Prescriptions actives (non archivées et non validées complètement)
-        $activePrescriptions = (clone $baseQuery)
-            ->whereNotIn('status', ['ARCHIVE'])
-            ->where($searchCondition)
-            ->latest()
-            ->paginate(15);
-
-        // Analyses validées (toutes les analyses ont des résultats validés)
-        $analyseValides = (clone $baseQuery)
-            ->where('status', 'VALIDE')
-            ->whereDoesntHave('analyses', function ($q) {
-                $q->whereDoesntHave('resultats', fn($q) => $q->whereNotNull('validated_by'));
-            })
-            ->where($searchCondition)
-            ->latest()
-            ->paginate(15, ['*'], 'valide_page');
-
-        // Prescriptions archivées
-        $archivedPrescriptions = (clone $baseQuery)
-            ->where('status', 'ARCHIVE')
-            ->where($searchCondition)
-            ->latest()
-            ->paginate(15, ['*'], 'archive_page');
-
-        // Prescriptions supprimées
-        $deletedPrescriptions = (clone $baseQuery)
-            ->onlyTrashed()
-            ->where($searchCondition)
-            ->latest()
-            ->paginate(15, ['*'], 'deleted_page');
-
-        // Add status labels to all prescription collections
-        $this->addStatusLabels($activePrescriptions);
-        $this->addStatusLabels($analyseValides);
-        $this->addStatusLabels($archivedPrescriptions);
-        $this->addStatusLabels($deletedPrescriptions);
-
-        return view('livewire.secretaire.prescription.prescription-index', compact(
-            'activePrescriptions',
-            'analyseValides',
-            'archivedPrescriptions',
-            'deletedPrescriptions',
-        ));
     }
 
     private function addStatusLabels($prescriptions)
@@ -331,5 +259,74 @@ class PrescriptionIndex extends Component
             session()->flash('error', "Erreur lors de la génération du PDF : {$e->getMessage()}");
             return null;
         }
+    }
+
+
+    public function render()
+    {
+        $search = '%' . $this->search . '%';
+
+        $baseQuery = Prescription::with([
+            'patient:id,reference,nom,prenom,telephone',
+            'prescripteur:id,nom',
+            'analyses',
+            'resultats'
+        ])
+            ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
+
+        $searchCondition = function ($query) use ($search) {
+            $query->where('renseignement_clinique', 'like', $search)
+                ->orWhere('status', 'like', $search)
+                ->orWhereHas('patient', function ($q) use ($search) {
+                    $q->where('nom', 'like', $search)
+                        ->orWhere('prenom', 'like', $search)
+                        ->orWhere('telephone', 'like', $search);
+                })
+                ->orWhereHas('prescripteur', function ($q) use ($search) {
+                    $q->where('nom', 'like', $search)
+                        ->where('is_active', true);
+                });
+        };
+
+        // Prescriptions actives (EN_ATTENTE, EN_COURS, TERMINE)
+        $activePrescriptions = (clone $baseQuery)
+            ->whereIn('status', ['EN_ATTENTE', 'EN_COURS', 'TERMINE'])
+            ->where($searchCondition)
+            ->latest()
+            ->paginate(15);
+
+        // Prescriptions validées
+        $validePrescriptions = (clone $baseQuery)
+            ->where('status', 'VALIDE')
+            ->where($searchCondition)
+            ->latest()
+            ->paginate(15, ['*'], 'valide_page');
+
+        // Prescriptions archivées
+        $archivedPrescriptions = (clone $baseQuery)
+            ->where('status', 'ARCHIVE')
+            ->where($searchCondition)
+            ->latest()
+            ->paginate(15, ['*'], 'archive_page');
+
+        // Prescriptions supprimées
+        $deletedPrescriptions = (clone $baseQuery)
+            ->onlyTrashed()
+            ->where($searchCondition)
+            ->latest()
+            ->paginate(15, ['*'], 'deleted_page');
+
+        // Add status labels to all prescription collections
+        $this->addStatusLabels($activePrescriptions);
+        $this->addStatusLabels($validePrescriptions);
+        $this->addStatusLabels($archivedPrescriptions);
+        $this->addStatusLabels($deletedPrescriptions);
+
+        return view('livewire.secretaire.prescription.prescription-index', compact(
+            'activePrescriptions',
+            'validePrescriptions',
+            'archivedPrescriptions',
+            'deletedPrescriptions',
+        ));
     }
 }
