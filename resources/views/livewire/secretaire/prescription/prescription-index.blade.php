@@ -69,7 +69,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="relative flex-shrink-0 flex items-center justify-center text-xxs text-white bg-primary-600 h-7 w-7 rounded-full font-medium">
-                                        <span>{{ strtoupper(substr($prescription->prescripteur->nom, 3, 3)) }}</span>
+                                        <span>{{ strtoupper(substr($prescription->prescripteur->nom, 2, 3)) }}</span>
                                     </div>
                                     <span>{{ $prescription->prescripteur->nom }}</span>
                                 </div>
@@ -92,7 +92,13 @@
                             </td>
                             <td class="px-6 py-4">{{ $prescription->created_at ? $prescription->created_at->diffForHumans() : 'N/A' }}</td>
                             <td class="px-6 py-4 flex gap-2">
-                                <a href="{{ route('secretaire.prescription.edit', $prescription->id) }}"
+                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
+                                   wire:navigate
+                                   class="p-1 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-200"
+                                   aria-label="Voir la prescription">
+                                    <em class="ni ni-user text-base"></em>
+                                </a>
+                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
                                    wire:navigate
                                    class="p-1 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-200"
                                    aria-label="Modifier la prescription">
@@ -117,12 +123,27 @@
                 </tbody>
             </table>
         </div>
+    </div>
 
-        {{-- Pagination --}}
-        @if($prescriptions->hasPages())
-            <div class="p-6 border-t border-gray-200 dark:border-slate-800">
-                {{ $prescriptions->links() }}
-            </div>
-        @endif
+    {{-- Tab Content --}}
+    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
+        @if($tab === 'actives')
+    @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $activePrescriptions, 'showActions' => true])
+@elseif($tab === 'valide')
+    @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $analyseValides, 'showActions' => false])
+@elseif($tab === 'deleted')
+    @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $deletedPrescriptions, 'showRestore' => true])
+@endif
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Confirmation de suppression avec SweetAlert ou confirmation native
+    function confirmDelete(prescriptionId) {
+        if (confirm('Voulez-vous vraiment supprimer cette prescription ?')) {
+            @this.call('deletePrescription', prescriptionId);
+        }
+    }
+</script>
+@endpush
