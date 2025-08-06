@@ -17,7 +17,6 @@ class Prescription extends Model
     const STATUS_VALIDE = 'VALIDE';
     const STATUS_A_REFAIRE = 'A_REFAIRE';
     const STATUS_ARCHIVE = 'ARCHIVE';
-    const STATUS_PRELEVEMENTS_GENERES = 'PRELEVEMENTS_GENERES';
 
     protected $fillable = [
         'secretaire_id',
@@ -248,7 +247,6 @@ class Prescription extends Model
             self::STATUS_VALIDE => 'Validé',
             self::STATUS_A_REFAIRE => 'À refaire',
             self::STATUS_ARCHIVE => 'Archivé',
-            self::STATUS_PRELEVEMENTS_GENERES => 'Prélèvements générés',
         ];
 
         return $labels[$this->status] ?? $this->status;
