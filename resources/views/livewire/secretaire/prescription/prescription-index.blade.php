@@ -36,104 +36,17 @@
         </div>
     </div>
 
-    {{-- Prescriptions Table --}}
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-slate-600 dark:text-slate-200">
-                <thead class="bg-gray-50 dark:bg-slate-800 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-                    <tr>
-                        <th class="px-6 py-4">Référence</th>
-                        <th class="px-6 py-4">Patient</th>
-                        <th class="px-6 py-4">Prescripteur</th>
-                        <th class="px-6 py-4">Analyses</th>
-                        <th class="px-6 py-4">Statut</th>
-                        <th class="px-6 py-4">Crée</th>
-                        <th class="px-6 py-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($prescriptions as $prescription)
-                        <tr class="border-t border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-200">
-                            <td class="px-6 py-4 font-medium">{{ $prescription->patient->reference }}</td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="relative flex-shrink-0 flex items-center justify-center text-xxs text-white bg-green-700 h-7 w-7 rounded-full font-bold">
-                                        <span>{{ strtoupper(substr($prescription->patient->nom, 0, 1) . substr($prescription->patient->prenom, 0, 1)) }}</span>
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span class="font-medium">{{ $prescription->patient->nom }} {{ $prescription->patient->prenom }}</span>
-                                        <span class="text-xs text-slate-500 dark:text-slate-400">{{ $prescription->patient->telephone ?? 'N/A' }}</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="relative flex-shrink-0 flex items-center justify-center text-xxs text-white bg-primary-600 h-7 w-7 rounded-full font-medium">
-                                        <span>{{ strtoupper(substr($prescription->prescripteur->nom, 2, 3)) }}</span>
-                                    </div>
-                                    <span>{{ $prescription->prescripteur->nom }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">{{ $prescription->analyses->count() }}</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium
-                                    @switch($prescription->status)
-                                        @case('EN_ATTENTE') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 @break
-                                        @case('EN_COURS') bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 @break
-                                        @case('TERMINE') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 @break
-                                        @case('VALIDE') bg-green-600 text-white dark:bg-green-700 @break
-                                        @case('A_REFAIRE') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 @break
-                                        @case('ARCHIVE') bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 @break
-                                        @case('PRELEVEMENTS_GENERES') bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 @break
-                                        @default bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200
-                                    @endswitch">
-                                    {{ $prescription->status_label ?? $prescription->status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">{{ $prescription->created_at ? $prescription->created_at->diffForHumans() : 'N/A' }}</td>
-                            <td class="px-6 py-4 flex gap-2">
-                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
-                                   wire:navigate
-                                   class="p-1 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-200"
-                                   aria-label="Voir la prescription">
-                                    <em class="ni ni-user text-base"></em>
-                                </a>
-                                <a href="{{ route('secretaire.prescriptions.edit', $prescription->id) }}"
-                                   wire:navigate
-                                   class="p-1 text-slate-600 dark:text-slate-200 hover:text-primary-600 dark:hover:text-primary-500 transition-colors duration-200"
-                                   aria-label="Modifier la prescription">
-                                    <em class="ni ni-edit text-base"></em>
-                                </a>
-                                <button wire:click="deletePrescription({{ $prescription->id }})"
-                                        class="p-1 text-slate-600 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-500 transition-colors duration-200"
-                                        aria-label="Supprimer la prescription"
-                                        onclick="return confirm('Voulez-vous vraiment supprimer cette prescription ?')">
-                                    <em class="ni ni-trash text-base"></em>
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-12 text-slate-500 dark:text-slate-400">
-                                <em class="ni ni-info text-4xl mb-4"></em>
-                                <p class="text-base">Aucune prescription trouvée</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+
 
     {{-- Tab Content --}}
     <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800 overflow-hidden">
         @if($tab === 'actives')
-    @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $activePrescriptions, 'showActions' => true])
-@elseif($tab === 'valide')
-    @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $analyseValides, 'showActions' => false])
-@elseif($tab === 'deleted')
-    @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $deletedPrescriptions, 'showRestore' => true])
-@endif
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $activePrescriptions, 'showActions' => true])
+        @elseif($tab === 'valide')
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $analyseValides, 'showActions' => false])
+        @elseif($tab === 'deleted')
+            @include('livewire.secretaire.prescription.prescription-table', ['prescriptions' => $deletedPrescriptions, 'showRestore' => true])
+        @endif
     </div>
 </div>
 
