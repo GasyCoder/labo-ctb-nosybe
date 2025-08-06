@@ -1,15 +1,28 @@
-<div class="nk-sidebar group/sidebar peer dark fixed w-60 [&.is-compact:not(.has-hover)]:w-[62px] min-h-screen max-h-screen overflow-hidden h-full start-0 top-0 z-[1031] transition-[transform,width] duration-300 -translate-x-full rtl:translate-x-full xl:translate-x-0 xl:rtl:translate-x-0 [&.sidebar-visible]:translate-x-0">
-    <!-- En-tête compact -->
-    <div class="flex items-center min-w-full w-60 h-14 border-b border-e bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 px-4 py-2 overflow-hidden">
-        <div class="flex items-center justify-between w-full">
-            <span class="text-xl font-bold text-primary-500 whitespace-nowrap group-[&.is-compact:not(.has-hover)]/sidebar:hidden">Labo-CTB-Nosy-Be</span>
-            <span class="text-xl font-bold text-primary-500 hidden group-[&.is-compact:not(.has-hover)]/sidebar:block">L</span>
+<div class="nk-sidebar group/sidebar peer dark fixed w-72 [&.is-compact:not(.has-hover)]:w-[74px] min-h-screen max-h-screen overflow-hidden h-full start-0 top-0 z-[1031] transition-[transform,width] duration-300 -translate-x-full rtl:translate-x-full xl:translate-x-0 xl:rtl:translate-x-0 [&.sidebar-visible]:translate-x-0">
+    <div class="flex items-center min-w-full w-72 h-16 border-b border-e bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 px-6 py-3 overflow-hidden">
+        <div class="-ms-1 me-4">
+            <div class="hidden xl:block">
+                <a href="#" class="sidebar-compact-toggle *:pointer-events-none inline-flex items-center isolate relative h-9 w-9 px-1.5 before:content-[''] before:absolute before:-z-[1] before:h-5 before:w-5 hover:before:h-10 hover:before:w-10 before:rounded-full before:opacity-0 hover:before:opacity-100 before:transition-all before:duration-300 before:-translate-x-1/2  before:-translate-y-1/2 before:top-1/2 before:left-1/2 before:bg-gray-200 dark:before:bg-gray-900">
+                    <em class="text-2xl text-slate-600 dark:text-slate-300 ni ni-menu"></em>
+                </a>
+            </div>
+            <div class="xl:hidden">
+                <a href="#" class="sidebar-toggle *:pointer-events-none inline-flex items-center isolate relative h-9 w-9 px-1.5 before:content-[''] before:absolute before:-z-[1] before:h-5 before:w-5 hover:before:h-10 hover:before:w-10 before:rounded-full before:opacity-0 hover:before:opacity-100 before:transition-all before:duration-300 before:-translate-x-1/2  before:-translate-y-1/2 before:top-1/2 before:left-1/2 before:bg-gray-200 dark:before:bg-gray-900">
+                    <em class="text-2xl text-slate-600 dark:text-slate-300 rtl:-scale-x-100 ni ni-arrow-left"></em>
+                </a>
+            </div>
+        </div>
+        <div class="relative flex flex-shrink-0">
+            <a href="{{ url('/') }}" class="relative inline-block transition-opacity duration-300 h-9 group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0">
+                <span class="text-xl font-bold text-primary-500 whitespace-nowrap group-[&.is-compact:not(.has-hover)]/sidebar:hidden">Labo-CTB-Nosy-Be</span>
+                <span class="text-xl font-bold text-primary-500 hidden group-[&.is-compact:not(.has-hover)]/sidebar:block">L</span>
+            </a>
         </div>
     </div>
-@php
-    $countArchive = \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)
-        ->count();
-@endphp
+    @php
+        $countArchive = \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)
+            ->count();
+    @endphp
     <div class="nk-sidebar-body max-h-full relative overflow-hidden w-full bg-white dark:bg-gray-950 border-e border-gray-200 dark:border-gray-900">
         <div class="flex flex-col w-full h-[calc(100vh-3.5rem)]">
             <div class="h-full pt-3 pb-8" data-simplebar>
@@ -35,7 +48,7 @@
                             <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                 <em class="text-xl leading-none text-current transition-all duration-300 icon ni ni-archived"></em>
                             </span>
-                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Archives</span>
+                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Archives ({{ $countArchive }})</span>
                         </a>
                     </li>
 
