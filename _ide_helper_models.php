@@ -225,10 +225,10 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
- * @property string $reference
  * @property string $nom
  * @property string|null $prenom
- * @property string $sexe
+ * @property string $civilite
+ * @property string|null $date_naissance
  * @property string|null $telephone
  * @property string|null $email
  * @property string $statut
@@ -244,14 +244,14 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient vip()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereCivilite($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereDateNaissance($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereNom($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient wherePrenom($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereReference($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereSexe($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereStatut($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereTelephone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereUpdatedAt($value)
@@ -363,6 +363,7 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
+ * @property string $reference
  * @property int $secretaire_id
  * @property int $patient_id
  * @property int|null $prescripteur_id
@@ -415,6 +416,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription wherePatientType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription wherePoids($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription wherePrescripteurId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereReference($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereRemise($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereRenseignementClinique($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereSecretaireId($value)
