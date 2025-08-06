@@ -55,35 +55,8 @@
                     </td>
 
                     {{-- Statut --}}
-                    <td class="px-6 py-4">
-                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium
-                            @switch($prescription->status ?? 'UNKNOWN')
-                                @case('EN_ATTENTE') 
-                                    bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 
-                                @break
-                                @case('EN_COURS') 
-                                    bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 
-                                @break
-                                @case('TERMINE') 
-                                    bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 
-                                @break
-                                @case('VALIDE') 
-                                    bg-green-600 text-white dark:bg-green-700 
-                                @break
-                                @case('A_REFAIRE') 
-                                    bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 
-                                @break
-                                @case('ARCHIVE') 
-                                    bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 
-                                @break
-                                @case('PRELEVEMENTS_GENERES') 
-                                    bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 
-                                @break
-                                @default 
-                                    bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200
-                            @endswitch">
-                            {{ $prescription->status_label ?? $prescription->status ?? 'Inconnu' }}
-                        </span>
+                    <td>
+                        <x-prescription-status :status="$prescription->status" />
                     </td>
 
                     {{-- Date de création --}}
@@ -95,43 +68,55 @@
                     </td>
 
                     {{-- Actions --}}
-                    @if(isset($showActions) && $showActions)
-                        <td class="px-6 py-4">
-                            <div class="flex gap-2">
-                                <a href="{{ route('secretaire.prescription.edit', $prescription->id) }}"
-                                   wire:navigate
-                                   class="p-2 text-slate-600 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
-                                   title="Modifier la prescription">
-                                    <em class="ni ni-edit text-base"></em>
-                                </a>
-                                <button wire:click="deletePrescription({{ $prescription->id }})"
-                                        class="p-2 text-slate-600 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                        title="Supprimer la prescription"
-                                        onclick="return confirm('Voulez-vous vraiment supprimer cette prescription ?')">
-                                    <em class="ni ni-trash text-base"></em>
+                    <td>
+                        <div class="d-flex gap-2 justify-content-end">
+                            @if($prescription->trashed())
+                                {{-- Actions pour les prescriptions dans la corbeille --}}
+                                <button wire:click="confirmRestore({{ $prescription->id }})"
+                                        class="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
+                                        title="Restaurer" style="width: 32px; height: 32px;">
+                                    <i class="fas fa-undo-alt"></i>
                                 </button>
-                            </div>
-                        </td>
-                    @endif
+                                @if(auth()->user()->type === 'admin')
+                                    <button wire:click="confirmPermanentDelete({{ $prescription->id }})"
+                                            class="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                                            title="Supprimer définitivement" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                @endif
+                            @else
+                                {{-- Actions selon le statut --}}
+                                @if(in_array($prescription->status, ['EN_ATTENTE', 'EN_COURS', 'TERMINE']))
+                                    <a href="{{ route('secretaire.prescription.edit', ['prescriptionId' => $prescription->id]) }}"
+                                    class="btn btn-sm btn-success d-flex align-items-center justify-content-center"
+                                    title="Modifier" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button wire:click="confirmDelete({{ $prescription->id }})"
+                                            class="btn btn-sm btn-danger d-flex align-items-center justify-content-center"
+                                            title="Corbeille" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                @endif
 
-                    {{-- Actions pour la corbeille --}}
-                    @if(isset($showRestore) && $showRestore)
-                        <td class="px-6 py-4">
-                            <div class="flex gap-2">
-                                <button wire:click="restorePrescription({{ $prescription->id }})"
-                                        class="p-2 text-slate-600 dark:text-slate-200 hover:text-green-600 dark:hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
-                                        title="Restaurer la prescription">
-                                    <em class="ni ni-reload text-base"></em>
-                                </button>
-                                <button wire:click="forceDeletePrescription({{ $prescription->id }})"
-                                        class="p-2 text-slate-600 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                                        title="Supprimer définitivement"
-                                        onclick="return confirm('Voulez-vous vraiment supprimer définitivement cette prescription ? Cette action est irréversible.')">
-                                    <em class="ni ni-trash text-base"></em>
-                                </button>
-                            </div>
-                        </td>
-                    @endif
+                                @if($prescription->status === 'VALIDE')
+                                    <button wire:click="confirmArchive({{ $prescription->id }})"
+                                            class="btn btn-sm btn-secondary d-flex align-items-center justify-content-center"
+                                            title="Archiver" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                                @endif
+
+                                @if($prescription->status === 'ARCHIVE')
+                                    <button wire:click="confirmUnarchive({{ $prescription->id }})"
+                                            class="btn btn-sm btn-warning d-flex align-items-center justify-content-center"
+                                            title="Désarchiver" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-undo-alt"></i>
+                                    </button>
+                                @endif
+                            @endif
+                        </div>
+                    </td>
                 </tr>
             @empty
                 <tr>
