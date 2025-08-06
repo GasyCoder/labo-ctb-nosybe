@@ -28,6 +28,7 @@ class PrescriptionIndex extends Component
     ];
 
     public $tab = 'actives';
+    
     public $prescriptionId;
     protected $pdfService;
 
