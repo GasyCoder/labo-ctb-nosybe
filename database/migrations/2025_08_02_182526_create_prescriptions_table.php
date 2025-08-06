@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('prescriptions', function (Blueprint $table) {
             $table->id();
+            $table->string('reference')->unique();
             $table->foreignId('secretaire_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('patient_id')->constrained('patients')->onDelete('cascade');
             $table->foreignId('prescripteur_id')->nullable()->constrained('prescripteurs')->onDelete('set null');
@@ -21,8 +22,6 @@ return new class extends Migration
             $table->enum('unite_age', ['Ans', 'Mois', 'Jours'])->default('Ans');
             $table->decimal('poids', 5, 2)->nullable();
             $table->text('renseignement_clinique')->nullable();
-            $table->boolean('is_archive')->default(false); // plus clair que tinyint(1)
-
             $table->decimal('remise', 10, 2)->default(0.00);
             $table->enum('status', [
                 'EN_ATTENTE',    // Prescription déposée, rien n’a commencé
@@ -42,8 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('prescriptions', function (Blueprint $table) {
-            $table->dropColumn('is_archive');
-        });
+         Schema::dropIfExists('prescriptions');
     }
 };
