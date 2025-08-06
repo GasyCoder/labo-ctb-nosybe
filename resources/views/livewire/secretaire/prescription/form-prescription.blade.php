@@ -2,7 +2,7 @@
 <div class="container mx-auto px-4 py-6">
     {{-- NAVIGATION RETOUR --}}
     <div class="mb-4">
-        <a href="{{ route('secretaire.prescriptions') }}"
+        <a href="{{ route('secretaire.prescription.index') }}"
            wire:navigate
            class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">
             <em class="ni ni-arrow-left mr-2"></em> Retour à la liste
@@ -315,7 +315,7 @@
                     <button class="px-6 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-xl font-semibold transition-colors">
                         <em class="ni ni-printer mr-2"></em>Facture
                     </button>
-                    <a href="{{ route('secretaire.prescriptions') }}" 
+                    <a href="{{ route('secretaire.prescription.index') }}" 
                        wire:navigate
                        class="px-6 py-3 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-xl font-semibold transition-colors">
                         <em class="ni ni-list mr-2"></em>Voir toutes les prescriptions
