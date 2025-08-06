@@ -10,6 +10,8 @@ class Prescription extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $guarded = ['reference'];
+
     // Constantes pour les statuts
     const STATUS_EN_ATTENTE = 'EN_ATTENTE';
     const STATUS_EN_COURS = 'EN_COURS';
@@ -20,6 +22,7 @@ class Prescription extends Model
 
     protected $fillable = [
         'secretaire_id',
+        'reference',
         'patient_id',
         'prescripteur_id',
         'patient_type',
@@ -28,7 +31,6 @@ class Prescription extends Model
         'poids',
         'renseignement_clinique',
         'remise',
-        'is_archive', // Si vous ajoutez la colonne
         'status',
     ];
 
@@ -36,7 +38,6 @@ class Prescription extends Model
     protected $casts = [
         'remise' => 'decimal:2',
         'poids' => 'decimal:2',
-        'is_archive' => 'boolean',
     ];
 
     // RELATIONS
@@ -55,11 +56,9 @@ class Prescription extends Model
         return $this->belongsTo(Prescripteur::class, 'prescripteur_id');
     }
 
-    // La relation Many to Many avec Analyse
     public function analyses()
     {
-        return $this->belongsToMany(Analyse::class, 'prescription_analyse')
-            ->withTimestamps();
+        return $this->belongsToMany(Analyse::class, 'prescription_analyse')->withTimestamps();
     }
 
     public function resultats()
@@ -104,69 +103,56 @@ class Prescription extends Model
     {
         $total = $this->tubes->count();
         $termines = $this->tubes->where('statut', 'ANALYSE_TERMINEE')->count();
-
         return $total > 0 ? round(($termines / $total) * 100) : 0;
     }
 
-    // CORRECTION: Méthode améliorée pour calculer le montant des analyses
     public function getMontantAnalysesAttribute()
     {
         $total = 0;
         $parentsTraites = [];
 
         foreach ($this->analyses as $analyse) {
-            // Si l'analyse a un parent et qu'on ne l'a pas encore traité
             if ($analyse->parent_id && !in_array($analyse->parent_id, $parentsTraites)) {
                 $parent = Analyse::find($analyse->parent_id);
 
                 if ($parent && $parent->prix > 0) {
-                    // Ajouter le prix du parent une seule fois
                     $total += $parent->prix;
                     $parentsTraites[] = $analyse->parent_id;
                     continue;
                 }
             }
 
-            // Si pas de parent ou parent sans prix, utiliser le prix de l'analyse
             if (!$analyse->parent_id || !in_array($analyse->parent_id, $parentsTraites)) {
                 $total += $analyse->prix;
             }
         }
-
         return $total;
     }
 
-    // Méthode pour calculer le montant total payé (analyses + prélèvements - remise)
     public function getMontantTotalAttribute()
     {
         $montantAnalyses = $this->montant_analyses;
         $montantPrelevements = $this->prelevements->sum(function ($prelevement) {
             return $prelevement->pivot->prix_unitaire * $prelevement->pivot->quantite;
         });
-
         return max(0, $montantAnalyses + $montantPrelevements - $this->remise);
     }
 
-    // COMMISSION PRESCRIPTEUR: 10% du montant des analyses
     public function getPartPrescripteurAttribute()
     {
         return round($this->montant_analyses * 0.10, 2);
     }
 
-    // Vérifier si la prescription est payée
     public function getEstPayeeAttribute()
     {
         return $this->paiements()->where('montant', '>=', $this->montant_total)->exists();
     }
 
-    // Méthode pour calculer la commission seulement si payée et réalisée
     public function getCommissionPrescripteurAttribute()
     {
-        // Commission seulement si prescription payée et analyses terminées
         if ($this->est_payee && in_array($this->status, [self::STATUS_TERMINE, self::STATUS_VALIDE, self::STATUS_ARCHIVE])) {
             return $this->part_prescripteur;
         }
-
         return 0;
     }
 
@@ -176,7 +162,6 @@ class Prescription extends Model
         if ($this->hasValidatedResultsByBiologiste()) {
             $this->update([
                 'status' => self::STATUS_ARCHIVE,
-                'is_archive' => true // Si vous ajoutez la colonne
             ]);
             return true;
         }
@@ -187,13 +172,11 @@ class Prescription extends Model
     {
         $this->update([
             'status' => self::STATUS_VALIDE,
-            'is_archive' => false // Si vous ajoutez la colonne
         ]);
     }
 
     public function hasValidatedResultsByBiologiste()
     {
-        // Vérifier que tous les résultats sont validés
         return $this->analyses->every(function ($analyse) {
             return $analyse->resultats->every(function ($resultat) {
                 return !is_null($resultat->validated_by);
@@ -214,17 +197,12 @@ class Prescription extends Model
 
     public function scopeActives($query)
     {
-        return $query->whereNotIn('status', [self::STATUS_ARCHIVE])
-            ->where(function ($q) {
-                $q->whereNull('is_archive')
-                    ->orWhere('is_archive', false);
-            });
+        return $query->where('status', '!=', self::STATUS_ARCHIVE);
     }
 
     public function scopeArchivees($query)
     {
-        return $query->where('status', self::STATUS_ARCHIVE)
-            ->orWhere('is_archive', true);
+        return $query->where('status', self::STATUS_ARCHIVE);
     }
 
     public function scopeParPrescripteur($query, $prescripteurId)
@@ -237,7 +215,6 @@ class Prescription extends Model
         return $query->whereBetween('created_at', [$dateDebut, $dateFin]);
     }
 
-    // Méthode pour obtenir le libellé du statut
     public function getStatusLabelAttribute()
     {
         $labels = [
@@ -250,5 +227,22 @@ class Prescription extends Model
         ];
 
         return $labels[$this->status] ?? $this->status;
+    }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($prescription) {
+            $prescription->reference = $prescription->genererReferenceUnique();
+        });
+    }
+
+    public function genererReferenceUnique()
+    {
+        $annee = date('Y');
+        $numero = str_pad(Prescription::withTrashed()->count() + 1, 5, '0', STR_PAD_LEFT);
+        return "PAT{$annee}{$numero}";
     }
 }
