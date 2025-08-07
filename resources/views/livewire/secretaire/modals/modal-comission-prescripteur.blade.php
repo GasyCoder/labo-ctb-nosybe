@@ -51,7 +51,7 @@
                                 <div class="text-2xl font-bold text-purple-800 dark:text-purple-300">{{ number_format($commissionDetails['montant_total_paye'] ?? 0, 0, ',', ' ') }} Ar</div>
                             </div>
                             <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                                <div class="text-sm font-medium text-yellow-600 dark:text-yellow-400">Commission totale (10%)</div>
+                                <div class="text-sm font-medium text-yellow-600 dark:text-yellow-400">Commission totale ({{ $commissionPourcentage }}%)</div>
                                 <div class="text-2xl font-bold text-yellow-800 dark:text-yellow-300">{{ number_format($commissionDetails['total_commission'] ?? 0, 0, ',', ' ') }} Ar</div>
                             </div>
                         </div>
@@ -69,7 +69,7 @@
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prescriptions</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant analyses</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant payé</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Commission (10%)</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Commission ({{ $commissionPourcentage }}%)</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -130,7 +130,7 @@
                                             {{ number_format($commissionDetails['total_commission'] ?? 0, 0, ',', ' ') }} Ar
                                         </div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            Taux : 10% du montant payé
+                                            Taux : {{ $commissionPourcentage }}% du montant payé
                                         </div>
                                     </div>
                                 </div>
