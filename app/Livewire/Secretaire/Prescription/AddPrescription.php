@@ -2,19 +2,20 @@
 
 namespace App\Livewire\Secretaire\Prescription;
 
-use App\Models\Patient;
-use App\Models\Prescription;
-use App\Models\Analyse;
-use App\Models\Prescripteur;
-use App\Models\Prelevement;
-use App\Models\Paiement;
 use App\Models\Tube;
+use App\Models\Analyse;
+use App\Models\Patient;
+use App\Models\Setting;
 use Livewire\Component;
-use Livewire\WithPagination;
+use App\Models\Paiement;
+use App\Models\Prelevement;
+use App\Models\Prescripteur;
+use App\Models\Prescription;
 use Livewire\Attributes\Url;
+use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class AddPrescription extends Component
 {
@@ -25,6 +26,7 @@ class AddPrescription extends Component
     public string $etape = 'patient';
 
     public bool $isEditMode = false;
+    public bool $activer_remise = false;
     
     // 👤 DONNÉES PATIENT
     public ?Patient $patient = null;
@@ -81,6 +83,7 @@ class AddPrescription extends Component
         $this->reference = (new Prescription())->genererReferenceUnique();
 
         $this->isEditMode = false;
+        $this->activer_remise = Setting::first()?->activer_remise ?? false;
     }
 
     public function getTitle()
@@ -195,7 +198,7 @@ class AddPrescription extends Component
             'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'age', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
-            'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
+            'montantPaye', 'activer_remise', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
             'rechercheAnalyse', 'recherchePrelevement'
         ]);
         
