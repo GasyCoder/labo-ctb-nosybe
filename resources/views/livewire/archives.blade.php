@@ -114,7 +114,7 @@
                     @forelse($prescriptions as $prescription)
                         <tr class="border-t border-gray-200 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-200">
                             {{-- Référence --}}
-                            <td class="px-6 py-4 font-medium">{{ $prescription->patient->reference }}</td>
+                            <td class="px-6 py-4 font-medium">{{ $prescription->reference }}</td>
 
                             {{-- Patient --}}
                             <td class="px-6 py-4">
