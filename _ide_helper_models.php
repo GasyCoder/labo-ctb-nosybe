@@ -196,7 +196,8 @@ namespace App\Models{
 /**
  * @property int $id
  * @property int $prescription_id
- * @property string $montant
+ * @property numeric $montant
+ * @property numeric $commission_prescripteur
  * @property string $mode_paiement
  * @property int $recu_par
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -208,6 +209,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCommissionPrescripteur($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereId($value)
@@ -332,29 +334,47 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
+ * @property string|null $grade
  * @property string $nom
+ * @property string|null $prenom
+ * @property string $status
+ * @property string|null $specialite
+ * @property string|null $telephone
+ * @property string|null $email
  * @property bool $is_active
+ * @property string|null $adresse
+ * @property string|null $ville
+ * @property string|null $code_postal
+ * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property-read mixed $commission_disponible
- * @property-read mixed $commission_en_attente
- * @property-read mixed $montant_analyses_total
  * @property-read mixed $nom_complet
- * @property-read mixed $nombre_prescriptions_realees
+ * @property-read mixed $nom_simple
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prescription> $prescriptions
  * @property-read int|null $prescriptions_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur actifs()
+ * @method static \Database\Factories\PrescripteurFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereAdresse($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereCodePostal($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereEmail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereGrade($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereIsActive($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereNom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur wherePrenom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereSpecialite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereTelephone($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur whereVille($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur withoutTrashed()
  */
@@ -373,7 +393,7 @@ namespace App\Models{
  * @property string $unite_age
  * @property numeric|null $poids
  * @property string|null $renseignement_clinique
- * @property numeric $remise
+ * @property string $remise
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -382,9 +402,8 @@ namespace App\Models{
  * @property-read int|null $analyses_count
  * @property-read mixed $commission_prescripteur
  * @property-read mixed $est_payee
- * @property-read mixed $montant_analyses
+ * @property-read mixed $est_payee_completement
  * @property-read mixed $montant_total
- * @property-read mixed $part_prescripteur
  * @property-read mixed $progres_analyses
  * @property-read mixed $status_label
  * @property-read mixed $tubes_par_statut
@@ -408,7 +427,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription parPrescripteur($prescripteurId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription payees()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription terminees()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereAge($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereDeletedAt($value)
