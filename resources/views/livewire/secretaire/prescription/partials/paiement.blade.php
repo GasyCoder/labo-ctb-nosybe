@@ -333,31 +333,37 @@
                             </div>
 
                             {{-- REMISE --}}
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                                    <em class="ni ni-tag mr-1.5 text-orange-500 text-xs"></em>
-                                    {{ $isEditMode ? 'Nouvelle remise accordée (Ar)' : 'Remise accordée (Ar)' }}
-                                </label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <em class="ni ni-arrow-down-round text-slate-400 dark:text-slate-500 text-sm"></em>
+                            @if($activer_remise)
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                                        <em class="ni ni-tag mr-1.5 text-orange-500 text-xs"></em>
+                                        {{ $isEditMode ? 'Nouvelle remise accordée (Ar)' : 'Remise accordée (Ar)' }}
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <em class="ni ni-arrow-down-round text-slate-400 dark:text-slate-500 text-sm"></em>
+                                        </div>
+                                        <input type="number" 
+                                            wire:model.live="remise_pourcentage" 
+                                            min="0" 
+                                            max="100"
+                                            step="0.1"
+                                            placeholder="0"
+                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
+                                                    bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
+                                                    placeholder-slate-400 dark:placeholder-slate-500
+                                                    focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'red' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'red' }}-500 
+                                                    transition-colors
+                                                    hover:border-{{ $isEditMode ? 'orange' : 'red' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'red' }}-600">
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 sm:text-sm">%</span>
+                                        </div>
                                     </div>
-                                    <input type="number" 
-                                           wire:model.live="remise" 
-                                           min="0" 
-                                           step="100" 
-                                           placeholder="0"
-                                           class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
-                                                  bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                                  placeholder-slate-400 dark:placeholder-slate-500
-                                                  focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'red' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'red' }}-500 
-                                                  transition-colors
-                                                  hover:border-{{ $isEditMode ? 'orange' : 'red' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'red' }}-600">
+                                    <p class="text-xxs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        Pourcentage de remise (0-100%)
+                                    </p>
                                 </div>
-                                <p class="text-xxs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    Maximum: {{ number_format($total + $remise, 0) }} Ar
-                                </p>
-                            </div>
+                            @endif
                             
                             {{-- MONTANT PAYÉ --}}
                             <div>
@@ -375,12 +381,12 @@
                                            step="100" 
                                            placeholder="{{ $total }}"
                                            class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
-                                                  bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
-                                                  placeholder-slate-400 dark:placeholder-slate-500
-                                                  focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'red' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'red' }}-500 
-                                                  transition-colors
-                                                  hover:border-{{ $isEditMode ? 'orange' : 'red' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'red' }}-600
-                                                  {{ $montantPaye < $total ? 'border-red-300 dark:border-red-600' : 'border-green-300 dark:border-green-600' }}">
+                                            bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
+                                            placeholder-slate-400 dark:placeholder-slate-500
+                                            focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'red' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'red' }}-500 
+                                            transition-colors
+                                            hover:border-{{ $isEditMode ? 'orange' : 'red' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'red' }}-600
+                                            {{ $montantPaye < $total ? 'border-red-300 dark:border-red-600' : 'border-green-300 dark:border-green-600' }}">
                                 </div>
                             </div>
                             
@@ -401,7 +407,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            @elseif($montantPaye > 0 && $montantPaye < $total)
+                             @elseif($montantPaye > 0 && $montantPaye < $total)
                                 <div class="bg-red-50/50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/50 rounded-lg p-3">
                                     <div class="flex items-center">
                                         <div class="w-8 h-8 bg-red-500 rounded flex items-center justify-center mr-2">
