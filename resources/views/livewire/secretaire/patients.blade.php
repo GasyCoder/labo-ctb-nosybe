@@ -211,8 +211,8 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="flex-shrink-0 w-12 h-12">
-                                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-500 dark:to-primary-700 flex items-center justify-center shadow-lg">
+                                        <div class="flex-shrink-0 w-10 h-10">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-500 dark:to-primary-700 flex items-center justify-center shadow-lg">
                                                 <span class="text-white font-bold text-sm">
                                                     {{ strtoupper(substr($patient->nom, 0, 1) . substr($patient->prenom ?? 'X', 0, 1)) }}
                                                 </span>
@@ -224,13 +224,13 @@
                                             </div>
                                             <div class="flex items-center mt-1">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium
-                                                    @if($patient->sexe === 'Monsieur') bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
-                                                    @elseif($patient->sexe === 'Madame') bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300
-                                                    @elseif($patient->sexe === 'Mademoiselle') bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
-                                                    @elseif($patient->sexe === 'Enfant') bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300
+                                                    @if($patient->civilite === 'Monsieur') bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
+                                                    @elseif($patient->secivilitexe === 'Madame') bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300
+                                                    @elseif($patient->civilite === 'Mademoiselle') bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
+                                                    @elseif($patient->civilite === 'Enfant') bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300
                                                     @else bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300
                                                     @endif">
-                                                    {{ $patient->sexe }}
+                                                    {{ $patient->civilite }}
                                                 </span>
                                                 @if(!$patient->prenom)
                                                     <span class="ml-2 text-xs text-gray-500 dark:text-gray-400 italic">(sans prénom)</span>
