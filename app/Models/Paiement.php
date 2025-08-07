@@ -15,10 +15,15 @@ class Paiement extends Model
         'montant',
         'mode_paiement',
         'recu_par',
+        'commission_prescripteur',
+    ];
+
+    protected $casts = [
+        'montant' => 'decimal:2',
+        'commission_prescripteur' => 'decimal:2',
     ];
 
     // Relations
-
     public function prescription()
     {
         return $this->belongsTo(Prescription::class);
@@ -26,7 +31,22 @@ class Paiement extends Model
 
     public function utilisateur()
     {
-        // Le user qui a encaissé le paiement
         return $this->belongsTo(User::class, 'recu_par');
+    }
+
+    // Auto-calcul de la commission
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($paiement) {
+            $paiement->commission_prescripteur = $paiement->montant * 0.10;
+        });
+        
+        static::updating(function ($paiement) {
+            if ($paiement->isDirty('montant')) {
+                $paiement->commission_prescripteur = $paiement->montant * 0.10;
+            }
+        });
     }
 }
