@@ -22,10 +22,6 @@
  @php
     $countArchive = \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)->count();
 @endphp
-
-<span class="badge rounded-pill bg-danger ms-2">
-    {{ $countArchive }}
-</span>
     <div class="nk-sidebar-body max-h-full relative overflow-hidden w-full bg-white dark:bg-gray-950 border-e border-gray-200 dark:border-gray-900">
         <div class="flex flex-col w-full h-[calc(100vh-3.5rem)]">
             <div class="h-full pt-3 pb-8" data-simplebar>
