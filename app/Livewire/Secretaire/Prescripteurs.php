@@ -4,6 +4,7 @@ namespace App\Livewire\Secretaire;
 
 use Livewire\Component;
 use App\Models\Prescripteur;
+use App\Models\Setting;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -45,6 +46,7 @@ class Prescripteurs extends Component
     public $dateDebut;
     public $dateFin;
     public $commissionDetails = [];
+    public $commissionPourcentage = 10; 
 
     // Propriétés pour la suppression
     public $prescripteurToDelete = null;
@@ -82,11 +84,11 @@ class Prescripteurs extends Component
         'email.unique' => 'Cet email est déjà utilisé.',
     ];
 
-
     public function mount()
     {
         $this->dateDebut = now()->startOfYear()->format('Y-m-d');
         $this->dateFin = now()->format('Y-m-d');
+        $this->commissionPourcentage = Setting::getCommissionPourcentage();
     }
 
     // MÉTHODES DE FILTRAGE ET TRI
@@ -123,7 +125,7 @@ class Prescripteurs extends Component
         $this->prenom = $prescripteur->prenom;
         $this->grade = $prescripteur->grade;
         $this->specialite = $prescripteur->specialite;
-        $this->status = $prescripteur->status ?? 'Medecin'; // ← NOUVEAU CHAMP
+        $this->status = $prescripteur->status ?? 'Medecin';
         $this->telephone = $prescripteur->telephone;
         $this->email = $prescripteur->email;
         $this->adresse = $prescripteur->adresse;
@@ -134,7 +136,6 @@ class Prescripteurs extends Component
 
         $this->showPrescripteurModal = true;
     }
-
 
     public function savePrescripteur()
     {
@@ -155,7 +156,7 @@ class Prescripteurs extends Component
                 'prenom' => $this->prenom,
                 'grade' => $this->grade,
                 'specialite' => $this->specialite,
-                'status' => $this->status, // ← NOUVEAU CHAMP
+                'status' => $this->status,
                 'telephone' => $this->telephone,
                 'email' => $this->email,
                 'adresse' => $this->adresse,
@@ -179,8 +180,6 @@ class Prescripteurs extends Component
             session()->flash('error', 'Une erreur s\'est produite lors de l\'enregistrement.');
         }
     }
-
-
 
     public function toggleStatus($id)
     {
@@ -224,11 +223,11 @@ class Prescripteurs extends Component
     private function resetPrescripteurForm()
     {
         $this->reset([
-            'nom', 'prenom', 'grade', 'specialite', 'status', 'telephone', // ← Ajouter status
+            'nom', 'prenom', 'grade', 'specialite', 'status', 'telephone',
             'email', 'adresse', 'ville', 'code_postal', 'notes'
         ]);
         $this->is_active = true;
-        $this->status = 'Medecin'; // ← Valeur par défaut
+        $this->status = 'Medecin';
         $this->resetErrorBag();
     }
 
@@ -239,12 +238,19 @@ class Prescripteurs extends Component
         $this->prescripteurId = null;
     }
 
-    // MÉTHODES POUR LES COMMISSIONS (VERSION SIMPLE)
+    // MÉTHODES POUR LES COMMISSIONS (AVEC EXCLUSION BiologieSolidaire)
     public function showCommissions($prescripteurId)
     {
         $this->selectedPrescripteur = Prescripteur::find($prescripteurId);
         
-        // Initialiser les dates pour l'affichage mais NE PAS les utiliser pour le filtre initial
+        // Vérifier si le prescripteur est BiologieSolidaire
+        if ($this->selectedPrescripteur && $this->selectedPrescripteur->status === 'BiologieSolidaire') {
+            session()->flash('info', 'Les prescripteurs de Biologie Solidaire ne perçoivent pas de commission.');
+            return;
+        }
+        
+        $this->commissionPourcentage = Setting::getCommissionPourcentage();
+        
         if (!$this->dateDebut) {
             $this->dateDebut = now()->startOfYear()->format('Y-m-d');
         }
@@ -252,7 +258,6 @@ class Prescripteurs extends Component
             $this->dateFin = now()->format('Y-m-d');
         }
         
-        // IMPORTANT: Charger TOUTES les données au début (sans filtre de dates)
         $this->loadCommissionDetailsAll();
         
         $this->showCommissionModal = true;
@@ -261,7 +266,7 @@ class Prescripteurs extends Component
     // Charger toutes les données sans filtre
     public function loadCommissionDetailsAll()
     {
-        if (!$this->selectedPrescripteur) {
+        if (!$this->selectedPrescripteur || $this->selectedPrescripteur->status === 'BiologieSolidaire') {
             $this->commissionDetails = [
                 'data' => collect([]),
                 'total_commission' => 0,
@@ -274,7 +279,6 @@ class Prescripteurs extends Component
         }
 
         try {
-            // Charger SANS filtres de dates (passer null, null)
             $statistiques = $this->selectedPrescripteur->getStatistiquesCommissions(null, null);
             $commissions = $this->selectedPrescripteur->getCommissionsParMois(null, null, null);
 
@@ -283,18 +287,7 @@ class Prescripteurs extends Component
                 ...$statistiques
             ];
 
-            \Log::info('Données chargées sans filtre', [
-                'prescripteur' => $this->selectedPrescripteur->nom_complet,
-                'total_prescriptions' => $this->commissionDetails['total_prescriptions'],
-                'total_commission' => $this->commissionDetails['total_commission']
-            ]);
-
         } catch (\Exception $e) {
-            \Log::error('Erreur chargement toutes données', [
-                'error' => $e->getMessage(),
-                'prescripteur_id' => $this->selectedPrescripteur->id
-            ]);
-            
             $this->commissionDetails = [
                 'data' => collect([]),
                 'total_commission' => 0,
@@ -310,23 +303,21 @@ class Prescripteurs extends Component
 
     public function updatedDateDebut()
     {
-        if ($this->dateDebut && $this->dateFin && $this->selectedPrescripteur) {
-            // Maintenant on applique le filtre de dates
+        if ($this->dateDebut && $this->dateFin && $this->selectedPrescripteur && $this->selectedPrescripteur->status !== 'BiologieSolidaire') {
             $this->loadCommissionDetails();
         }
     }
 
     public function updatedDateFin()
     {
-        if ($this->dateDebut && $this->dateFin && $this->selectedPrescripteur) {
-            // Maintenant on applique le filtre de dates
+        if ($this->dateDebut && $this->dateFin && $this->selectedPrescripteur && $this->selectedPrescripteur->status !== 'BiologieSolidaire') {
             $this->loadCommissionDetails();
         }
     }
 
     public function loadCommissionDetails()
     {
-        if (!$this->selectedPrescripteur) {
+        if (!$this->selectedPrescripteur || $this->selectedPrescripteur->status === 'BiologieSolidaire') {
             $this->commissionDetails = [
                 'data' => collect([]),
                 'total_commission' => 0,
@@ -339,13 +330,6 @@ class Prescripteurs extends Component
         }
 
         try {
-            \Log::info('Chargement des commissions avec filtres de dates', [
-                'prescripteur' => $this->selectedPrescripteur->nom_complet,
-                'dateDebut' => $this->dateDebut,
-                'dateFin' => $this->dateFin
-            ]);
-
-            // AVEC filtres de dates cette fois
             $statistiques = $this->selectedPrescripteur->getStatistiquesCommissions(
                 $this->dateDebut, 
                 $this->dateFin
@@ -362,22 +346,7 @@ class Prescripteurs extends Component
                 ...$statistiques
             ];
 
-            \Log::info('Commissions chargées avec succès', [
-                'total_prescriptions' => $this->commissionDetails['total_prescriptions'],
-                'total_commission' => $this->commissionDetails['total_commission'],
-                'data_count' => $this->commissionDetails['data']->count()
-            ]);
-
         } catch (\Exception $e) {
-            \Log::error('Erreur lors du chargement des commissions avec filtrage dates', [
-                'error' => $e->getMessage(),
-                'prescripteur_id' => $this->selectedPrescripteur->id ?? 'null',
-                'dateDebut' => $this->dateDebut,
-                'dateFin' => $this->dateFin,
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ]);
-            
             $this->commissionDetails = [
                 'data' => collect([]),
                 'total_commission' => 0,
@@ -391,19 +360,21 @@ class Prescripteurs extends Component
         }
     }
 
-
     private function calculateGlobalStatistics()
     {
         try {
             $totalPrescripteurs = Prescripteur::count();
             $prescripteursActifs = Prescripteur::where('is_active', true)->count();
             
-            // Calcul simple basé sur le nouveau champ commission_prescripteur
+            // Calcul uniquement pour les prescripteurs commissionnables (excluant BiologieSolidaire)
             $result = DB::table('paiements')
-                ->whereNull('deleted_at')
+                ->join('prescriptions', 'paiements.prescription_id', '=', 'prescriptions.id')
+                ->join('prescripteurs', 'prescriptions.prescripteur_id', '=', 'prescripteurs.id')
+                ->where('prescripteurs.status', '!=', 'BiologieSolidaire')
+                ->whereNull('paiements.deleted_at')
                 ->selectRaw('
                     COUNT(*) as total_paiements,
-                    SUM(commission_prescripteur) as total_commissions
+                    SUM(paiements.commission_prescripteur) as total_commissions
                 ')
                 ->first();
 
@@ -427,15 +398,13 @@ class Prescripteurs extends Component
         }
     }
 
-
     public function render()
     {
-        // Récupération des prescripteurs AVEC les compteurs
         $prescripteurs = Prescripteur::query()
             ->withCount([
                 'prescriptions as total_prescriptions',
                 'prescriptions as prescriptions_commissionnables' => function($q) {
-                    $q->whereHas('paiements'); // Prescriptions avec paiements
+                    $q->whereHas('paiements');
                 }
             ])
             ->when($this->search, function ($query) {
@@ -457,10 +426,8 @@ class Prescripteurs extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
-        // Statistiques simplifiées
         $statistiques = $this->calculateGlobalStatistics();
         
-        // Liste des spécialités
         $specialites = Prescripteur::select('specialite')
             ->distinct()
             ->whereNotNull('specialite')
@@ -469,13 +436,13 @@ class Prescripteurs extends Component
             ->pluck('specialite');
 
         $grades = Prescripteur::getGradesDisponibles();
-        $statusOptions = Prescripteur::getStatusDisponibles(); // ← NOUVEAU
+        $statusOptions = Prescripteur::getStatusDisponibles();
 
         return view('livewire.secretaire.prescripteurs', array_merge([
             'prescripteurs' => $prescripteurs,
             'specialites' => $specialites,
             'grades' => $grades,
-            'statusOptions' => $statusOptions, // ← NOUVEAU
+            'statusOptions' => $statusOptions,
         ], $statistiques));
     }
 }
