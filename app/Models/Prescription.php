@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Prescription extends Model
 {
@@ -30,13 +31,10 @@ class Prescription extends Model
         'unite_age',
         'poids',
         'renseignement_clinique',
-        'remise',
         'status',
     ];
 
-    // Ajouter les casts pour les décimaux
     protected $casts = [
-        'remise' => 'decimal:2',
         'poids' => 'decimal:2',
     ];
 
@@ -61,14 +59,10 @@ class Prescription extends Model
         return $this->belongsToMany(Analyse::class, 'prescription_analyse')->withTimestamps();
     }
 
+    // RELATION CORRIGÉE : Résultats directement liés à la prescription
     public function resultats()
     {
-        return $this->hasManyThrough(Resultat::class, Analyse::class, 'id', 'analyse_id', 'id', 'id')
-            ->whereIn('analyse_id', function ($query) {
-                $query->select('analyse_id')
-                    ->from('prescription_analyse')
-                    ->where('prescription_id', $this->id);
-            });
+        return $this->hasMany(Resultat::class);
     }
 
     public function tubes()
@@ -106,63 +100,72 @@ class Prescription extends Model
         return $total > 0 ? round(($termines / $total) * 100) : 0;
     }
 
-    public function getMontantAnalysesAttribute()
+    /**
+     * Calculer le montant des analyses avec chargement des relations
+     */
+    public function getMontantAnalysesCalcule()
     {
+        $this->loadMissing(['analyses.parent']);
+        
         $total = 0;
         $parentsTraites = [];
 
         foreach ($this->analyses as $analyse) {
+            // Si analyse enfant ET parent a un prix > 0
             if ($analyse->parent_id && !in_array($analyse->parent_id, $parentsTraites)) {
-                $parent = Analyse::find($analyse->parent_id);
-
-                if ($parent && $parent->prix > 0) {
-                    $total += $parent->prix;
+                if ($analyse->parent && $analyse->parent->prix > 0) {
+                    $total += $analyse->parent->prix;
                     $parentsTraites[] = $analyse->parent_id;
+                    continue;
+                }
+                // Si parent prix = 0, on prend le prix de l'enfant
+                elseif ($analyse->prix > 0) {
+                    $total += $analyse->prix;
                     continue;
                 }
             }
 
-            if (!$analyse->parent_id || !in_array($analyse->parent_id, $parentsTraites)) {
+            // Analyse sans parent
+            if (!$analyse->parent_id && $analyse->prix > 0) {
                 $total += $analyse->prix;
             }
         }
+        
         return $total;
     }
 
     public function getMontantTotalAttribute()
     {
-        $montantAnalyses = $this->montant_analyses;
+        $montantAnalyses = $this->getMontantAnalysesCalcule();
         $montantPrelevements = $this->prelevements->sum(function ($prelevement) {
             return $prelevement->pivot->prix_unitaire * $prelevement->pivot->quantite;
         });
-        return max(0, $montantAnalyses + $montantPrelevements - $this->remise);
+        return $montantAnalyses + $montantPrelevements;
     }
 
-    public function getPartPrescripteurAttribute()
+    // COMMISSION SIMPLIFIÉE (utilise le champ dans paiements)
+    public function getCommissionPrescripteurAttribute()
     {
-        return round($this->montant_analyses * 0.10, 2);
+        return $this->paiements->sum('commission_prescripteur');
     }
 
     public function getEstPayeeAttribute()
     {
-        return $this->paiements()->where('montant', '>=', $this->montant_total)->exists();
+        return $this->paiements()->exists();
     }
 
-    public function getCommissionPrescripteurAttribute()
+    public function getEstPayeeCompletementAttribute()
     {
-        if ($this->est_payee && in_array($this->status, [self::STATUS_TERMINE, self::STATUS_VALIDE, self::STATUS_ARCHIVE])) {
-            return $this->part_prescripteur;
-        }
-        return 0;
+        $montantTotal = $this->getMontantTotalAttribute();
+        $montantPaye = $this->paiements()->sum('montant');
+        return $montantPaye >= $montantTotal;
     }
 
     // MÉTHODES D'ARCHIVAGE
     public function archive()
     {
         if ($this->hasValidatedResultsByBiologiste()) {
-            $this->update([
-                'status' => self::STATUS_ARCHIVE,
-            ]);
+            $this->update(['status' => self::STATUS_ARCHIVE]);
             return true;
         }
         return false;
@@ -170,29 +173,25 @@ class Prescription extends Model
 
     public function unarchive()
     {
-        $this->update([
-            'status' => self::STATUS_VALIDE,
-        ]);
+        $this->update(['status' => self::STATUS_VALIDE]);
     }
 
+    // MÉTHODE CORRIGÉE : Vérification des résultats validés
     public function hasValidatedResultsByBiologiste()
     {
-        return $this->analyses->every(function ($analyse) {
-            return $analyse->resultats->every(function ($resultat) {
-                return !is_null($resultat->validated_by);
-            });
-        });
+        // Si pas de résultats, on ne peut pas archiver
+        if ($this->resultats()->count() === 0) {
+            return false;
+        }
+
+        // Tous les résultats doivent être validés
+        return $this->resultats()->whereNull('validated_by')->count() === 0;
     }
 
-    // SCOPES utiles
+    // SCOPES
     public function scopePayees($query)
     {
         return $query->whereHas('paiements');
-    }
-
-    public function scopeTerminees($query)
-    {
-        return $query->whereIn('status', [self::STATUS_TERMINE, self::STATUS_VALIDE, self::STATUS_ARCHIVE]);
     }
 
     public function scopeActives($query)
@@ -228,7 +227,6 @@ class Prescription extends Model
 
         return $labels[$this->status] ?? $this->status;
     }
-
 
     protected static function boot()
     {
