@@ -15,7 +15,7 @@ class Prescripteur extends Model
         'prenom',
         'grade',
         'specialite',
-        'status', // ← NOUVEAU CHAMP
+        'status',
         'telephone',
         'email',
         'is_active',
@@ -35,15 +35,31 @@ class Prescripteur extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeCommissionnables($query)
+    {
+        return $query->where('status', '!=', 'BiologieSolidaire');
+    }
+
     // Relations
     public function prescriptions()
     {
         return $this->hasMany(Prescription::class, 'prescripteur_id');
     }
 
-    // Statistiques commissions (NOUVELLE VERSION SIMPLE)
+    // Statistiques commissions (AVEC EXCLUSION BiologieSolidaire)
     public function getStatistiquesCommissions($dateDebut = null, $dateFin = null)
     {
+        // Si c'est BiologieSolidaire, retourner zéro
+        if ($this->status === 'BiologieSolidaire') {
+            return [
+                'total_prescriptions' => 0,
+                'montant_total_analyses' => 0,
+                'montant_total_paye' => 0,
+                'total_commission' => 0,
+                'commission_moyenne' => 0
+            ];
+        }
+
         $query = $this->prescriptions()->whereHas('paiements');
 
         if ($dateDebut && $dateFin && $dateDebut !== '' && $dateFin !== '') {
@@ -66,6 +82,11 @@ class Prescripteur extends Model
 
     public function getCommissionsParMois($annee = null, $dateDebut = null, $dateFin = null)
     {
+        // Si c'est BiologieSolidaire, retourner collection vide
+        if ($this->status === 'BiologieSolidaire') {
+            return collect([]);
+        }
+
         $query = $this->prescriptions()->whereHas('paiements');
         
         if ($dateDebut && $dateFin && $dateDebut !== '' && $dateFin !== '') {
@@ -114,15 +135,22 @@ class Prescripteur extends Model
         return trim(($this->prenom ? $this->prenom . ' ' : '') . $this->nom);
     }
 
+    public function getEstCommissionnableAttribute()
+    {
+        return $this->status !== 'BiologieSolidaire';
+    }
+
     // Méthodes statiques
     public static function getGradesDisponibles()
     {
         return [
             'Dr' => 'Docteur',
+            'Pr' => 'Professeur',
+            'Infirmier(e)' => 'Infirmier(e)',
+            'Sage-femme' => 'Sage-femme'
         ];
     }
 
-    // NOUVEAU : Méthode pour les statuts
     public static function getStatusDisponibles()
     {
         return [
