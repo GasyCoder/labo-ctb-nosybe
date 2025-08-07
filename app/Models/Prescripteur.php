@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Prescripteur extends Model
 {
@@ -13,10 +13,16 @@ class Prescripteur extends Model
     protected $fillable = [
         'nom',
         'prenom',
+        'grade',
         'specialite',
+        'status', // ← NOUVEAU CHAMP
         'telephone',
         'email',
         'is_active',
+        'adresse',
+        'ville',
+        'code_postal',
+        'notes',
     ];
 
     protected $casts = [
@@ -32,102 +38,96 @@ class Prescripteur extends Model
     // Relations
     public function prescriptions()
     {
-        return $this->hasMany(Prescription::class);
+        return $this->hasMany(Prescription::class, 'prescripteur_id');
     }
 
-    // MÉTHODES POUR CALCULER LES COMMISSIONS
-
-    /**
-     * Calculer le total des commissions pour ce prescripteur
-     * @param string|null $dateDebut
-     * @param string|null $dateFin
-     * @return float
-     */
-    public function calculerCommissionsTotal($dateDebut = null, $dateFin = null)
+    // Statistiques commissions (NOUVELLE VERSION SIMPLE)
+    public function getStatistiquesCommissions($dateDebut = null, $dateFin = null)
     {
-        $query = $this->prescriptions()
-                     ->payees()
-                     ->terminees();
+        $query = $this->prescriptions()->whereHas('paiements');
 
-        if ($dateDebut && $dateFin) {
-            $query->parPeriode($dateDebut, $dateFin);
+        if ($dateDebut && $dateFin && $dateDebut !== '' && $dateFin !== '') {
+            $query->whereBetween('created_at', [
+                \Carbon\Carbon::parse($dateDebut)->startOfDay(),
+                \Carbon\Carbon::parse($dateFin)->endOfDay()
+            ]);
         }
 
-        return $query->get()->sum('commission_prescripteur');
+        $prescriptions = $query->with('paiements')->get();
+
+        return [
+            'total_prescriptions' => $prescriptions->count(),
+            'montant_total_analyses' => $prescriptions->sum(function($p) { return $p->getMontantAnalysesCalcule(); }),
+            'montant_total_paye' => $prescriptions->sum(function($p) { return $p->paiements->sum('montant'); }),
+            'total_commission' => $prescriptions->sum(function($p) { return $p->paiements->sum('commission_prescripteur'); }),
+            'commission_moyenne' => $prescriptions->count() > 0 ? $prescriptions->sum(function($p) { return $p->paiements->sum('commission_prescripteur'); }) / $prescriptions->count() : 0
+        ];
     }
 
-    /**
-     * Calculer le montant total des analyses prescrites (payées et terminées)
-     */
-    public function getMontantAnalysesTotalAttribute()
+    public function getCommissionsParMois($annee = null, $dateDebut = null, $dateFin = null)
     {
-        return $this->prescriptions()
-                   ->payees()
-                   ->terminees()
-                   ->get()
-                   ->sum('montant_analyses');
+        $query = $this->prescriptions()->whereHas('paiements');
+        
+        if ($dateDebut && $dateFin && $dateDebut !== '' && $dateFin !== '') {
+            $query->whereBetween('created_at', [
+                \Carbon\Carbon::parse($dateDebut)->startOfDay(),
+                \Carbon\Carbon::parse($dateFin)->endOfDay()
+            ]);
+        } elseif ($annee) {
+            $query->whereYear('created_at', $annee);
+        }
+
+        $prescriptions = $query->with('paiements')->get();
+        
+        if ($prescriptions->isEmpty()) {
+            return collect([]);
+        }
+
+        $prescriptionsParMois = $prescriptions->groupBy(function($prescription) {
+            return $prescription->created_at->month;
+        });
+
+        $results = collect();
+        foreach ($prescriptionsParMois as $mois => $prescriptionsDuMois) {
+            $results->push((object)[
+                'mois' => $mois,
+                'nombre_prescriptions' => $prescriptionsDuMois->count(),
+                'montant_analyses' => $prescriptionsDuMois->sum(function($p) { return $p->getMontantAnalysesCalcule(); }),
+                'montant_paye' => $prescriptionsDuMois->sum(function($p) { return $p->paiements->sum('montant'); }),
+                'commission' => $prescriptionsDuMois->sum(function($p) { return $p->paiements->sum('commission_prescripteur'); }),
+            ]);
+        }
+
+        return $results->sortBy('mois')->values();
     }
 
-    /**
-     * Calculer le nombre de prescriptions réalisées
-     */
-    public function getNombrePrescriptionsRealeesAttribute()
-    {
-        return $this->prescriptions()
-                   ->payees()
-                   ->terminees()
-                   ->count();
-    }
-
-    /**
-     * Obtenir les commissions détaillées par mois
-     */
-    public function getCommissionsParMois($annee = null)
-    {
-        $annee = $annee ?: date('Y');
-
-        return $this->prescriptions()
-                   ->payees()
-                   ->terminees()
-                   ->whereYear('created_at', $annee)
-                   ->selectRaw('
-                       MONTH(created_at) as mois,
-                       COUNT(*) as nombre_prescriptions,
-                       SUM(montant_analyses) as montant_analyses,
-                       SUM(montant_analyses * 0.10) as commission
-                   ')
-                   ->groupBy('mois')
-                   ->orderBy('mois')
-                   ->get();
-    }
-
-    /**
-     * Commission en attente (prescriptions payées mais pas encore terminées)
-     */
-    public function getCommissionEnAttenteAttribute()
-    {
-        return $this->prescriptions()
-                   ->payees()
-                   ->whereNotIn('status', ['ANALYSE_TERMINEE', 'TERMINE', 'ARCHIVE'])
-                   ->get()
-                   ->sum('part_prescripteur');
-    }
-
-    /**
-     * Commission disponible (prescriptions terminées)
-     */
-    public function getCommissionDisponibleAttribute()
-    {
-        return $this->prescriptions()
-                   ->payees()
-                   ->terminees()
-                   ->get()
-                   ->sum('part_prescripteur');
-    }
-
-    // Accesseur pour nom complet
+    // Accesseurs
     public function getNomCompletAttribute()
     {
-        return trim($this->prenom . ' ' . $this->nom);
+        $grade = $this->grade ? $this->grade . ' ' : '';
+        $prenom = $this->prenom ? $this->prenom . ' ' : '';
+        return trim($grade . $prenom . $this->nom);
+    }
+
+    public function getNomSimpleAttribute()
+    {
+        return trim(($this->prenom ? $this->prenom . ' ' : '') . $this->nom);
+    }
+
+    // Méthodes statiques
+    public static function getGradesDisponibles()
+    {
+        return [
+            'Dr' => 'Docteur',
+        ];
+    }
+
+    // NOUVEAU : Méthode pour les statuts
+    public static function getStatusDisponibles()
+    {
+        return [
+            'Medecin' => 'Médecin',
+            'BiologieSolidaire' => 'Biologie Solidaire',
+        ];
     }
 }
