@@ -144,7 +144,7 @@
                                         <div class="flex items-center justify-between">
                                             <div class="flex items-center space-x-2 flex-1">
                                                 <div class="w-6 h-6 bg-gradient-to-br from-{{ $isEditMode ? 'orange' : 'yellow' }}-500 to-{{ $isEditMode ? 'amber' : 'orange' }}-600 rounded flex items-center justify-center text-white">
-                                                    <em class="ni ni-capsule text-xs"></em>
+                                                    <em class="ni ni-tag text-xs"></em>
                                                 </div>
                                                 <div>
                                                     <div class="flex items-center space-x-1.5 mb-0.5">
