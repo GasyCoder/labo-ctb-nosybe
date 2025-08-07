@@ -349,11 +349,13 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read mixed $est_commissionnable
  * @property-read mixed $nom_complet
  * @property-read mixed $nom_simple
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prescription> $prescriptions
  * @property-read int|null $prescriptions_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur actifs()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur commissionnables()
  * @method static \Database\Factories\PrescripteurFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescripteur newQuery()
@@ -502,6 +504,37 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat withoutTrashed()
  */
 	class Resultat extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property string $nom_entreprise
+ * @property string|null $nif
+ * @property string|null $statut
+ * @property float $remise_pourcentage
+ * @property bool $activer_remise
+ * @property string $unite_argent
+ * @property bool $commission_prescripteur
+ * @property float $commission_prescripteur_pourcentage
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereActiverRemise($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCommissionPrescripteur($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCommissionPrescripteurPourcentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereNif($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereNomEntreprise($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereRemisePourcentage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereStatut($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUniteArgent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUpdatedAt($value)
+ */
+	class Setting extends \Eloquent {}
 }
 
 namespace App\Models{
