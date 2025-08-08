@@ -13,6 +13,7 @@ use App\Models\Prescripteur;
 use App\Models\Prescription;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
+use App\Models\PaymentMethod;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class AddPrescription extends Component
     public string $etape = 'patient';
 
     public bool $isEditMode = false;
-    public bool $activer_remise = false;
+    public bool $activer_remise = false; // ✅ AJOUT DE LA PROPRIÉTÉ PUBLIQUE
     
     // 👤 DONNÉES PATIENT
     public ?Patient $patient = null;
@@ -79,11 +80,31 @@ class AddPrescription extends Component
         // Valider l'étape depuis l'URL
         $this->validateEtape();
         
+        // ✅ CHARGER LE SETTING DE REMISE
+        $this->chargerSettingsRemise();
+        
         $this->calculerTotaux();
         $this->reference = (new Prescription())->genererReferenceUnique();
+        $premiereMethode = PaymentMethod::where('is_active', true)
+                                   ->orderBy('display_order')
+                                   ->first();
 
         $this->isEditMode = false;
-        $this->activer_remise = Setting::first()?->activer_remise ?? false;
+        $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
+    }
+
+    public function getMethodesPaiementProperty()
+    {
+        return PaymentMethod::where('is_active', true)
+                        ->orderBy('display_order')
+                        ->get();
+    }
+
+    // ✅ NOUVELLE MÉTHODE POUR CHARGER LES SETTINGS
+    private function chargerSettingsRemise()
+    {
+        $setting = Setting::first();
+        $this->activer_remise = $setting?->activer_remise ?? false;
     }
 
     public function getTitle()
@@ -198,7 +219,7 @@ class AddPrescription extends Component
             'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'age', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
-            'montantPaye', 'activer_remise', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
+            'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
             'rechercheAnalyse', 'recherchePrelevement'
         ]);
         
@@ -209,6 +230,10 @@ class AddPrescription extends Component
         $this->patientType = 'EXTERNE';
         $this->modePaiement = 'ESPECES';
         $this->civilite = 'Monsieur';
+        
+        // ✅ RECHARGER LES SETTINGS
+        $this->chargerSettingsRemise();
+        
         $this->calculerTotaux();
 
         flash()->info('Nouvelle prescription initialisée');
@@ -611,13 +636,23 @@ class AddPrescription extends Component
     
     public function validerPaiement()
     {
+        // ✅ Récupérer les codes des méthodes actives pour validation dynamique
+        $codesMethodesActives = PaymentMethod::where('is_active', true)
+                                            ->pluck('code')
+                                            ->toArray();
+        
+        $codesValidation = !empty($codesMethodesActives) 
+            ? 'in:' . implode(',', $codesMethodesActives)
+            : 'in:ESPECES,CARTE,CHEQUE,MOBILEMONEY'; // Fallback
+        
         // Validation des données de paiement
         $this->validate([
-            'modePaiement' => 'required|in:ESPECES,CARTE,CHEQUE',
+            'modePaiement' => "required|{$codesValidation}",
             'montantPaye' => 'required|numeric|min:0',
             'remise' => 'nullable|numeric|min:0',
         ], [
             'modePaiement.required' => 'Veuillez sélectionner un mode de paiement',
+            'modePaiement.in' => 'Mode de paiement non valide ou inactif',
             'montantPaye.required' => 'Le montant payé est obligatoire',
             'montantPaye.min' => 'Le montant payé doit être positif',
         ]);
@@ -694,11 +729,18 @@ class AddPrescription extends Component
                 }
             }
             
-            // 4. Enregistrer le paiement
+            // ✅ 4. Enregistrer le paiement avec payment_method_id
+            // Récupérer l'ID de la méthode de paiement sélectionnée
+            $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
+            
+            if (!$paymentMethod) {
+                throw new \Exception('Méthode de paiement invalide: ' . $this->modePaiement);
+            }
+            
             Paiement::create([
                 'prescription_id' => $prescription->id,
                 'montant' => $this->total,
-                'mode_paiement' => $this->modePaiement,
+                'payment_method_id' => $paymentMethod->id, // ✅ Utilise payment_method_id
                 'recu_par' => Auth::id()
             ]);
             
