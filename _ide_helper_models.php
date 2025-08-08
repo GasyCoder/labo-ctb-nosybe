@@ -198,11 +198,14 @@ namespace App\Models{
  * @property int $prescription_id
  * @property numeric $montant
  * @property numeric $commission_prescripteur
- * @property string $mode_paiement
+ * @property int|null $payment_method_id
  * @property int $recu_par
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read mixed $methode_paiement_label
+ * @property-read mixed $modee_paiement
+ * @property-read \App\Models\PaymentMethod|null $paymentMethod
  * @property-read \App\Models\Prescription $prescription
  * @property-read \App\Models\User $utilisateur
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement newModelQuery()
@@ -213,8 +216,8 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereModePaiement($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereMontant($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement wherePaymentMethodId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement wherePrescriptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereRecuPar($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereUpdatedAt($value)
@@ -262,6 +265,34 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient withoutTrashed()
  */
 	class Patient extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property string $code Code unique de la méthode (ex: ESPECES, CARTE)
+ * @property string $label Libellé affiché (ex: Espèces, Carte bancaire)
+ * @property bool $is_active Méthode active ou non
+ * @property int $display_order Ordre d'affichage
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Paiement> $paiements
+ * @property-read int|null $paiements_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod active()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod activeOrdered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod ordered()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereDisplayOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereLabel($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PaymentMethod whereUpdatedAt($value)
+ */
+	class PaymentMethod extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -514,11 +545,14 @@ namespace App\Models{
  * @property string|null $statut
  * @property float $remise_pourcentage
  * @property bool $activer_remise
- * @property string $unite_argent
+ * @property string $format_unite_argent
  * @property bool $commission_prescripteur
  * @property float $commission_prescripteur_pourcentage
+ * @property string|null $logo Chemin vers le logo de l'entreprise
+ * @property string|null $favicon Chemin vers le favicon du site
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\PaymentMethod|null $defaultPaymentMethod
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting query()
@@ -526,12 +560,14 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCommissionPrescripteur($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCommissionPrescripteurPourcentage($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereFavicon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereFormatUniteArgent($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereLogo($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereNif($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereNomEntreprise($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereRemisePourcentage($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereStatut($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUniteArgent($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUpdatedAt($value)
  */
 	class Setting extends \Eloquent {}
