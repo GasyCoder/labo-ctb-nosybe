@@ -108,7 +108,7 @@
                 </div>
             </div>
         </div>
-    @endif
+   
 
     {{-- Tableau des archives --}}
     <div class="bg-white dark:bg-slate-900 rounded-lg shadow overflow-hidden">

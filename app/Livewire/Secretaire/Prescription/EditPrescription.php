@@ -9,6 +9,8 @@ use App\Models\Prescripteur;
 use App\Models\Prelevement;
 use App\Models\Paiement;
 use App\Models\Tube;
+use App\Models\Setting;
+use App\Models\PaymentMethod;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Url;
@@ -23,7 +25,8 @@ class EditPrescription extends Component
     #[Url(as: 'step', except: 'patient', history: true)]
     public string $etape = 'patient';
 
-    public bool $isEditMode = false;
+    public bool $isEditMode = true;
+    public bool $activer_remise = false; // ✅ AJOUT DE LA PROPRIÉTÉ PUBLIQUE
 
     public ?Patient $patient = null;
     public bool $nouveauPatient = false;
@@ -65,8 +68,27 @@ class EditPrescription extends Component
         $this->prescriptionId = $prescriptionId;
         $this->loadPrescription();
         $this->validateEtape();
+        
+        // ✅ CHARGER LES SETTINGS DE REMISE
+        $this->chargerSettingsRemise();
+        
         $this->calculerTotaux();
         $this->isEditMode = true;
+    }
+
+    // ✅ NOUVELLE MÉTHODE POUR CHARGER LES SETTINGS
+    private function chargerSettingsRemise()
+    {
+        $setting = Setting::first();
+        $this->activer_remise = $setting?->activer_remise ?? false;
+    }
+
+    // ✅ MÉTHODE POUR RÉCUPÉRER LES MÉTHODES DE PAIEMENT ACTIVES
+    public function getMethodesPaiementProperty()
+    {
+        return PaymentMethod::where('is_active', true)
+                        ->orderBy('display_order')
+                        ->get();
     }
 
     public function getTitle()
@@ -77,7 +99,7 @@ class EditPrescription extends Component
     private function loadPrescription()
     {
         $this->prescription = Prescription::with([
-            'patient', 'analyses', 'prelevements', 'paiements', 'tubes'
+            'patient', 'analyses', 'prelevements', 'paiements.paymentMethod', 'tubes'
         ])->findOrFail($this->prescriptionId);
 
         // PATIENT
@@ -128,9 +150,18 @@ class EditPrescription extends Component
             ];
         }
 
-        // PAIEMENT
+        // ✅ PAIEMENT - RÉCUPÉRATION CORRECTE DU MODE DE PAIEMENT
         $lastPaiement = $this->prescription->paiements()->latest()->first();
-        $this->modePaiement = $lastPaiement ? $lastPaiement->mode_paiement : 'ESPECES';
+        if ($lastPaiement && $lastPaiement->paymentMethod) {
+            $this->modePaiement = $lastPaiement->paymentMethod->code;
+        } else {
+            // Fallback vers la première méthode active
+            $premiereMethode = PaymentMethod::where('is_active', true)
+                                           ->orderBy('display_order')
+                                           ->first();
+            $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
+        }
+        
         $this->montantPaye = $lastPaiement ? $lastPaiement->montant : 0;
         $this->remise = $this->prescription->remise ?? 0;
         $this->total = $this->prescription->paiements()->sum('montant') ?? 0;
@@ -269,6 +300,13 @@ class EditPrescription extends Component
             'age' => 'required|integer|min:0|max:150',
             'patientType' => 'required|in:HOSPITALISE,EXTERNE,URGENCE-NUIT,URGENCE-JOUR',
             'poids' => 'nullable|numeric|min:0|max:500'
+        ], [
+            'prescripteurId.required' => 'Veuillez sélectionner un prescripteur',
+            'prescripteurId.exists' => 'Prescripteur invalide',
+            'age.required' => 'L\'âge est obligatoire',
+            'age.min' => 'L\'âge doit être positif',
+            'age.max' => 'L\'âge ne peut pas dépasser 150 ans',
+            'poids.max' => 'Le poids ne peut pas dépasser 500 kg'
         ]);
 
         flash()->success('Informations cliniques validées');
@@ -287,20 +325,29 @@ class EditPrescription extends Component
             return;
         }
 
-        $analyse = Analyse::with(['parent', 'enfants'])->find($analyseId);
-        
-        if (!$analyse) {
-            flash()->error('Analyse introuvable');
-            return;
-        }
+        try {
+            $analyse = Analyse::with(['parent', 'enfants'])->find($analyseId);
+            
+            if (!$analyse) {
+                flash()->error('Analyse introuvable');
+                return;
+            }
 
-        if ($analyse->level === 'PARENT') {
-            $this->ajouterAnalyseParent($analyse);
-        } else {
-            $this->ajouterAnalyseIndividuelle($analyse);
-        }
+            // LOGIQUE DIFFÉRENTE SELON LE NIVEAU
+            if ($analyse->level === 'PARENT') {
+                // CAS 1: ANALYSE PARENT (Panel complet)
+                $this->ajouterAnalyseParent($analyse);
+            } else {
+                // CAS 2: ANALYSE INDIVIDUELLE (Normal/Child)
+                $this->ajouterAnalyseIndividuelle($analyse);
+            }
 
-        $this->calculerTotaux();
+            $this->calculerTotaux();
+            
+        } catch (\Exception $e) {
+            flash()->error('Erreur lors de l\'ajout de l\'analyse');
+            Log::error('Erreur ajout analyse', ['error' => $e->getMessage(), 'analyse_id' => $analyseId]);
+        }
     }
 
     private function ajouterAnalyseParent($analyse)
@@ -310,6 +357,20 @@ class EditPrescription extends Component
             return;
         }
 
+        // Vérifier si des enfants de ce parent sont déjà dans le panier
+        $enfantsDejaPresents = [];
+        foreach ($this->analysesPanier as $id => $item) {
+            if ($item['parent_id'] == $analyse->id) {
+                $enfantsDejaPresents[] = $item['designation'];
+            }
+        }
+
+        if (!empty($enfantsDejaPresents)) {
+            flash()->warning('Certaines analyses de ce panel sont déjà sélectionnées: ' . implode(', ', $enfantsDejaPresents));
+            return;
+        }
+
+        // Ajouter le parent comme une analyse complète
         $this->analysesPanier[$analyse->id] = [
             'id' => $analyse->id,
             'designation' => $analyse->designation,
@@ -324,16 +385,39 @@ class EditPrescription extends Component
             'enfants_inclus' => $analyse->enfants->pluck('designation')->toArray(),
         ];
 
-        flash()->success("Panel « {$analyse->designation} » ajouté au panier");
+        $message = "Panel « {$analyse->designation} » ajouté au panier";
+        if ($analyse->enfants->count() > 0) {
+            $message .= " (inclut {$analyse->enfants->count()} analyses)";
+        }
+        
+        flash()->success($message);
     }
 
     private function ajouterAnalyseIndividuelle($analyse)
     {
+        if (!in_array($analyse->level, ['NORMAL', 'CHILD'])) {
+            flash()->error('Type d\'analyse non valide');
+            return;
+        }
+
+        // Vérifier si le parent de cette analyse est déjà dans le panier
+        if ($analyse->parent_id) {
+            foreach ($this->analysesPanier as $item) {
+                if ($item['id'] == $analyse->parent_id && isset($item['is_parent'])) {
+                    flash()->warning("Cette analyse est déjà incluse dans le panel « {$item['designation']} »");
+                    return;
+                }
+            }
+        }
+
+        // Calculer le prix selon la logique parent/enfant
         $prixEffectif = $analyse->prix;
         $parentNom = 'Analyse individuelle';
 
         if ($analyse->parent && $analyse->parent->prix > 0) {
+            // Si le parent a un prix, cette analyse peut être gratuite ou payante selon la logique métier
             $parentNom = $analyse->parent->designation . ' (partie)';
+            // Garder le prix de l'analyse individuelle
         } elseif ($analyse->parent) {
             $parentNom = $analyse->parent->designation;
         }
@@ -371,8 +455,42 @@ class EditPrescription extends Component
             return;
         }
 
+        // Validation des conflits parent/enfant
+        $conflits = $this->detecterConflitsParentEnfant();
+        if (!empty($conflits)) {
+            flash()->error('Conflits détectés: ' . implode(', ', $conflits));
+            return;
+        }
+
         flash()->success(count($this->analysesPanier) . ' analyse(s) sélectionnée(s)');
         $this->allerEtape('prelevements');
+    }
+
+    private function detecterConflitsParentEnfant()
+    {
+        $conflits = [];
+        $parentsPresents = [];
+        $enfantsPresents = [];
+
+        foreach ($this->analysesPanier as $analyse) {
+            if (isset($analyse['is_parent']) && $analyse['is_parent']) {
+                $parentsPresents[] = $analyse['id'];
+            } else {
+                if ($analyse['parent_id']) {
+                    $enfantsPresents[$analyse['parent_id']][] = $analyse['designation'];
+                }
+            }
+        }
+
+        // Vérifier les conflits
+        foreach ($parentsPresents as $parentId) {
+            if (isset($enfantsPresents[$parentId])) {
+                $parent = Analyse::find($parentId);
+                $conflits[] = "Panel {$parent->designation} en conflit avec ses analyses individuelles";
+            }
+        }
+
+        return $conflits;
     }
 
     // =====================================
@@ -386,25 +504,31 @@ class EditPrescription extends Component
             return;
         }
 
-        $prelevement = Prelevement::find($prelevementId);
-        
-        if (!$prelevement) {
-            flash()->error('Prélèvement introuvable');
-            return;
-        }
-        
-        $this->prelevementsSelectionnes[$prelevementId] = [
-            'id' => $prelevement->id,
-            'nom' => $prelevement->nom,
-            'description' => $prelevement->description ?? '',
-            'prix' => $prelevement->prix ?? 0,
-            'quantite' => 1,
-            'type_tube_requis' => 'SEC',
-            'volume_requis_ml' => 5.0,
-        ];
+        try {
+            $prelevement = Prelevement::find($prelevementId);
+            
+            if (!$prelevement) {
+                flash()->error('Prélèvement introuvable');
+                return;
+            }
+            
+            $this->prelevementsSelectionnes[$prelevementId] = [
+                'id' => $prelevement->id,
+                'nom' => $prelevement->nom,
+                'description' => $prelevement->description ?? '',
+                'prix' => $prelevement->prix ?? 0,
+                'quantite' => 1,
+                'type_tube_requis' => 'SEC',
+                'volume_requis_ml' => 5.0,
+            ];
 
-        $this->calculerTotaux();
-        flash()->success("Prélèvement « {$prelevement->nom} » ajouté");
+            $this->calculerTotaux();
+            flash()->success("Prélèvement « {$prelevement->nom} » ajouté");
+            
+        } catch (\Exception $e) {
+            flash()->error('Erreur lors de l\'ajout du prélèvement');
+            Log::error('Erreur ajout prélèvement', ['error' => $e->getMessage(), 'prelevement_id' => $prelevementId]);
+        }
     }
 
     public function retirerPrelevement(int $prelevementId)
@@ -428,6 +552,7 @@ class EditPrescription extends Component
 
     public function validerPrelevements()
     {
+        // Prélèvements optionnels - pas de validation obligatoire
         if (empty($this->prelevementsSelectionnes)) {
             flash()->info('Aucun prélèvement sélectionné - Passage direct au paiement');
         } else {
@@ -443,38 +568,50 @@ class EditPrescription extends Component
 
     private function calculerTotaux()
     {
-        $sousTotal = 0;
-        $parentsTraites = [];
+        try {
+            $sousTotal = 0;
+            $parentsTraites = [];
 
-        foreach ($this->analysesPanier as $analyse) {
-            if (isset($analyse['is_parent']) && $analyse['is_parent']) {
-                $sousTotal += $analyse['prix_effectif'];
-            } else {
-                if ($analyse['parent_id'] && !in_array($analyse['parent_id'], $parentsTraites)) {
-                    $parent = Analyse::find($analyse['parent_id']);
-                    if ($parent && $parent->prix > 0) {
-                        $sousTotal += $analyse['prix_effectif'];
+            foreach ($this->analysesPanier as $analyse) {
+                if (isset($analyse['is_parent']) && $analyse['is_parent']) {
+                    // CAS 1: Analyse PARENT (panel complet)
+                    $sousTotal += $analyse['prix_effectif'];
+                } else {
+                    // CAS 2: Analyse individuelle
+                    if ($analyse['parent_id'] && !in_array($analyse['parent_id'], $parentsTraites)) {
+                        // Vérifier si le parent a un prix et n'est pas déjà compté
+                        $parent = Analyse::find($analyse['parent_id']);
+                        if ($parent && $parent->prix > 0) {
+                            // ICI: Option C - Si on prend les enfants individuellement, on ne compte pas le parent
+                            $sousTotal += $analyse['prix_effectif'];
+                        } else {
+                            $sousTotal += $analyse['prix_effectif'];
+                        }
                     } else {
                         $sousTotal += $analyse['prix_effectif'];
                     }
-                } else {
-                    $sousTotal += $analyse['prix_effectif'];
                 }
             }
-        }
 
-        $totalPrelevements = 0;
-        foreach ($this->prelevementsSelectionnes as $prelevement) {
-            $totalPrelevements += ($prelevement['prix'] ?? 0) * ($prelevement['quantite'] ?? 1);
-        }
+            // Total des prélèvements
+            $totalPrelevements = 0;
+            foreach ($this->prelevementsSelectionnes as $prelevement) {
+                $totalPrelevements += ($prelevement['prix'] ?? 0) * ($prelevement['quantite'] ?? 1);
+            }
 
-        $this->total = max(0, $sousTotal + $totalPrelevements - $this->remise);
-        
-        if ($this->montantPaye < $this->total) {
-            $this->montantPaye = $this->total;
+            $this->total = max(0, $sousTotal + $totalPrelevements - $this->remise);
+            
+            if ($this->montantPaye < $this->total) {
+                $this->montantPaye = $this->total;
+            }
+            
+            $this->calculerMonnaie();
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur calcul totaux', ['error' => $e->getMessage()]);
+            $this->total = 0;
+            $this->montantPaye = 0;
         }
-        
-        $this->calculerMonnaie();
     }
 
     public function updatedRemise()
@@ -496,10 +633,25 @@ class EditPrescription extends Component
 
     public function validerPaiement()
     {
+        // ✅ Récupérer les codes des méthodes actives pour validation dynamique
+        $codesMethodesActives = PaymentMethod::where('is_active', true)
+                                            ->pluck('code')
+                                            ->toArray();
+        
+        $codesValidation = !empty($codesMethodesActives) 
+            ? 'in:' . implode(',', $codesMethodesActives)
+            : 'in:ESPECES,CARTE,CHEQUE,MOBILEMONEY'; // Fallback
+        
+        // Validation des données de paiement
         $this->validate([
-            'modePaiement' => 'required|in:ESPECES,CARTE,CHEQUE',
+            'modePaiement' => "required|{$codesValidation}",
             'montantPaye' => 'required|numeric|min:0',
             'remise' => 'nullable|numeric|min:0',
+        ], [
+            'modePaiement.required' => 'Veuillez sélectionner un mode de paiement',
+            'modePaiement.in' => 'Mode de paiement non valide ou inactif',
+            'montantPaye.required' => 'Le montant payé est obligatoire',
+            'montantPaye.min' => 'Le montant payé doit être positif',
         ]);
 
         if ($this->montantPaye < $this->total) {
@@ -536,13 +688,6 @@ class EditPrescription extends Component
     // 🔧 MÉTHODES UTILITAIRES
     // =====================================
 
-    private function genererReferencePatient(): string
-    {
-        $annee = date('Y');
-        $numero = str_pad(Patient::count() + 1, 5, '0', STR_PAD_LEFT);
-        return "PAT{$annee}{$numero}";
-    }
-
     private function genererTubesPourPrescription($prescription)
     {
         $tubes = [];
@@ -552,6 +697,7 @@ class EditPrescription extends Component
                 $quantite = $prelevement->pivot->quantite ?? 1;
                 
                 for ($i = 0; $i < $quantite; $i++) {
+                    // Créer le tube avec un nouveau pattern plus sûr
                     $tube = new Tube([
                         'prescription_id' => $prescription->id,
                         'patient_id' => $prescription->patient_id,
@@ -562,7 +708,10 @@ class EditPrescription extends Component
                         'genere_at' => now(),
                     ]);
                     
+                    // Sauvegarder d'abord pour obtenir l'ID
                     $tube->save();
+
+                    // Maintenant générer le code-barre avec l'ID
                     $tube->code_barre = 'T' . date('Y') . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
                     $tube->numero_tube = 'T-' . date('Y') . '-' . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
                     $tube->save();
@@ -578,7 +727,9 @@ class EditPrescription extends Component
                 }
             }
 
+            // Marquer la prescription comme ayant des tubes générés
             $prescription->update(['status' => 'EN_ATTENTE']);
+            
             flash()->success(count($tubes) . ' tube(s) généré(s) avec succès');
             
         } catch (\Exception $e) {
@@ -597,9 +748,9 @@ class EditPrescription extends Component
         try {
             DB::beginTransaction();
 
-            // Validation des données requises
+            // Vérifications préalables
             if (!$this->patient) {
-                throw new \Exception('Patient non sélectionné');
+                throw new \Exception('Patient non défini');
             }
 
             if (!Prescripteur::find($this->prescripteurId)) {
@@ -625,69 +776,67 @@ class EditPrescription extends Component
                 'updated_at' => now()
             ]);
 
-            // 2. Synchroniser les analyses
+            // 2. Associer les analyses (vérification des IDs)
             $analyseIds = array_keys($this->analysesPanier);
-            $existingAnalyses = Analyse::whereIn('id', $analyseIds)->pluck('id');
+            $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
             
-            if ($existingAnalyses->count() !== count($analyseIds)) {
-                throw new \Exception('Certaines analyses sélectionnées sont introuvables');
+            if (count($analysesExistantes) !== count($analyseIds)) {
+                throw new \Exception('Certaines analyses sélectionnées n\'existent plus');
             }
+            
+            $this->prescription->analyses()->sync($analysesExistantes);
 
-            $this->prescription->analyses()->sync($existingAnalyses);
-
-            // 3. Gérer les prélèvements
+            // 3. Associer les prélèvements avec vérification (si présents)
             $this->prescription->prelevements()->detach();
             
             if (!empty($this->prelevementsSelectionnes)) {
                 foreach ($this->prelevementsSelectionnes as $prelevement) {
-                    $prelevementModel = Prelevement::find($prelevement['id']);
-                    if (!$prelevementModel) {
-                        throw new \Exception("Prélèvement {$prelevement['id']} introuvable");
+                    if (!Prelevement::find($prelevement['id'])) {
+                        throw new \Exception('Prélèvement ID ' . $prelevement['id'] . ' invalide');
                     }
 
                     $this->prescription->prelevements()->attach($prelevement['id'], [
-                        'prix_unitaire' => $prelevement['prix'] ?? $prelevementModel->prix ?? 0,
+                        'prix_unitaire' => $prelevement['prix'] ?? 0,
                         'quantite' => max(1, $prelevement['quantite'] ?? 1),
                         'type_tube_requis' => $prelevement['type_tube_requis'] ?? 'SEC',
                         'volume_requis_ml' => $prelevement['volume_requis_ml'] ?? 5.0,
-                        'is_payer' => 'PAYE',
-                        'created_at' => now(),
-                        'updated_at' => now()
+                        'is_payer' => 'PAYE'
                     ]);
                 }
             }
 
-            // 4. Mettre à jour le paiement
-            $this->prescription->paiements()->delete(); // Supprime les anciens paiements
+            // ✅ 4. Enregistrer le paiement avec payment_method_id
+            // Récupérer l'ID de la méthode de paiement sélectionnée
+            $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
+            
+            if (!$paymentMethod) {
+                throw new \Exception('Méthode de paiement invalide: ' . $this->modePaiement);
+            }
+            
+            // Supprimer les anciens paiements et créer le nouveau
+            $this->prescription->paiements()->delete();
             
             Paiement::create([
                 'prescription_id' => $this->prescription->id,
                 'montant' => $this->total,
-                'mode_paiement' => $this->modePaiement,
-                'recu_par' => Auth::id(),
-                'created_at' => now(),
-                'updated_at' => now()
+                'payment_method_id' => $paymentMethod->id, // ✅ Utilise payment_method_id
+                'recu_par' => Auth::id()
             ]);
 
-            // 5. Régénérer les tubes si nécessaire
+            // 5. Régénérer les tubes (seulement si prélèvements présents)
             $this->prescription->tubes()->delete();
             $this->tubesGeneres = [];
             
             if (!empty($this->prelevementsSelectionnes)) {
                 $this->tubesGeneres = $this->genererTubesPourPrescription($this->prescription);
+                $this->allerEtape('tubes');
+            } else {
+                $this->allerEtape('confirmation');
             }
 
             DB::commit();
 
-            // Redirection et message de succès
-            $this->allerEtape('confirmation');
-            
-            $message = 'Prescription mise à jour avec succès';
-            if (!empty($this->tubesGeneres)) {
-                $message .= ' - ' . count($this->tubesGeneres) . ' nouveau(x) tube(s) généré(s)';
-            }
-            
-            session()->flash('success', $message);
+            flash()->success('Prescription modifiée avec succès!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -699,7 +848,7 @@ class EditPrescription extends Component
                 'prescription_id' => $this->prescriptionId
             ]);
             
-            session()->flash('error', 'Erreur lors de la modification : ' . $e->getMessage());
+            flash()->error('Erreur lors de la modification: ' . $e->getMessage());
         }
     }
 
@@ -750,9 +899,10 @@ class EditPrescription extends Component
         $terme = trim(strtoupper($this->rechercheAnalyse));
         $results = collect();
 
+        // 1. RECHERCHE DIRECTE DES PARENTS (panels complets)
         $parents = Analyse::where('status', true)
                         ->where('level', 'PARENT')
-                        ->where('prix', '>', 0)
+                        ->where('prix', '>', 0) // Seulement les parents avec prix
                         ->where(function($query) use ($terme) {
                             $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
                                 ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
@@ -768,6 +918,7 @@ class EditPrescription extends Component
                         ->limit(10)
                         ->get();
 
+        // 2. RECHERCHE DES ANALYSES INDIVIDUELLES (normal/child)
         $individuelles = Analyse::where('status', true)
                             ->whereIn('level', ['NORMAL', 'CHILD'])
                             ->where(function($query) use ($terme) {
@@ -786,7 +937,9 @@ class EditPrescription extends Component
                             ->limit(15)
                             ->get();
 
+        // 3. COMBINER LES RÉSULTATS (Parents en premier)
         $results = $parents->concat($individuelles)->take(20);
+
         $this->parentRecherche = null;
         return $results;
     }
@@ -836,8 +989,17 @@ class EditPrescription extends Component
         $this->age = 0;
         $this->uniteAge = 'Ans';
         $this->patientType = 'EXTERNE';
-        $this->modePaiement = 'ESPECES';
         $this->civilite = 'Monsieur';
+        
+        // ✅ RECHARGER LES SETTINGS
+        $this->chargerSettingsRemise();
+        
+        // Initialiser avec la première méthode active
+        $premiereMethode = PaymentMethod::where('is_active', true)
+                                       ->orderBy('display_order')
+                                       ->first();
+        $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
+        
         $this->calculerTotaux();
 
         flash()->info('Nouvelle prescription initialisée');

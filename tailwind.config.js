@@ -154,4 +154,10 @@ export default {
         require('@tailwindcss/forms'),
         require('@tailwindcss/typography'),
     ],
+    safelist: [
+        'peer-checked:border-orange-500',
+        'peer-checked:bg-orange-50',
+        'peer-checked:border-primary-500',
+        'peer-checked:bg-primary-50'
+    ],
 };

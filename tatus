@@ -1,0 +1,1568 @@
+[33mcommit 907dea862004c88f3802feafa1cabd7a7ebf936d[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Merge: b4672f6 e1d5102
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:33:05 2025 +0300
+
+    Merge branch 'master' of github.com:GasyCoder/labo-ctb-nosybe
+
+[33mcommit b4672f69ee433edbaaa9f3ac3964f0c328faee08[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:57 2025 +0300
+
+    Deleted database/seeders/SettingSeeder.php
+
+[33mcommit 263b02ebba369990fcfc6f5bc0df2b3f34e4ecfb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:57 2025 +0300
+
+    Added resources/views/livewire/secretaire/prescription/partials/Includes/
+
+[33mcommit 3d249276978defbeb51da1ee4f7883d2d088bc4d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:56 2025 +0300
+
+    Added resources/views/livewire/admin/partials/
+
+[33mcommit 7c1c078ec7c460e30885cd3027235b9f514d2593[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:56 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-index.blade.php
+
+[33mcommit 5a9aa797488c24f1daf8930e3227fc667451026b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:56 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/paiement.blade.php
+
+[33mcommit 61ce882006d2069b424e96c99a8aea149d272f0e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:55 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/admin/settings.blade.php
+
+[33mcommit b090c88d5dab0ae20e7d32ffc655c8d828a36ca3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:54 2025 +0300
+
+    Error fetching commit message for database/seeders/DatabaseSeeder.php
+
+[33mcommit daf513a3c7cad1bad4305b988b65b059f4b6d912[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:54 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_07_201531_create_settings_table.php
+
+[33mcommit a18ce57a6b4192216e591a24103b990f29635a9c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:53 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_190531_create_paiements_table.php
+
+[33mcommit 04557c73041585b2d84cae461d59394319c35d01[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:52 2025 +0300
+
+    Error fetching commit message for composer.json
+
+[33mcommit aa0b58c562ab358069486469497ffee3419a93aa[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:52 2025 +0300
+
+    Error fetching commit message for app/Models/Setting.php
+
+[33mcommit 4668d8a4d43aae25c118dc01ac9644cf4d980425[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:51 2025 +0300
+
+    Error fetching commit message for app/Models/Paiement.php
+
+[33mcommit e5b8406a0d57b3cb43222b5351b5076dba15c8bb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:50 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/AddPrescription.php
+
+[33mcommit 62133ce6395ae254ccc499aaacd8d5871d3f14dc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:50 2025 +0300
+
+    Error fetching commit message for app/Livewire/Admin/Settings.php
+
+[33mcommit db4593d161eafff28b2c705cc0d45cc45f0281bc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:49 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit 1f90d08e4dd76beac7bdea133edc347e10428594[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:48 2025 +0300
+
+    Error fetching commit message for database/seeders/SettingsSeeder.php
+
+[33mcommit fff4abd07f3ffeb044bf483a5076f05a57104424[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:47 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_190530_create_payment_methods_table.php
+
+[33mcommit 2b12ebb42449e0efd92f7cda43d9f91997622343[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:46 2025 +0300
+
+    Error fetching commit message for app/Models/PaymentMethod.php
+
+[33mcommit 4c5afd8a571921c763eb3ccb9390dfe226980900[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Fri Aug 8 10:32:45 2025 +0300
+
+    Error fetching commit message for app/Helpers/PaymentMethodsHelper.php
+
+[33mcommit e1d5102b00154f63483afa90b1a75293085c4c20[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Thu Aug 7 05:54:12 2025 +0300
+
+    update sidebar.blade.php and archives.blade.php
+    
+            modified:   resources/views/livewire/archives.blade.php
+            modified:   resources/views/livewire/secretaire/prescription/prescription-table.blade.php
+
+[33mcommit 289ad677cb781f452171a74890c5880ec7145f75[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:43 2025 +0300
+
+    Added app/Listeners/
+
+[33mcommit 9833c93aaf1e805b590341355524318ed347d37b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:43 2025 +0300
+
+    Added app/Jobs/
+
+[33mcommit d884fa64bfb3169f408d377fe13acbc21affe473[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:43 2025 +0300
+
+    Added app/Events/
+
+[33mcommit 5dc9f63ca69f46b1f1fee4cb38957a81a74d36f2[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:43 2025 +0300
+
+    Added app/Console/
+
+[33mcommit fa99424abe35aedcec06b520ef4ee11b9a42bcd5[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:43 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/paiement.blade.php
+
+[33mcommit 1a458d88ff9e577c9cf73ffa519ce1a043f08147[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:43 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescripteurs.blade.php
+
+[33mcommit fc1474c66ecad325416ec650a56b5ead4c77462e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:42 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/modals/modal-form-prescripteurs.blade.php
+
+[33mcommit 0ddf31e0708a2945c3a49f235f2175d62a5158e4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:41 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/modals/modal-comission-prescripteur.blade.php
+
+[33mcommit 5c90856459a88f14be95ad4d2728dfbfc22444b7[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:39 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/admin/settings.blade.php
+
+[33mcommit 80cebd8b88bfe462656abcd42d8bf668215592a1[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:38 2025 +0300
+
+    Error fetching commit message for database/seeders/DatabaseSeeder.php
+
+[33mcommit 2c3b7567ce69e7fa727c74a58cc3353e276f6f63[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:37 2025 +0300
+
+    Error fetching commit message for app/Models/Prescripteur.php
+
+[33mcommit d0992bc2b7581ab57c298d26fa16758f2845db46[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:36 2025 +0300
+
+    Error fetching commit message for app/Models/Paiement.php
+
+[33mcommit 1c909bf4b36cae17e1514ad83ffdbbb9dda6d3bb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:36 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/AddPrescription.php
+
+[33mcommit 15e80aa9dd88e1efe0880303e0d3a366b8e93740[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:35 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescripteurs.php
+
+[33mcommit fa512fa4518ffcc8265d147f646acac35944afd2[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:34 2025 +0300
+
+    Error fetching commit message for app/Livewire/Admin/Settings.php
+
+[33mcommit 9d37dba03a46c9b9e1aa253322fb9a4cd5b1796f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:34 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit 1718e20929d4a9f13ce189f67f5dffa664245fe6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:33 2025 +0300
+
+    Error fetching commit message for database/seeders/SettingSeeder.php
+
+[33mcommit 65950fab3f46bd28fea47f3a3fc28fecfd7f335c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:32 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_07_201531_create_settings_table.php
+
+[33mcommit c190275443447a929a67bc6a1ecfade1b48fb566[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:31 2025 +0300
+
+    Error fetching commit message for app/Providers/EventServiceProvider.php
+
+[33mcommit 05064c5d8fc33cf3ba65f38668444bd1e4c3afb6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 22:39:30 2025 +0300
+
+    Error fetching commit message for app/Models/Setting.php
+
+[33mcommit 2d1fc50b3e5d0de125e9822fb5d5bca5c6fc22d3[m
+Merge: ccccc45 61eeb4f
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:27:11 2025 +0300
+
+    Merge branch 'master' of github.com:GasyCoder/labo-ctb-nosybe
+
+[33mcommit ccccc453070be3e92cff131b5271bd55d97c394f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:50 2025 +0300
+
+    Deleted resources/views/livewire/secretaire/paiements.blade.php
+
+[33mcommit eb23872f60e58acb847570b37273c5245698163d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:50 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Paiements.php
+
+[33mcommit 5e3957d2d1bae28c4ddd94f15f10db7bc775e9ea[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:50 2025 +0300
+
+    Added resources/views/livewire/secretaire/modals/
+
+[33mcommit 641c33e2019bd242d02fe40aad11ab013c0c32e9[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:50 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/paiement.blade.php
+
+[33mcommit 6e7b0523385f4a19da0712069330e7a656d8b493[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:49 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescripteurs.blade.php
+
+[33mcommit 3c87c74f4c4d948be012ee1595e36b8a8c9c4d39[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:48 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/patients.blade.php
+
+[33mcommit 1ddd57c717f6c20174bc9a5de45ae96d22cb876c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:48 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/archives.blade.php
+
+[33mcommit 045ccf1cf7d67a302a7d4aa2bb0123865dbb4972[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:47 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/sidebar.blade.php
+
+[33mcommit 2839a11028a6763cddb95467a15be963eba205b3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:47 2025 +0300
+
+    Error fetching commit message for database/seeders/PrescripteurSeeder.php
+
+[33mcommit 05b3140c0aac34a1fc0c503fe414609212bd558f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:46 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_190531_create_paiements_table.php
+
+[33mcommit 65cd608db03a744668a9dc7df2a18907e36ebbca[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:45 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182525_create_prescripteurs_table.php
+
+[33mcommit 93f80f1d581ed113fa37863b5fce30c2d71f21f5[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:45 2025 +0300
+
+    Error fetching commit message for config/app.php
+
+[33mcommit 51de36fb0a527096f5389487ef97811f317c32c4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:44 2025 +0300
+
+    Error fetching commit message for app/Models/Prescription.php
+
+[33mcommit 7a1b9b6d6d8d870a41b6c9aedd6586874c1b8936[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:43 2025 +0300
+
+    Error fetching commit message for app/Models/Prescripteur.php
+
+[33mcommit 3faf80be64353666ce94d85c55865bf6a5e47d9b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:43 2025 +0300
+
+    Error fetching commit message for app/Models/Paiement.php
+
+[33mcommit c6bc136252b2160e0f8810e39ceb573f5ba83d13[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:42 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescripteurs.php
+
+[33mcommit a5f735da970c73a4511de805b2f1322648782ac7[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:41 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit 0e1b43a3709b462df4094c0b7f031a2b9c6b27c8[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Thu Aug 7 15:23:41 2025 +0300
+
+    Error fetching commit message for database/factories/PrescripteurFactory.php
+
+[33mcommit 61eeb4f3861586ad503e922e4ec9460546752c16[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Thu Aug 7 05:54:12 2025 +0300
+
+    update sidebar.blade.php and archives.blade.php
+
+[33mcommit 73c4a57de2e49223970f033b3b722a8d6220b0c3[m
+Merge: fe0fd96 841aa25
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 23:34:00 2025 +0300
+
+    Merge branch 'master' of github.com:GasyCoder/labo-ctb-nosybe
+
+[33mcommit fe0fd960faa880739c3be83c694db82f94c7cdb3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 23:33:17 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/AddPrescription.php
+
+[33mcommit f48f667eadf6056748862a0f4857b146d1aab4e8[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 23:33:15 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit c86e44e3e8a40d4f438112514744256721786796[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 23:33:14 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/confirmation.blade.php
+
+[33mcommit 841aa25d83eb29c1d09b2c746578ce0df61db5a9[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Wed Aug 6 23:28:46 2025 +0300
+
+    update 6 files
+
+[33mcommit f2d41071902d6ec4a5317a282f44aba9c4c5e98f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:20 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/analyses.blade.php
+
+[33mcommit 745a04da7dd23cb9eff0273f6e6e7a21e359fb73[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:19 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/form-prescription.blade.php
+
+[33mcommit 6e47e2282a86f6ec8734462ca046dd820f496627[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:18 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/patients.blade.php
+
+[33mcommit 94b1c87f84636e02b0b18c2b557382a724df9ae9[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:17 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/sidebar.blade.php
+
+[33mcommit 95a30801b2d4bcded3dc6d0366178fbdecd3578b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:16 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_190531_create_paiements_table.php
+
+[33mcommit cddf6a46ea99a2ba422ebee0004141190542d895[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:15 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182526_create_prescriptions_table.php
+
+[33mcommit 92e3a03990b49048451203721413ea5c0a562fe2[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:13 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182524_create_patients_table.php
+
+[33mcommit c53042f625aeb163d5a39fa931d8b1be15527a8d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:12 2025 +0300
+
+    Error fetching commit message for app/Models/Prescription.php
+
+[33mcommit eefb798c1863f416c5bb004eb11a4324f583b409[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:10 2025 +0300
+
+    Error fetching commit message for app/Models/Patient.php
+
+[33mcommit e37bec08d05aa56e58ae5bbf04b8b92af6c3f1a9[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:09 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/PrescriptionIndex.php
+
+[33mcommit 327f4cddfc9a2868963ca7ef1c217f4293a066b4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:07 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/EditPrescription.php
+
+[33mcommit 813e791472f5a50cdea26d74ea1b8c687b705d3a[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:06 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/AddPrescription.php
+
+[33mcommit 7325ae65d07cedb3ae51faa9e39be293f9f9ae71[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 21:45:05 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit 0026562e987d49de79832fbea924690caec0907a[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 19:04:52 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/PrescriptionIndex.php
+
+[33mcommit c1e1848aa29df11f47fba34665b7e9e09a900a7d[m
+Merge: 7ada8d6 d59c25a
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 19:04:08 2025 +0300
+
+    Merge branch 'master' of github.com:GasyCoder/labo-ctb-nosybe
+
+[33mcommit 7ada8d66523ffa895c169444f8356fe835468b9b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 19:02:46 2025 +0300
+
+    Modifications sidebar locales
+
+[33mcommit d59c25ac34ba9e9b62f176fd8a5a23eef870dc3e[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Wed Aug 6 15:52:02 2025 +0300
+
+    Mise à jour du header, sidebar et routes
+
+[33mcommit 8b24649b7a79062e87364699d84f2ed5fd309919[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Wed Aug 6 15:11:08 2025 +0300
+
+    Modifications locales du sidebar
+
+[33mcommit 1c23424aa5a0798efea5a98c53ebd1ba0ee33615[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:16 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-table.blade.php
+
+[33mcommit efebae606aba6619d3d42a15935e9d5e5374c515[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:15 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-index.blade.php
+
+[33mcommit fb0d797f654540844cad47076dd5dd8d22701d39[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:13 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/sidebar.blade.php
+
+[33mcommit 78eefbcef494f81c5f88286a3be90148706fb180[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:07 2025 +0300
+
+    Error fetching commit message for app/Models/Prescription.php
+
+[33mcommit 7a98fd1e28f226129180a18056e198b96cfe94db[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:06 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/PrescriptionIndex.php
+
+[33mcommit bdb0693800075b14b9d849e5aa979ed08be9a418[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:05 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit 132a1769dd68155f2eb418921edcea01382d55ad[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 15:03:05 2025 +0300
+
+    Error fetching commit message for resources/views/components/prescription-status.blade.php
+
+[33mcommit d1039b06a33d01a3425c2575f7781a63bcb77217[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Wed Aug 6 14:38:41 2025 +0300
+
+    update PrescriptionIndex.php, prescription-index.blade.php and prescription-table.blade.php
+
+[33mcommit 6b486a456090bc34fe659d8bd91109511042f001[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 16:41:38 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-table.blade.php
+
+[33mcommit 9a7fb7b7c536efbc40e9410a5111815e3f257dd6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 16:41:37 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-index.blade.php
+
+[33mcommit 5d11babbacaa37e802c9d02035ef57d3829c6b51[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 16:41:37 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/PrescriptionIndex.php
+
+[33mcommit 4bc7039ae23e8f79a8262a23b689ef0e5398ed9f[m
+Merge: 750c59b 597d2a6
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 16:23:15 2025 +0300
+
+    Merge branch 'master' of github.com:GasyCoder/labo-ctb-nosybe
+
+[33mcommit 750c59bab75a2626069a87fbe356e734dcf99b6e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 16:16:31 2025 +0300
+
+    update sidebar.blade.php, form-prescription.blade.php and web.php
+
+[33mcommit 7d4db4033d4052abdfa3b4c64a22dd1e04b1db78[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 16:16:30 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/sidebar.blade.php
+
+[33mcommit 597d2a640d1a1254d0c4b58d7b6086a98e46e911[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Wed Aug 6 12:38:36 2025 +0300
+
+    ok
+
+[33mcommit a6c7ca5ebc7721d3b78e1126e031f42088a38e40[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:32 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/patient-detail.blade.php
+
+[33mcommit 70ff1a79d361d52039f8c2eafccbbb98468d55b4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:32 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/patient-detail.blade.php
+
+[33mcommit cf0cacd1b003af63a32786a5dcf2844ceb217ecd[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:31 2025 +0300
+
+    Error fetching commit message for resources/lang/fr.json
+
+[33mcommit 6fb2e454314e717effd8fea724dd43d0f9bb8a45[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:30 2025 +0300
+
+    Error fetching commit message for resources/lang/en/validation.php
+
+[33mcommit 36482f74b9cdca4e35a9f1f57ab9a131aae8d4c3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:29 2025 +0300
+
+    Error fetching commit message for resources/lang/en/passwords.php
+
+[33mcommit 1671adb3dca7f529b2a1fb8ab90db1a3221336d8[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:28 2025 +0300
+
+    Error fetching commit message for resources/lang/en/pagination.php
+
+[33mcommit e5bd9c51d6eb3bd2c9da9c56d3c6ff8f3d8b6252[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:28 2025 +0300
+
+    Error fetching commit message for resources/lang/en/http-statuses.php
+
+[33mcommit 9d4dadc9af33eb58841839c648e0174797f6ddb7[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:27 2025 +0300
+
+    Error fetching commit message for resources/lang/en/auth.php
+
+[33mcommit 6bca9661fbb022eb66ba7ae33d3535e6c507a38f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:26 2025 +0300
+
+    Error fetching commit message for resources/lang/en/actions.php
+
+[33mcommit 3c0949f05eb555d84351aa127c053efc1dd8839b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:26 2025 +0300
+
+    Error fetching commit message for resources/lang/en.json
+
+[33mcommit f8442e43aa3fd0c8cef665dfc49d6f9c9fc03173[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:25 2025 +0300
+
+    Error fetching commit message for config/flasher.php
+
+[33mcommit 1da88d73b4dc80ae30974fd3e881bfd58b6a6a25[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:24 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/EditPrescription.php
+
+[33mcommit dcac22d89f6189fd349641fb40006e73542c1e79[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:23 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/PatientDetail.php
+
+[33mcommit ac23f900495947bf8e9ece7057bd5d9b6d8bad22[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:22 2025 +0300
+
+    Error fetching commit message for _ide_helper_models.php
+
+[33mcommit cb3b0facb92fd0daf2bbd9a1e61173b9695a6911[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Wed Aug 6 10:42:21 2025 +0300
+
+    Error fetching commit message for _ide_helper.php
+
+[33mcommit 45f062ddcdfe7139d3aafe5588d1abecef348b9b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 17:28:57 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/patient.blade.php
+
+[33mcommit e278ad517072ecf5939e9617cc2e3836902bb06c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 17:28:56 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/partials/clinique.blade.php
+
+[33mcommit f09e1bcfbfba710df76b1d2b55933df850b6e031[m
+Merge: 17a7230 7ade109
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 17:00:36 2025 +0300
+
+    Merge branch 'master' of github.com:GasyCoder/labo-ctb-nosybe
+
+[33mcommit 17a7230706958cf8a28cd8216043f211a5fbe11e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:43 2025 +0300
+
+    Added resources/views/livewire/secretaire/prescription/partials/
+
+[33mcommit ba918f45d9cbaa414c473874464680a32fdfa9f4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:43 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-index.blade.php
+
+[33mcommit 552e62f3baa2217092d7a4619c0a533ef7f56089[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:42 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/add-prescription.blade.php
+
+[33mcommit a72f82e60144fbf7ecb2ae1592c71aa4ee0a50cf[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:41 2025 +0300
+
+    Error fetching commit message for database/seeders/DatabaseSeeder.php
+
+[33mcommit f04345b0f0827f3ae8dfdb79b6376109574e4ab1[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:40 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182526_create_prescriptions_table.php
+
+[33mcommit 669b94d1e1e496860cfdec67eebcc3db8cd9f16e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:38 2025 +0300
+
+    Error fetching commit message for app/Models/Prescription.php
+
+[33mcommit 77930fe98f3d0d6da32f99b1cd067bb6c481a1b2[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:37 2025 +0300
+
+    Error fetching commit message for app/Models/Prescripteur.php
+
+[33mcommit d5bdf5e1d1fb6a7d713ba01f671e13a0338c25e5[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:36 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/AddPrescription.php
+
+[33mcommit d32c9f5bd0d7e12dbe66b6d2072fbeda305890e6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 16:59:35 2025 +0300
+
+    Error fetching commit message for database/seeders/PrescripteurSeeder.php
+
+[33mcommit 7ade1092a3b79ca064ad2c8c7ed4c7df055cc61b[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Tue Aug 5 16:07:27 2025 +0300
+
+    Sauvegarde de mes changements locaux
+
+[33mcommit a9b344900fd93381a30d59ab52c74f2a58099d13[m
+Author: BEZARA Florent <34341565+GasyCoder@users.noreply.github.com>
+Date:   Tue Aug 5 15:44:12 2025 +0300
+
+    Create generator-generic-ossf-slsa3-publish.yml
+
+[33mcommit 6ad0aa2e1e21b20b1c552a1e6bc926a91caa8555[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:43:18 2025 +0300
+
+    Error fetching commit message for README.md
+
+[33mcommit d8d97d6fa8f9569391dfb4ba463446d75e0a7483[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:49 2025 +0300
+
+    Deleted resources/views/livewire/secretaire/prescription/recherche-patient.blade.php
+
+[33mcommit 5d34986598606e32ac62a7eceacbfc9374ea95d6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:48 2025 +0300
+
+    Deleted resources/views/livewire/secretaire/prescription/nouvelle-prescription.blade.php
+
+[33mcommit bdb74a7c87f929dfb2bb75284422655e273e51f7[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:48 2025 +0300
+
+    Deleted app/Services/PrescriptionService.php
+
+[33mcommit 71e021112e649c8279da58f8e0d33dbbf4bef4d3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:48 2025 +0300
+
+    Deleted app/Services/PatientService.php
+
+[33mcommit 49562e3adb98c7cc4846337788bb99ce6a54c4db[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:48 2025 +0300
+
+    Deleted app/Services/PaiementService.php
+
+[33mcommit a46b7ca90a11221f87b2b20b8e42e8f4976690d9[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:47 2025 +0300
+
+    Deleted app/Services/AnalyseService.php
+
+[33mcommit 7c84354de5d7c6350965927c32f0a3cbaa401171[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:47 2025 +0300
+
+    Deleted app/Repositories/PrescriptionRepository.php
+
+[33mcommit 440d473c7eea21edf212de595f4a1903db7dd15a[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:46 2025 +0300
+
+    Deleted app/Repositories/PatientRepository.php
+
+[33mcommit b5fd6022fad5bac60cc10830d607dfeb1f5b70c4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:46 2025 +0300
+
+    Deleted app/Repositories/PaiementRepository.php
+
+[33mcommit 0869c561e272af75438a63462a9d37527d12dd04[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:46 2025 +0300
+
+    Deleted app/Repositories/AnalyseRepository.php
+
+[33mcommit d2722e9b818eca70fe47a23a7e591d2f43136ebf[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:46 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Prescription/SelectionAnalyses.php
+
+[33mcommit 3771b568ec3420113361380a4530f2c31e67bb7d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:46 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Prescription/RecherchePatient.php
+
+[33mcommit f657b8b97ea8b4b725b46cce0ba1d5fb163b167d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:45 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Prescription/RecapitulatifPaiement.php
+
+[33mcommit ec7cbcfc3f0e4b1293edd3f7bfefd5eab884bac3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:45 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Prescription/NouvellePrescription.php
+
+[33mcommit c46f98dcef281d18dce82cedca3f85b12db35fa4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:45 2025 +0300
+
+    Error fetching commit message for routes/web.php
+
+[33mcommit 3d34f847aa8860a86a51eddcdab758bc109c5c20[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:44 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/sidebar.blade.php
+
+[33mcommit 2c64d6b2d97a3863e330fca35485d4161ffebe4e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:43 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_04_164419_create_tubes_table.php
+
+[33mcommit a4cb7a8235bd6c48b03fb32f4459d0b71d80eafd[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:42 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_190948_create_prelevements_table.php
+
+[33mcommit cf14425f497d40d82ede221a6914b3803dd72550[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:40 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182750_create_prescription_analyse.php
+
+[33mcommit b4b64ab426768b81d7f094bc319de3d20d29d152[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:37 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182526_create_prescriptions_table.php
+
+[33mcommit fcf3231f38a646638b31b0f8581f37a11a9a37cb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:35 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_170628_create_analyses_table.php
+
+[33mcommit af552c9a04aea081a3bf29fc430ca750de6b881e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:33 2025 +0300
+
+    Error fetching commit message for config/app.php
+
+[33mcommit ce2dfad67c8656eba15890ad6490fb802941650e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:30 2025 +0300
+
+    Error fetching commit message for app/Models/TubeHistoriqueStatut.php
+
+[33mcommit a6d8403856bbfdec3d2952781f8a2d65d06de1b5[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:28 2025 +0300
+
+    Error fetching commit message for app/Models/Tube.php
+
+[33mcommit fdee7cc1b59edc12be899ec57ef3b2e03c1ece3d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:27 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/prescription-index.blade.php
+
+[33mcommit 39f3684678665cff22ff07efdb26d0623da280a4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:26 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/secretaire/prescription/add-prescription.blade.php
+
+[33mcommit 07e87c233f10e6e7aa56b0d68651845175d319d7[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:25 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/PrescriptionIndex.php
+
+[33mcommit f4d21dbd9d4b5ea4475a08f5ca735a5acc0696c5[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 15:41:24 2025 +0300
+
+    Error fetching commit message for app/Livewire/Secretaire/Prescription/AddPrescription.php
+
+[33mcommit 82645c464904aeeddde29c264010824fa4d586aa[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Tue Aug 5 07:01:31 2025 +0300
+
+    delete 2 files and update 2 files
+
+[33mcommit 5bf0d16f26ffd1e6b71fd5296425eb8759391f42[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Tue Aug 5 02:32:40 2025 +0300
+
+    update 10 files
+
+[33mcommit e30c12926be1d6cd1dbd923b0cb6cdb258ea2f70[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 23:56:21 2025 +0300
+
+    Sauvegarde temporaire avant pull
+
+[33mcommit 1bc09ece8a2d671ab026453c206eb9006d134025[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 16:54:29 2025 +0300
+
+    update examens.blade.php
+
+[33mcommit c88ab1faa36fb64f66881ffb0d11a01ad1d310ff[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 14:23:27 2025 +0300
+
+    Sauvegarde avant pull/rebase
+
+[33mcommit a9386e350a66912a8244182ac3393d0bb6bbd55a[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 14:22:04 2025 +0300
+
+    Amélioration : rendu du dashboard Livewire avec user dans mount
+
+[33mcommit 4604f053230073977276c17cbca143617167b1d6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:54 2025 +0300
+
+    Deleted resources/views/livewire/secretaire/prescriptions.blade.php
+
+[33mcommit 8ac058f0febfbd7b15d7bc475511951bc63062ea[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:54 2025 +0300
+
+    Deleted database/migrations/2025_08_02_185454_create_resultats_table.php
+
+[33mcommit 8967931c509345d8f20ed04ca87e89c0fd3ddc84[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:54 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Prescriptions.php
+
+[33mcommit 47a10ba4fa05c06dd2e677c10ae6444289d50e3a[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Deleted app/Livewire/Secretaire/Archives.php
+
+[33mcommit 2a639f6f73d7216e37cd6132a11751ba2b92a435[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Added resources/views/livewire/secretaire/prescription/
+
+[33mcommit ac8dd7bd99bdd89a5896d580333d67d6117c1010[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Added app/Services/
+
+[33mcommit 23e14843d1068c0a0eb0e585ec3641cd68a3de22[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Added app/Repositories/
+
+[33mcommit 1ff3f80eab56d83f2b02da76ac763799282af4e5[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Added app/Livewire/Secretaire/Prescription/
+
+[33mcommit be6e8a2fc0b3e1012cbf8b745b02dfb01286d2fe[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Error fetching commit message for routes/web.php
+
+[33mcommit 4f9bf16945ba576fc35c17c884a11361ee3a3662[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:53 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/sidebar.blade.php
+
+[33mcommit 7e6e719bc74c24505cb449ef18224c284e1a8e2e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:52 2025 +0300
+
+    Error fetching commit message for database/seeders/DatabaseSeeder.php
+
+[33mcommit eff3bf3edc2fce4ed395b42e054d0456d5688ed3[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:51 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_190948_create_prelevements_table.php
+
+[33mcommit 5198d804316ba2646a3c51016b2654b90bdd72cb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:51 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_182526_create_prescriptions_table.php
+
+[33mcommit b80a4ca1b518acb932e4a664bb89bc416bf9c9ed[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:50 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_02_170628_create_analyses_table.php
+
+[33mcommit 6108259785df2722e673581221ec473431167132[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:49 2025 +0300
+
+    Error fetching commit message for app/Models/Resultat.php
+
+[33mcommit ee55a9758ce3585016f496296c43829fdfc0ab6e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:48 2025 +0300
+
+    Error fetching commit message for app/Models/Prescription.php
+
+[33mcommit 31d321ac0b4f03413b4d3daf952210b2f6f07edd[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:47 2025 +0300
+
+    Error fetching commit message for app/Models/Analyse.php
+
+[33mcommit d8d0cbeaa79a7c972d67bc774ac12e0c7ba8f574[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:46 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/archives.blade.php
+
+[33mcommit 04e9741611844d9626680bb6670a9090db98e7d6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:45 2025 +0300
+
+    Error fetching commit message for database/seeders/BacterieFamilleSeeder.php
+
+[33mcommit adef0d960781be01ea78e9698b711f5c851c7fbc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:44 2025 +0300
+
+    Error fetching commit message for database/seeders/AnalysesSeeder.php
+
+[33mcommit 212aaf80b0a6b127ada8d61fcfa0cdffe6495b33[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:44 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_04_164624_create_tube_analyse_table.php
+
+[33mcommit 1ed3ce13f7abda53b94f9347336bc81d6446af86[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:43 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_04_164429_create_tube_historique_statuts_table.php
+
+[33mcommit 66056ad288b2a7f81ccbf9d68ea303cae2e44138[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:42 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_04_164420_create_resultats_table.php
+
+[33mcommit ee3573017f76271de67a356f3bc83c8a696a9f82[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:39 2025 +0300
+
+    Error fetching commit message for database/migrations/2025_08_04_164419_create_tubes_table.php
+
+[33mcommit c791d19efb8ced76ff5ee2ad325ab06c9076c1c9[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:38 2025 +0300
+
+    Error fetching commit message for app/Models/TubeHistoriqueStatut.php
+
+[33mcommit c866e4e5cde166c7419fd60e3b8b31efbca94cd6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:37 2025 +0300
+
+    Error fetching commit message for app/Models/Tube.php
+
+[33mcommit 7ee10fb071a34cd954af4983107fe0029829968d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Tue Aug 5 00:39:27 2025 +0300
+
+    Error fetching commit message for app/Livewire/Archives.php
+
+[33mcommit 17e20471df4df000f57132ab86debffda0f6b6dc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:22:11 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/footer.blade.php
+
+[33mcommit 6cbf6cc1358bc948116990fb7ee04bbd6ac0a34c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:18:28 2025 +0300
+
+    Added public/images/
+
+[33mcommit bcfd92842aeb0b76b139e36b29d960f3924246bf[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:18:28 2025 +0300
+
+    Error fetching commit message for routes/web.php
+
+[33mcommit 4ad13918a9de2dcdbc928a74c91b6e01e44bd52b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:18:27 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/partials/footer.blade.php
+
+[33mcommit dc7f7697459a1e81b6cf89e4b0fc656a85be0220[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:18:27 2025 +0300
+
+    Error fetching commit message for resources/views/layouts/app.blade.php
+
+[33mcommit 7196566b397f9a620c27c420d4fb122362b2ba55[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:18:26 2025 +0300
+
+    Error fetching commit message for app/Livewire/Dashboard.php
+
+[33mcommit 0ca4fb5ca76115a9b94b7b456fb2ef8d2fed8d8d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:04:47 2025 +0300
+
+    Error fetching commit message for package.json
+
+[33mcommit 75268aeb9c5768eefa1bb8f3cb286ce44493b870[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:04:47 2025 +0300
+
+    Error fetching commit message for app/Livewire/Dashboard.php
+
+[33mcommit 1950ec3e6f1ec5ff125acd880bac81dc2f2702e6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:04:46 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/admin/users-index.blade.php
+
+[33mcommit 3fba57e2acd9c73d5aa47e3e27a522a28ddef81f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 17:04:45 2025 +0300
+
+    Error fetching commit message for resources/views/livewire/admin/settings.blade.php
+
+[33mcommit 2d0b86dbb6b78732a9d930b8326ef846238636aa[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 13:16:44 2025 +0300
+
+    update header.blade.php and web.php
+
+[33mcommit bfbf8359d638b3d496b06fc2dc1d16cc0c9f8113[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 13:12:58 2025 +0300
+
+    update header.blade.php, sidebar.blade.php and web.php
+
+[33mcommit b423170be04fbaeaf13baf010c0c5c731e97d5c3[m
+Author: kananavy <kananavymiremby@gmail.com>
+Date:   Mon Aug 4 12:30:16 2025 +0300
+
+    update sidebar.blade.php
+
+[33mcommit 958c3ddb2e0f4861e35ba433f6e7274718cc493f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Deleted resources/js/bootstrap.js
+
+[33mcommit cd8b50829b8350402f77321ae5537f5f3b339e4e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Deleted resources/js/app.js
+
+[33mcommit d6ae62e53213ff40e9e5e0a450acb36b5fd1a6eb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Deleted app/Models/Resultats.php
+
+[33mcommit 2ed4baa58e3e29ab6c90295bd56e3d2873107ac9[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added tests/Feature/Auth/
+
+[33mcommit cb96cbb12868e13183ea42f556bba070d58f7e46[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/views/profile/
+
+[33mcommit 37778face409c8aa981f0ae3978a23bed3807858[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/views/livewire/
+
+[33mcommit e15d173c494df89241a4ef9b69ea08294eb2d212[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/views/layouts/
+
+[33mcommit d65c23f4f694b69fd3278ed7d44a82a1ab573798[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/views/components/
+
+[33mcommit ceedca0fbfdce9c1b6297b37b45bc87e21af250e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/views/auth/
+
+[33mcommit 99e442aa3206a9a12c95021995ad235b0eac711a[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/js/function/
+
+[33mcommit 21c9a74cfb44deb85f458a29d02ce8925f4961cb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/js/component/
+
+[33mcommit d74dc0e0342a29faac75bfb786a917dfee37a8cc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/js/chart/
+
+[33mcommit 0c0dbf4dd83b1c90ed0ada06da1438ded4097081[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/js/app/
+
+[33mcommit 98ea4b5a521546e16dcab03a9e602160229006fc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/js/addon/
+
+[33mcommit 4e4552adb730c531e2f3b6d2e434e81befeb96f8[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/fonts/
+
+[33mcommit f06c4ee322127401662ed59cade4bb10b721341d[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/css/custom/
+
+[33mcommit ae29762aa1e3d06db7288c355467e1f04d903f06[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added resources/css/bundles/
+
+[33mcommit b7db2ae0bdbf6a0f6bac011ca6c7f9676b33be42[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added app/View/
+
+[33mcommit 6a5d81047a9604c9eca0a35135845eae996777e6[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added app/Livewire/
+
+[33mcommit a42a106e7b447baf9629c92f03a07f6484960c5b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added app/Http/Requests/
+
+[33mcommit 0844ea7c97ba20fdbf9699fc04a4e3fc063504a2[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added app/Http/Controllers/Auth/
+
+[33mcommit 65e3a73d70c7926ec3c180f8b72e5c3a3b79c440[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Added app/Helpers/
+
+[33mcommit 3f844eee2ff3b7c095b8da59b2fa6c4221c89a19[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:37 2025 +0300
+
+    Error fetching commit message for vite.config.js
+
+[33mcommit 3a33c58202af66768049c1a7bbb8ca969b9679f4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:36 2025 +0300
+
+    Error fetching commit message for tests/Pest.php
+
+[33mcommit 3f4b8d2040d3cd791c3da643acc507f1030c2f71[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:36 2025 +0300
+
+    Error fetching commit message for tests/Feature/ExampleTest.php
+
+[33mcommit 5053c5589d42c22782fb999914521804244836ea[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:35 2025 +0300
+
+    Error fetching commit message for routes/web.php
+
+[33mcommit f3574b5f558977b263cd670df14f7393e3ad9d90[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:34 2025 +0300
+
+    Error fetching commit message for resources/css/app.css
+
+[33mcommit 5c7b1b8731b67db2a7b61188f96cc887719215f1[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:33 2025 +0300
+
+    Error fetching commit message for package.json
+
+[33mcommit ecb43dd4b9db8d2db8ea2faa60b646eebd3074a4[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:33 2025 +0300
+
+    Error fetching commit message for package-lock.json
+
+[33mcommit 2c14fd088fc5ff9767d9db0c8d3a136b5c60c7f8[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:32 2025 +0300
+
+    Error fetching commit message for config/app.php
+
+[33mcommit 1b51a03996e602106decbbbffcc990e1e5e7eb6e[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:31 2025 +0300
+
+    Error fetching commit message for composer.lock
+
+[33mcommit 32c8e2fbd6a543664a2bb25ee3a0b8b5c32e9edc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:31 2025 +0300
+
+    Error fetching commit message for composer.json
+
+[33mcommit fdb0e3c7106afe1604d1dd3e03e96054d83d1e96[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:30 2025 +0300
+
+    Error fetching commit message for bootstrap/app.php
+
+[33mcommit 7e27ad35d9e091bf1c4be748bbd5627ce347ae6c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:29 2025 +0300
+
+    Error fetching commit message for app/Models/User.php
+
+[33mcommit fadc7df57eba611ff236cc94e44986a15bf33dd8[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:29 2025 +0300
+
+    Error fetching commit message for app/Models/Patient.php
+
+[33mcommit febf4f83cf611cdb8a23fc0047f5ec637e12ac9c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:28 2025 +0300
+
+    Error fetching commit message for app/Models/Paiement.php
+
+[33mcommit 7aea68e875628871409a02193ebed9231b8b8467[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:27 2025 +0300
+
+    Error fetching commit message for tests/Feature/ProfileTest.php
+
+[33mcommit 545042ca9aa90cc680adc14eeda8faa625ccff64[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:26 2025 +0300
+
+    Error fetching commit message for tailwind.config.js
+
+[33mcommit 9f47c5a7d899bbe00083d2149293c51f6dc9a572[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:26 2025 +0300
+
+    Error fetching commit message for routes/auth.php
+
+[33mcommit a8c72252e8a8e7837ac3d5c0a75bf049a8080a9f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:25 2025 +0300
+
+    Error fetching commit message for resources/js/scripts.js
+
+[33mcommit 2122706b939d4d7fffc221ec7edb9bea07534631[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:24 2025 +0300
+
+    Error fetching commit message for resources/js/charts.js
+
+[33mcommit eb0e5cde464e5e3c5bdf65061619559163b12e0a[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:24 2025 +0300
+
+    Error fetching commit message for resources/js/apps.js
+
+[33mcommit ea465e02df606aa831c09fbcfbc7686c8c1b9c16[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:23 2025 +0300
+
+    Error fetching commit message for postcss.config.js
+
+[33mcommit c16ed410f193a4cd46d33e51256a3b764352fd82[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:23 2025 +0300
+
+    Error fetching commit message for config/livewire.php
+
+[33mcommit 574262eb68db75c25ee12854cbc2b9e566f2b7ee[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:21 2025 +0300
+
+    Error fetching commit message for app/Models/Resultat.php
+
+[33mcommit 3b30c2a7c5bee19f8c5b20867e2e4c505f66599f[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:21 2025 +0300
+
+    Error fetching commit message for app/Http/Middleware/TechnicienMiddleware.php
+
+[33mcommit 1c126201467b919fb64751980cda7a291295fdfb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:20 2025 +0300
+
+    Error fetching commit message for app/Http/Middleware/SecretaireMiddleware.php
+
+[33mcommit 399a4faab4ac8ac358fdbfd48d68208636fc4510[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:20 2025 +0300
+
+    Error fetching commit message for app/Http/Middleware/BiologisteMiddleware.php
+
+[33mcommit edf3c5708b92a598d0109baa62a564b5955555ad[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:19 2025 +0300
+
+    Error fetching commit message for app/Http/Middleware/AdminMiddleware.php
+
+[33mcommit 5593011b5e854ec60cedfc6ebb38844cc80cf676[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Mon Aug 4 10:12:17 2025 +0300
+
+    Error fetching commit message for app/Http/Controllers/ProfileController.php
+
+[33mcommit b550242cade71889eaf30e8b0e7f12e17db7a01b[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 23:39:17 2025 +0300
+
+    Error fetching commit message for package.json
+
+[33mcommit 75a40e097d34f00de2c742038965fcd15a7687cb[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 23:39:16 2025 +0300
+
+    Error fetching commit message for package-lock.json
+
+[33mcommit 796ebe90676d05231cd01ced7e869917d2b9d724[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 23:39:14 2025 +0300
+
+    Error fetching commit message for composer.json
+
+[33mcommit 81af145e1d9f899177d0e3b849be0cbec24e8691[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 23:39:13 2025 +0300
+
+    Error fetching commit message for .gitignore
+
+[33mcommit 6a9344e363b80de6419ce094fb16b9070ddd6a46[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 23:39:12 2025 +0300
+
+    Error fetching commit message for .gitattributes
+
+[33mcommit 711b122923241ea036733de3c858b5d9d04ecdfc[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 23:39:11 2025 +0300
+
+    Error fetching commit message for .editorconfig
+
+[33mcommit e43c67a06f16a1210b559d1665bf3cf6e59fbf7c[m
+Author: GasyCoder <bezaraflorent@gmail.com>
+Date:   Sat Aug 2 19:56:26 2025 +0300
+
+    first commit

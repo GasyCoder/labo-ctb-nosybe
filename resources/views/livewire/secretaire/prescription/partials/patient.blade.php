@@ -171,12 +171,15 @@
                             @foreach(['Madame' => '👩 Mme', 'Monsieur' => '👨 M.', 'Mademoiselle' => '👧 Mlle', 'Enfant' => '👶 Enfant'] as $value => $label)
                                 <label class="flex-1 cursor-pointer">
                                     <input type="radio" 
-                                           wire:model="civilite" 
-                                           value="{{ $value }}" 
-                                           class="sr-only peer">
-                                    <div class="w-full p-2 text-center border rounded-lg text-sm
-                                               peer-checked:border-{{ $isEditMode ? 'orange' : 'primary' }}-500 peer-checked:bg-{{ $isEditMode ? 'orange' : 'primary' }}-50 dark:peer-checked:bg-slate-700
-                                               border-gray-200 dark:border-slate-600">
+                                        wire:model="civilite" 
+                                        value="{{ $value }}" 
+                                        class="sr-only peer">
+                                    <div @class([
+                                        'w-full p-2 text-center border rounded-lg text-sm border-gray-200 dark:border-slate-600',
+                                        'peer-checked:border-orange-500 peer-checked:bg-orange-50' => $isEditMode,
+                                        'peer-checked:border-primary-500 peer-checked:bg-primary-50' => !$isEditMode,
+                                        'dark:peer-checked:bg-slate-700'
+                                    ])>
                                         {{ $label }}
                                     </div>
                                 </label>
