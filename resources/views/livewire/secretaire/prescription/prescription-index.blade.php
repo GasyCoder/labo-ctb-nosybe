@@ -122,7 +122,7 @@ document.addEventListener('livewire:initialized', () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 console.log('=== CONFIRMATION UTILISATEUR ===');
-                console.log('Appel de la méthode:', data[0].method);
+                console.log('Appel de la méthode:', data[0]monnaieRendue.method);
                 console.log('Avec les paramètres:', data[0].params);
                 
                 // Appel direct de la méthode
