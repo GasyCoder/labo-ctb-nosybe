@@ -27,9 +27,9 @@ class Setting extends Model
         'commission_prescripteur_pourcentage' => 'float',
     ];
     
-    public static function getCommissionPourcentage()
+    public function defaultPaymentMethod()
     {
-        return static::first()?->commission_prescripteur_pourcentage ?? 10;
+        return $this->belongsTo(PaymentMethod::class, 'default_payment_method_id');
     }
 
     // DÉCLENCHEMENT AUTOMATIQUE DU RECALCUL
@@ -49,5 +49,20 @@ class Setting extends Model
                 });
             }
         });
+    }
+
+
+    /**
+     * Récupérer le pourcentage de commission actuel
+     */
+    public static function getCommissionPourcentage()
+    {
+        $setting = static::first();
+        
+        if (!$setting || !$setting->commission_prescripteur) {
+            return 0;
+        }
+        
+        return (float) $setting->commission_prescripteur_pourcentage;
     }
 }
