@@ -277,61 +277,7 @@
                         
                         <div class="space-y-3">
                             {{-- MODE DE PAIEMENT --}}
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Mode de paiement
-                                </label>
-                                <div class="grid grid-cols-2 gap-1.5">
-                                    <!-- Espèces -->
-                                    <input type="radio" id="mode_especes" wire:model.live="modePaiement" value="ESPECES" class="hidden peer/especes">
-                                    <label for="mode_especes"
-                                        class="peer-checked/especes:bg-green-500 peer-checked/especes:text-white
-                                            peer-checked/especes:ring-2 peer-checked/especes:ring-green-400
-                                            bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600
-                                            rounded-lg px-2 py-1.5 cursor-pointer flex items-center gap-1.5
-                                            transition-colors text-xs
-                                            text-slate-700 dark:text-slate-300 hover:border-green-400">
-                                        💵 Espèces
-                                    </label>
-
-                                    <!-- Carte bancaire -->
-                                    <input type="radio" id="mode_carte" wire:model.live="modePaiement" value="CARTE" class="hidden peer/carte">
-                                    <label for="mode_carte"
-                                        class="peer-checked/carte:bg-blue-500 peer-checked/carte:text-white
-                                            peer-checked/carte:ring-2 peer-checked/carte:ring-blue-400
-                                            bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600
-                                            rounded-lg px-2 py-1.5 cursor-pointer flex items-center gap-1.5
-                                            transition-colors text-xs
-                                            text-slate-700 dark:text-slate-300 hover:border-blue-400">
-                                        💳 Carte
-                                    </label>
-
-                                    <!-- Chèque -->
-                                    <input type="radio" id="mode_cheque" wire:model.live="modePaiement" value="CHEQUE" class="hidden peer/cheque">
-                                    <label for="mode_cheque"
-                                        class="peer-checked/cheque:bg-purple-500 peer-checked/cheque:text-white
-                                            peer-checked/cheque:ring-2 peer-checked/cheque:ring-purple-400
-                                            bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600
-                                            rounded-lg px-2 py-1.5 cursor-pointer flex items-center gap-1.5
-                                            transition-colors text-xs
-                                            text-slate-700 dark:text-slate-300 hover:border-purple-400">
-                                        📄 Chèque
-                                    </label>
-
-                                    <!-- Mobile Money -->
-                                    <input type="radio" id="mode_mobilemoney" wire:model.live="modePaiement" value="MOBILEMONEY" class="hidden peer/mobilemoney">
-                                    <label for="mode_mobilemoney"
-                                        class="peer-checked/mobilemoney:bg-yellow-400 peer-checked/mobilemoney:text-white
-                                            peer-checked/mobilemoney:ring-2 peer-checked/mobilemoney:ring-yellow-300
-                                            bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600
-                                            rounded-lg px-2 py-1.5 cursor-pointer flex items-center gap-1.5
-                                            transition-colors text-xs
-                                            text-slate-700 dark:text-slate-300 hover:border-yellow-400">
-                                        📱 MobileMoney
-                                    </label>
-                                </div>
-                            </div>
-
+                            @include('livewire.secretaire.prescription.partials.Includes.mode-payment')
                             {{-- REMISE --}}
                             @if($activer_remise)
                                 <div>
