@@ -14,7 +14,7 @@ class Paiement extends Model
     protected $fillable = [
         'prescription_id',
         'montant',
-        'mode_paiement',
+        'payment_method_id',
         'recu_par',
         'commission_prescripteur',
     ];
@@ -30,9 +30,25 @@ class Paiement extends Model
         return $this->belongsTo(Prescription::class);
     }
 
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
     public function utilisateur()
     {
         return $this->belongsTo(User::class, 'recu_par');
+    }
+
+    // ✅ Accesseurs pour la compatibilité
+    public function getModeePaiementAttribute()
+    {
+        return $this->paymentMethod?->code ?? 'INCONNU';
+    }
+    
+    public function getMethodePaiementLabelAttribute()
+    {
+        return $this->paymentMethod?->label ?? 'Méthode inconnue';
     }
 
     // Auto-calcul de la commission avec exclusion BiologieSolidaire
@@ -65,8 +81,14 @@ class Paiement extends Model
             return 0;
         }
 
-        // Sinon, calculer la commission normale
-        $pourcentage = Setting::getCommissionPourcentage();
+        // Récupérer le setting de commission
+        $setting = Setting::first();
+        if (!$setting || !$setting->commission_prescripteur) {
+            return 0;
+        }
+
+        // Calculer la commission
+        $pourcentage = (float) $setting->commission_prescripteur_pourcentage;
         return $paiement->montant * ($pourcentage / 100);
     }
 }
