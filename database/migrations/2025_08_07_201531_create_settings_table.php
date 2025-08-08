@@ -21,6 +21,8 @@ return new class extends Migration
             $table->enum('format_unite_argent', ['Ar', 'MGA', 'Ariary'])->default('Ar');
             $table->boolean('commission_prescripteur')->default(false);
             $table->decimal('commission_prescripteur_pourcentage', 5, 2)->default(0);
+            $table->string('logo')->nullable()->comment('Chemin vers le logo de l\'entreprise');
+            $table->string('favicon')->nullable()->comment('Chemin vers le favicon du site');
 
             $table->timestamps();
         });
