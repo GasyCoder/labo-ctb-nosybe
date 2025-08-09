@@ -4,11 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('prescripteurs', function (Blueprint $table) {
@@ -17,7 +13,7 @@ return new class extends Migration
             $table->string('nom');
             $table->string('prenom')->nullable();
             $table->enum('status', ['Medecin', 'BiologieSolidaire'])->default('Medecin');
-            $table->string('specialite')->nullable();
+            $table->string('specialite')->nullable(); // retiré ->after('nom')
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
             $table->boolean('is_active')->default(true);
@@ -28,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            // Index pour améliorer les performances
+            // Index
             $table->index(['is_active']);
             $table->index(['nom', 'prenom']);
             $table->index(['status']);
@@ -36,9 +32,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('prescripteurs');
