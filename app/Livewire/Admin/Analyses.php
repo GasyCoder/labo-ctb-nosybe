@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
@@ -19,8 +20,8 @@ class Analyses extends Component
 
     // Filtres et pagination
     public $selectedExamen = '';
-    public $perPage = 10; // Nombre d'éléments par page
-    public $search = ''; // Recherche textuelle
+    public $perPage = 10;
+    public $search = '';
 
     // Propriétés pour les formulaires
     public $code = '';
@@ -87,23 +88,23 @@ class Analyses extends Component
             ->get();
     }
 
-    // Cette méthode sera appelée automatiquement quand les filtres changent
+    // ÉVÉNEMENTS LIVEWIRE
     public function updatedSelectedExamen()
     {
-        $this->resetPage(); // Réinitialiser à la page 1 quand on change de filtre
+        $this->resetPage();
     }
 
     public function updatedSearch()
     {
-        $this->resetPage(); // Réinitialiser à la page 1 quand on fait une recherche
+        $this->resetPage();
     }
 
     public function updatedPerPage()
     {
-        $this->resetPage(); // Réinitialiser à la page 1 quand on change le nombre par page
+        $this->resetPage();
     }
 
-    // Utiliser une propriété computed pour les analyses avec pagination
+    // PROPRIÉTÉ COMPUTED POUR LES ANALYSES
     public function getAnalysesProperty()
     {
         $query = Analyse::with(['examen', 'type', 'parent', 'enfants'])
@@ -130,10 +131,10 @@ class Analyses extends Component
 
     public function render()
     {
-        // Les analyses seront récupérées via la propriété computed
         return view('livewire.admin.analyses');
     }
 
+    // ACTIONS CRUD
     public function show($id)
     {
         $this->analyse = Analyse::with(['examen', 'type', 'parent', 'enfants'])->findOrFail($id);
@@ -221,7 +222,7 @@ class Analyses extends Component
             ->get();
     }
 
-    // Méthode pour réinitialiser tous les filtres
+    // MÉTHODES DE FILTRAGE
     public function resetFilters()
     {
         $this->selectedExamen = '';
@@ -229,13 +230,13 @@ class Analyses extends Component
         $this->resetPage();
     }
 
-    // Méthode pour réinitialiser le filtre examen
     public function resetFilter()
     {
         $this->selectedExamen = '';
         $this->resetPage();
     }
 
+    // MÉTHODES PRIVÉES
     private function fillForm()
     {
         $this->code = $this->analyse->code;
@@ -275,7 +276,7 @@ class Analyses extends Component
         $this->resetErrorBag();
     }
 
-    // Méthodes utilitaires
+    // MÉTHODES UTILITAIRES
     public function toggleStatus($id)
     {
         $analyse = Analyse::findOrFail($id);

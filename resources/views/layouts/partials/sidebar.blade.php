@@ -40,7 +40,17 @@
                             <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Accueil</span>
                         </a>
                     </li>
-
+<!-- Archives -->
+                    <li class="nk-menu-item py-0{{ request()->routeIs('archives') ? ' active' : '' }} group/item">
+                        <a href="{{ route('archives') }}" class="nk-menu-link flex relative items-center align-middle py-2 ps-5 pe-8 font-heading font-bold tracking-snug group">
+                            <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
+                                <em class="text-xl leading-none text-current transition-all duration-300 icon ni ni-archived"></em>
+                            </span>
+                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
+                                Archives (<span id="archive-count">{{ $countArchive ?? \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)->count() }}</span>)
+                            </span>
+                        </a>
+                    </li>
                     {{-- Section Secrétaire --}}
                     @if(auth()->check() && auth()->user()->type === 'secretaire')
                         <li class="relative first:pt-1 pt-6 pb-1 px-4 before:absolute before:h-px before:w-full before:start-0 before:top-1/2 before:bg-gray-200 dark:before:bg-gray-900 first:before:hidden before:opacity-0 group-[&.is-compact:not(.has-hover)]/sidebar:before:opacity-100">
@@ -91,8 +101,8 @@
 
                     <!-- Biologiste -->
                     @if(auth()->check() && auth()->user()->type === 'biologiste')
-                    <li class="nk-menu-item py-0{{ request()->routeIs('biologiste.index') ? ' active' : '' }} group/item">
-                        <a href="{{ route('biologiste.index') }}" class="nk-menu-link flex relative items-center align-middle py-2 ps-5 pe-8 font-heading font-bold tracking-snug group">
+                    <li class="nk-menu-item py-0{{ request()->routeIs('biologiste.analyse.index') ? ' active' : '' }} group/item">
+                        <a href="{{ route('biologiste.analyse.index') }}" class="nk-menu-link flex relative items-center align-middle py-2 ps-5 pe-8 font-heading font-bold tracking-snug group">
                             <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                 <em class="text-xl leading-none text-current transition-all duration-300 icon ni ni-user-check-fill"></em>
                             </span>
@@ -105,18 +115,7 @@
 
                     <hr class="my-4 border-0 border-t border-gray-300 dark:border-gray-800">
 
-
-                    <!-- Archives -->
-                    <li class="nk-menu-item py-0{{ request()->routeIs('archives') ? ' active' : '' }} group/item">
-                        <a href="{{ route('archives') }}" class="nk-menu-link flex relative items-center align-middle py-2 ps-5 pe-8 font-heading font-bold tracking-snug group">
-                            <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
-                                <em class="text-xl leading-none text-current transition-all duration-300 icon ni ni-archived"></em>
-                            </span>
-                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
-                                Archives (<span id="archive-count">{{ $countArchive ?? \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)->count() }}</span>)
-                            </span>
-                        </a>
-                    </li>
+                    
 
                     {{-- Section Laboratoire --}}
                     @if(auth()->check() && in_array(auth()->user()->type, ['technicien', 'biologiste', 'admin']))
@@ -226,5 +225,5 @@
             document.getElementById('archive-count').textContent = count;
         });
     });
-</script>
+    </script>
 @endpush

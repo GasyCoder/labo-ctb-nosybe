@@ -17,12 +17,13 @@ use App\Livewire\Secretaire\Paiements;
 use App\Livewire\Secretaire\PatientDetail;
 use App\Livewire\Secretaire\Prescripteurs;
 use App\Http\Controllers\ProfileController;
-use App\Livewire\Biologiste\IndexBiologiste;
+use App\Livewire\Biologiste\BiologisteAnalysisForm;
+use App\Livewire\Biologiste\AnalyseValide;
+use App\Livewire\Admin\BacterieFamilies;
 use App\Livewire\Techniciens\IndexTechniciens;
 use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
-use App\Livewire\Admin\BacterieFamilies; // ✅ Corrigé : BacterieFamilies au lieu de BacteryFamilies
 
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
@@ -78,7 +79,8 @@ Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')
 // ROUTES SPÉCIFIQUES AUX BIOLOGISTES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')->name('biologiste.')->group(function () {
-    Route::get('traitement', IndexBiologiste::class)->name('index');
+    Route::get('/analyse-valide', AnalyseValide::class)->name('analyse.index');
+    Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
 });
 
 // ============================================
