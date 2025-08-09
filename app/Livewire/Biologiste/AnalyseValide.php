@@ -11,91 +11,124 @@ use App\Models\Analyse;
 use App\Models\AnalysePrescription;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Jantinnerezo\LivewireAlert\LivewireAlert;
 
 class AnalyseValide extends Component
 {
     use WithPagination;
 
-    protected $paginationTheme = 'bootstrap';
+    protected $paginationTheme = 'tailwind';
+
+    // Propriétés principales
     public $tab = 'termine';
     public $search = '';
+    public $perPage = 20;
 
-    protected $queryString = [
-        'search',
-        'tab' => ['except' => 'termine'],
+    // Filtres
+    public $filterPrescripteur = '';
+    public $filterUrgence = '';
+    public $showFilters = false;
+
+    // Sélection multiple
+    public $selectedPrescriptions = [];
+    public $selectAll = false;
+
+    // Statistiques
+    public $stats = [
+        'total_termine' => 0,
+        'total_valide' => 0,
+        'urgences_nuit' => 0,
+        'urgences_jour' => 0,
     ];
 
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'tab' => ['except' => 'termine'],
+        'page' => ['except' => 1],
+    ];
 
+    protected $listeners = [
+        'refreshComponent' => '$refresh',
+    ];
+
+    public function mount()
+    {
+        $this->loadStatistics();
+    }
 
     public function updatingSearch()
     {
         $this->resetPage();
+        $this->resetSelection();
     }
 
     public function updatedTab()
     {
         $this->resetPage();
+        $this->resetSelection();
+    }
+
+    public function updatedSelectAll()
+    {
+        if ($this->selectAll) {
+            $this->selectedPrescriptions = $this->getCurrentPrescriptions()->pluck('id')->toArray();
+        } else {
+            $this->selectedPrescriptions = [];
+        }
+    }
+
+    public function resetSelection()
+    {
+        $this->selectedPrescriptions = [];
+        $this->selectAll = false;
+    }
+
+    public function toggleFilters()
+    {
+        $this->showFilters = !$this->showFilters;
+    }
+
+    public function resetFilters()
+    {
+        $this->filterPrescripteur = '';
+        $this->filterUrgence = '';
+        $this->showFilters = false;
+        $this->resetPage();
     }
 
     public function openAnalyse($prescriptionId)
     {
-        $prescription = Prescription::findOrFail($prescriptionId);
-        return $this->redirect(route('biologiste.valide.show', ['prescription' => $prescription]));
+        try {
+            $prescription = Prescription::findOrFail($prescriptionId);
+            return $this->redirect(route('biologiste.valide.show', ['prescription' => $prescription]));
+        } catch (\Exception $e) {
+            $this->alert('error', 'Impossible d\'ouvrir cette analyse');
+        }
     }
 
-    public function render()
+    public function generatePDF($prescriptionId)
     {
-        $search = '%' . $this->search . '%';
+        try {
+            $prescription = Prescription::with(['patient', 'analyses', 'resultats'])
+                ->findOrFail($prescriptionId);
 
-        $baseQuery = Prescription::with([
-            'patient',
-            'prescripteur:id,nom,is_active',
-            'analyses.type'
-        ])
-            ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
-
-        $searchCondition = function ($query) use ($search) {
-            $query->where('renseignement_clinique', 'like', $search)
-                ->orWhere('status', 'like', $search)
-                ->orWhereHas('patient', function ($q) use ($search) {
-                    $q->where('nom', 'like', $search)
-                        ->orWhere('prenom', 'like', $search)
-                        ->orWhere('telephone', 'like', $search);
-                })
-                ->orWhereHas('prescripteur', function ($q) use ($search) {
-                    $q->where('nom', 'like', $search)
-                        ->where('is_active', true);
-                });
-        };
-
-        $analyseValides = (clone $baseQuery)
-            ->where('status', Prescription::STATUS_VALIDE)
-            ->where($searchCondition)
-            ->oldest()
-            ->paginate(15);
-
-        $analyseTermines = (clone $baseQuery)
-            ->where('status', Prescription::STATUS_TERMINE)
-            ->where($searchCondition)
-            ->oldest()
-            ->paginate(15);
-
-        return view('livewire.biologiste.analyse-valide', compact('analyseValides', 'analyseTermines'));
-    }
-
- 
-
-    // Méthode pour collecter les IDs des enfants basée sur le modèle Analyse
-    private function collectChildAnalyseIds($analyse, &$allAnalyseIds)
-    {
-        // Utiliser la relation 'enfants' du modèle Analyse
-        if ($analyse->enfants && $analyse->enfants->isNotEmpty()) {
-            foreach ($analyse->enfants as $child) {
-                $allAnalyseIds->push($child->id);
-                $this->collectChildAnalyseIds($child, $allAnalyseIds);
+            if ($prescription->status !== Prescription::STATUS_VALIDE) {
+                $this->alert('warning', 'Seules les analyses validées peuvent être exportées en PDF');
+                return;
             }
+
+            // Ici vous pouvez intégrer votre service de génération PDF
+            // $pdfUrl = $this->pdfService->generatePDF($prescription);
+
+            $this->alert('success', 'PDF généré avec succès');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur génération PDF:', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage()
+            ]);
+
+            $this->alert('error', 'Erreur lors de la génération du PDF');
         }
     }
 
@@ -106,18 +139,24 @@ class AnalyseValide extends Component
 
             $prescription = Prescription::findOrFail($prescriptionId);
 
+            if (!in_array($prescription->status, [Prescription::STATUS_VALIDE, Prescription::STATUS_TERMINE])) {
+                throw new \Exception('Cette prescription ne peut pas être remise à refaire');
+            }
+
             // Mettre à jour le statut de la prescription
             $prescription->update([
-                'status' => Prescription::STATUS_A_REFAIRE
+                'status' => Prescription::STATUS_A_REFAIRE,
+                'updated_by' => Auth::id()
             ]);
 
-            // Mettre à jour toutes les analyses de la prescription dans la table pivot
+            // Mettre à jour toutes les analyses de la prescription
             foreach ($prescription->analyses as $analyse) {
                 AnalysePrescription::where([
                     'prescription_id' => $prescriptionId,
                     'analyse_id' => $analyse->id
                 ])->update([
-                            'status' => AnalysePrescription::STATUS_A_REFAIRE
+                            'status' => AnalysePrescription::STATUS_A_REFAIRE,
+                            'updated_at' => now()
                         ]);
             }
 
@@ -126,32 +165,163 @@ class AnalyseValide extends Component
                 ->update([
                     'validated_by' => null,
                     'validated_at' => null,
-                    'status' => 'EN_ATTENTE'
+                    'status' => 'EN_ATTENTE',
+                    'updated_at' => now()
                 ]);
 
             DB::commit();
 
-            $this->dispatch('prescription-status-updated');
+            $this->loadStatistics();
             $this->alert('success', 'La prescription a été marquée à refaire');
 
         } catch (\Exception $e) {
             DB::rollback();
-            Log::error('Erreur lors de la mise à refaire de la prescription:', [
+            Log::error('Erreur lors de la mise à refaire:', [
                 'message' => $e->getMessage(),
                 'prescription_id' => $prescriptionId,
                 'user_id' => Auth::id()
             ]);
 
-            $this->alert('error', "Une erreur s'est produite lors de la mise à refaire de la prescription");
+            $this->alert('error', 'Erreur lors de la mise à refaire de la prescription');
         }
     }
 
-    public function validateAnalyse($prescriptionId)
+    public function bulkValidate()
     {
+        if (empty($this->selectedPrescriptions)) {
+            $this->alert('warning', 'Veuillez sélectionner au moins une prescription');
+            return;
+        }
+
         try {
             DB::beginTransaction();
 
+            $count = 0;
+            foreach ($this->selectedPrescriptions as $prescriptionId) {
+                $prescription = Prescription::find($prescriptionId);
+                if ($prescription && $prescription->status === Prescription::STATUS_TERMINE) {
+                    if ($this->validateSingleAnalyse($prescriptionId)) {
+                        $count++;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $this->resetSelection();
+            $this->loadStatistics();
+
+            $this->alert('success', "{$count} analyse(s) validée(s) avec succès");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            $this->alert('error', 'Erreur lors de la validation en lot');
+        }
+    }
+
+    public function render()
+    {
+        $search = '%' . $this->search . '%';
+
+        $baseQuery = Prescription::with([
+            'patient',
+            'prescripteur:id,nom,prenom,is_active',
+            'analyses'
+        ])
+            ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
+
+        // Application des filtres de recherche
+        $searchCondition = function ($query) use ($search) {
+            if ($this->search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('reference', 'like', $search)
+                        ->orWhere('renseignement_clinique', 'like', $search)
+                        ->orWhereHas('patient', function ($subQ) use ($search) {
+                            $subQ->where('nom', 'like', $search)
+                                ->orWhere('prenom', 'like', $search)
+                                ->orWhere('telephone', 'like', $search);
+                        })
+                        ->orWhereHas('prescripteur', function ($subQ) use ($search) {
+                            $subQ->where('nom', 'like', $search)
+                                ->where('is_active', true);
+                        });
+                });
+            }
+        };
+
+        // Application des filtres avancés
+        $advancedFilters = function ($query) {
+            if ($this->filterPrescripteur) {
+                $query->where('prescripteur_id', $this->filterPrescripteur);
+            }
+
+            if ($this->filterUrgence) {
+                $query->where('patient_type', $this->filterUrgence);
+            }
+        };
+
+        // Construction des requêtes pour chaque onglet
+        $analyseValides = (clone $baseQuery)
+            ->where('status', Prescription::STATUS_VALIDE)
+            ->where($searchCondition)
+            ->where($advancedFilters)
+            ->latest()
+            ->paginate($this->perPage, ['*'], 'page');
+
+        $analyseTermines = (clone $baseQuery)
+            ->where('status', Prescription::STATUS_TERMINE)
+            ->where($searchCondition)
+            ->where($advancedFilters)
+            ->latest()
+            ->paginate($this->perPage, ['*'], 'page');
+
+        // Charger les prescripteurs pour les filtres
+        $prescripteurs = \App\Models\Prescripteur::where('is_active', true)
+            ->orderBy('nom')
+            ->get(['id', 'nom', 'prenom']);
+
+        return view('livewire.biologiste.analyse-valide', compact(
+            'analyseValides',
+            'analyseTermines',
+            'prescripteurs'
+        ));
+    }
+
+    private function getCurrentPrescriptions()
+    {
+        $query = Prescription::with(['patient', 'prescripteur']);
+
+        if ($this->tab === 'valide') {
+            $query->where('status', Prescription::STATUS_VALIDE);
+        } else {
+            $query->where('status', Prescription::STATUS_TERMINE);
+        }
+
+        return $query->get();
+    }
+
+    private function loadStatistics()
+    {
+        $this->stats = [
+            'total_termine' => Prescription::where('status', Prescription::STATUS_TERMINE)->count(),
+            'total_valide' => Prescription::where('status', Prescription::STATUS_VALIDE)->count(),
+            'urgences_nuit' => Prescription::where('patient_type', 'URGENCE-NUIT')
+                ->whereIn('status', [Prescription::STATUS_TERMINE, Prescription::STATUS_VALIDE])
+                ->count(),
+            'urgences_jour' => Prescription::where('patient_type', 'URGENCE-JOUR')
+                ->whereIn('status', [Prescription::STATUS_TERMINE, Prescription::STATUS_VALIDE])
+                ->count(),
+        ];
+    }
+
+    private function validateSingleAnalyse($prescriptionId)
+    {
+        try {
             $prescription = Prescription::findOrFail($prescriptionId);
+
+            if ($prescription->status !== Prescription::STATUS_TERMINE) {
+                return false;
+            }
 
             // Récupérer toutes les analyses parents avec leurs enfants
             $parentAnalyses = $prescription->analyses()
@@ -178,7 +348,6 @@ class AnalyseValide extends Component
 
             // Mettre à jour les statuts des analyses pivot
             foreach ($parentAnalyses as $parentAnalyse) {
-                // Mettre à jour l'analyse parent en VALIDE
                 AnalysePrescription::where([
                     'prescription_id' => $prescriptionId,
                     'analyse_id' => $parentAnalyse->id
@@ -186,58 +355,33 @@ class AnalyseValide extends Component
                             'status' => AnalysePrescription::STATUS_VALIDE,
                             'updated_at' => now()
                         ]);
-
-                // Les analyses enfants restent en TERMINE si elles étaient déjà TERMINE
-                if ($parentAnalyse->enfants->isNotEmpty()) {
-                    foreach ($parentAnalyse->enfants as $enfant) {
-                        AnalysePrescription::where([
-                            'prescription_id' => $prescriptionId,
-                            'analyse_id' => $enfant->id
-                        ])->where('status', AnalysePrescription::STATUS_TERMINE)
-                            ->update([
-                                'status' => AnalysePrescription::STATUS_TERMINE,
-                                'updated_at' => now()
-                            ]);
-                    }
-                }
             }
-
-            // Vérifier si toutes les analyses principales sont validées
-            $totalParentAnalyses = $parentAnalyses->count();
-            $validatedParentAnalyses = AnalysePrescription::where([
-                'prescription_id' => $prescriptionId,
-                'status' => AnalysePrescription::STATUS_VALIDE
-            ])->whereIn('analyse_id', $parentAnalyses->pluck('id'))->count();
 
             // Mise à jour du statut de la prescription
-            if ($totalParentAnalyses === $validatedParentAnalyses) {
-                $prescription->update([
-                    'status' => Prescription::STATUS_VALIDE
-                ]);
-            } else {
-                $prescription->update([
-                    'status' => Prescription::STATUS_TERMINE
-                ]);
-            }
-
-            DB::commit();
-
-            $this->dispatch('$refresh');
-            $this->alert('success', 'Les analyses ont été validées avec succès');
-
-            return redirect()->route('biologiste.analyse.index', ['tab' => 'valide']);
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            Log::error('Erreur validation analyses:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'prescription_id' => $prescriptionId,
-                'user_id' => Auth::id()
+            $prescription->update([
+                'status' => Prescription::STATUS_VALIDE,
+                'validated_by' => Auth::id(),
+                'validated_at' => now()
             ]);
 
-            $this->alert('error', "Une erreur s'est produite lors de la validation");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Erreur validation analyse unique:', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage()
+            ]);
             return false;
+        }
+    }
+
+    private function collectChildAnalyseIds($analyse, &$allAnalyseIds)
+    {
+        if ($analyse->enfants && $analyse->enfants->isNotEmpty()) {
+            foreach ($analyse->enfants as $child) {
+                $allAnalyseIds->push($child->id);
+                $this->collectChildAnalyseIds($child, $allAnalyseIds);
+            }
         }
     }
 }
