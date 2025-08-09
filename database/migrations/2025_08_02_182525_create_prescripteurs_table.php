@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->string('prenom')->nullable();
             $table->enum('status', ['Medecin', 'BiologieSolidaire'])->default('Medecin');
             $table->string('specialite')->nullable(); // retiré ->after('nom')
+            $table->string('specialite')->nullable(); // garder une seule fois ici
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
             $table->boolean('is_active')->default(true);
@@ -30,6 +31,7 @@ return new class extends Migration {
             $table->index(['status']);
             $table->index(['email']);
         });
+
     }
 
     public function down(): void

@@ -69,6 +69,9 @@
                             Email
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Dernière connexion
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Permissions
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -85,9 +88,30 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="h-10 w-10 flex-shrink-0">
-                                        <div class="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                                            <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                                                {{ $user->initials }}
+                                        <div class="h-10 w-10 rounded-full 
+                                            @if(isset($lastSessions[$user->id]) && \Carbon\Carbon::createFromTimestamp($lastSessions[$user->id]->last_activity)->diffInMinutes(now()) < 5)
+                                                bg-green-100 dark:bg-green-900
+                                            @else
+                                                bg-indigo-100 dark:bg-indigo-900
+                                            @endif
+                                            flex items-center justify-center">
+                                            <span class="text-sm font-medium 
+                                                @if(isset($lastSessions[$user->id]) && \Carbon\Carbon::createFromTimestamp($lastSessions[$user->id]->last_activity)->diffInMinutes(now()) < 5)
+                                                    text-green-700 dark:text-green-300
+                                                @else
+                                                    text-indigo-700 dark:text-indigo-300
+                                                @endif">
+                                                @php
+                                                    $words = explode(' ', $user->name);
+                                                    $initials = '';
+                                                    foreach ($words as $word) {
+                                                        if (!empty($word)) {
+                                                            $initials .= strtoupper(substr($word, 0, 1));
+                                                        }
+                                                    }
+                                                    $initials = substr($initials, 0, 2);
+                                                @endphp
+                                                {{ $initials }}
                                             </span>
                                         </div>
                                     </div>
@@ -102,24 +126,60 @@
                                     @elseif($user->type === 'secretaire') bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200
                                     @elseif($user->type === 'technicien') bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
                                     @else bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 @endif">
-                                    {{ $user->type_name }}
+                                    @php
+                                        $typeNames = [
+                                            'admin' => 'Administrateur',
+                                            'secretaire' => 'Secrétaire',
+                                            'technicien' => 'Technicien',
+                                            'biologiste' => 'Biologiste'
+                                        ];
+                                    @endphp
+                                    {{ $typeNames[$user->type] ?? ucfirst($user->type) }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
                                 {{ $user->email }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+<td class="px-6 py-4 whitespace-nowrap text-sm">
+    @php
+        $userStatus = $this->getUserStatus($user->id, $sessions);
+    @endphp
+
+    <div class="flex items-center mb-1">
+        <span class="h-2 w-2 rounded-full mr-2 bg-{{ $userStatus['color'] }}"></span>
+        <span class="{{ $userStatus['text_color'] }} text-sm">{{ $userStatus['text'] }}</span>
+    </div>
+
+    @if($userStatus['show_date'] ?? false)
+        <div class="text-xs text-gray-400 dark:text-gray-500" title="{{ $userStatus['last_activity_full'] }}">
+            {{ $userStatus['last_activity_formatted'] }}
+        </div>
+    @elseif($userStatus['status'] === 'never_connected')
+        <div class="text-xs text-gray-400 dark:text-gray-500">
+            Créé {{ $user->created_at->diffForHumans() }}
+        </div>
+    @endif
+
+    {{-- Debug info (à retirer une fois que ça marche)
+    @if(config('app.debug'))
+        <div class="text-xs text-blue-400 mt-1">
+            Debug: Status={{ $userStatus['status'] }}, 
+            LastActivity={{ $userStatus['last_activity'] ?? 'null' }}
+        </div>
+    @endif --}}
+</td>
+               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 <div class="space-y-1">
-                                    @if($user->canAccessAdmin())
+                                    @if($user->type === 'admin')
                                         <div class="text-xs text-purple-600 dark:text-purple-400">• Administration</div>
                                     @endif
-                                    @if($user->canManagePrescriptions())
+                                    @if(in_array($user->type, ['admin', 'secretaire']))
                                         <div class="text-xs text-blue-600 dark:text-blue-400">• Prescriptions</div>
                                     @endif
-                                    @if($user->canPerformAnalyses())
+                                    @if(in_array($user->type, ['admin', 'technicien']))
                                         <div class="text-xs text-green-600 dark:text-green-400">• Analyses</div>
                                     @endif
-                                    @if($user->canValidateResults())
+                                    @if(in_array($user->type, ['admin', 'biologiste']))
                                         <div class="text-xs text-yellow-600 dark:text-yellow-400">• Validation</div>
                                     @endif
                                 </div>
@@ -138,7 +198,10 @@
                                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                         </svg>
                                     </button>
-                                    @if(!$user->isAdmin() || App\Models\User::admins()->count() > 1)
+                                    @php
+                                        $adminCount = \App\Models\User::where('type', 'admin')->count();
+                                    @endphp
+                                    @if($user->type !== 'admin' || $adminCount > 1)
                                         <button 
                                             wire:click="confirmUserDeletion({{ $user->id }})"
                                             class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
@@ -154,7 +217,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="text-gray-500 dark:text-gray-400">
                                     <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
