@@ -71,14 +71,14 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 // ROUTES SPÉCIFIQUES AUX TECHNICIENS
 // ============================================
 Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
-    Route::get('dashboard', IndexTechniciens::class)->name('dashboard');
+    Route::get('traitement', IndexTechniciens::class)->name('index');
 });
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX BIOLOGISTES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')->name('biologiste.')->group(function () {
-    Route::get('dashboard', IndexBiologiste::class)->name('dashboard');
+    Route::get('traitement', IndexBiologiste::class)->name('index');
 });
 
 // ============================================
