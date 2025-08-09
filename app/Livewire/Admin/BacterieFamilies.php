@@ -5,7 +5,7 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\BacterieFamille;
-use App\Livewire\Admin\BacterieFamilies;
+
 
 
 class BacterieFamilies extends Component

@@ -1,29 +1,7 @@
 import { config, today, yesterday, currentMonth } from "./function";
 import Message, { info_break } from "./app/messages";
 import Calendar from "./app/calendar";
-import Swal from 'sweetalert2';
 
-document.addEventListener('livewire:initialized', () => {
-    window.Livewire.on('swal:confirm', (data) => {
-        Swal.fire({
-            title: 'Confirmation',
-            text: data[0].message,
-            icon: data[0].type,
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: data[0].confirmButtonText,
-            cancelButtonText: 'Annuler'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Dispatch l'événement vers le composant spécifique
-                window.Livewire.dispatch(data[0].method, { 
-                    prescriptionId: data[0].params 
-                });
-            }
-        });
-    });
-});
 
 document.addEventListener('DOMContentLoaded', 
     function(){

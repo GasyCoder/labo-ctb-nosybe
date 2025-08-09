@@ -230,6 +230,7 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
+ * @property string $numero_dossier
  * @property string $nom
  * @property string|null $prenom
  * @property string $civilite
@@ -240,15 +241,26 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Prescription|null $dernierePrescription
+ * @property-read mixed $derniere_visite
  * @property-read mixed $latest_age
+ * @property-read mixed $latest_unite_age
+ * @property-read mixed $montant_total_paye
+ * @property-read mixed $statut_automatique
+ * @property-read mixed $total_analyses
+ * @property-read mixed $total_paiements
+ * @property-read mixed $total_prescriptions
+ * @property-read \App\Models\Prescription|null $premierePrescription
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prescription> $prescriptions
  * @property-read int|null $prescriptions_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient actifs($jours = 30)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient fideles()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient nouveaux()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient rechercher($terme)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient vip()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereCivilite($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereCreatedAt($value)
@@ -257,6 +269,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereNom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereNumeroDossier($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient wherePrenom($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereStatut($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient whereTelephone($value)
@@ -426,7 +439,7 @@ namespace App\Models{
  * @property string $unite_age
  * @property numeric|null $poids
  * @property string|null $renseignement_clinique
- * @property string $remise
+ * @property numeric $remise
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at

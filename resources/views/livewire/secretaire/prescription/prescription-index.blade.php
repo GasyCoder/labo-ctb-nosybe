@@ -1,3 +1,4 @@
+{{-- livewire/secretaire/prescription/prescription-index.blade.php --}}
 <div class="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
@@ -99,40 +100,7 @@
             ])
         @endif
     </div>
-</div>
 
-@push('scripts')
-<script>
-document.addEventListener('livewire:initialized', () => {
-    Livewire.on('swal:confirm', (data) => {
-        console.log('=== DEBUG SWEETALERT ===');
-        console.log('Données reçues:', data[0]);
-        console.log('Méthode à appeler:', data[0].method);
-        console.log('Paramètres:', data[0].params);
-        
-        Swal.fire({
-            title: 'Confirmation',
-            text: data[0].message,
-            icon: data[0].type,
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: data[0].confirmButtonText,
-            cancelButtonText: 'Annuler'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                console.log('=== CONFIRMATION UTILISATEUR ===');
-                console.log('Appel de la méthode:', data[0]monnaieRendue.method);
-                console.log('Avec les paramètres:', data[0].params);
-                
-                // Appel direct de la méthode
-                @this.call(data[0].method, data[0].params);
-                
-                // Log après appel
-                console.log('Méthode appelée avec succès');
-            }
-        });
-    });
-});
-</script>
-@endpush
+    {{-- Modal de confirmation de suppression --}}
+    @include('livewire.secretaire.prescription.modals.action-modal-prescription')
+</div>

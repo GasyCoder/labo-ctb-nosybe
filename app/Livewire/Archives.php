@@ -2,13 +2,11 @@
 
 namespace App\Livewire;
 
+use App\Models\Prescription;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Prescription;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Builder;
-use App\Livewire;
-use App\Models;
-
 
 class Archives extends Component
 {
@@ -18,6 +16,7 @@ class Archives extends Component
     public $statusFilter = '';
     public $dateFilter = '';
     public $prescripteurFilter = '';
+    public $countArchive; // Add property for archive count
 
     // Messages de confirmation
     public $showUnarchiveModal = false;
@@ -30,6 +29,11 @@ class Archives extends Component
         'dateFilter' => ['except' => ''],
         'prescripteurFilter' => ['except' => ''],
     ];
+
+    public function mount()
+    {
+        $this->refreshArchiveCount(); // Initialize count on mount
+    }
 
     public function updatingSearch()
     {
@@ -49,6 +53,12 @@ class Archives extends Component
     public function updatingPrescripteurFilter()
     {
         $this->resetPage();
+    }
+
+    public function refreshArchiveCount()
+    {
+        $this->countArchive = Prescription::where('status', Prescription::STATUS_ARCHIVE)->count();
+        $this->dispatch('updateArchiveCount', count: $this->countArchive); // Dispatch event
     }
 
     public function getArchivedPrescriptions()
@@ -99,18 +109,12 @@ class Archives extends Component
             ->get(['id', 'name']);
     }
 
-    /**
-     * Confirmer la désarchivage d'une prescription
-     */
     public function confirmUnarchive($prescriptionId)
     {
         $this->selectedPrescriptionId = $prescriptionId;
         $this->showUnarchiveModal = true;
     }
 
-    /**
-     * Désarchiver une prescription
-     */
     public function unarchive()
     {
         if (!$this->selectedPrescriptionId) {
@@ -127,8 +131,8 @@ class Archives extends Component
             }
 
             $prescription->unarchive();
-
             session()->flash('success', 'La prescription a été désarchivée avec succès.');
+            $this->refreshArchiveCount(); // Refresh count after unarchiving
 
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur lors de la désarchivage : ' . $e->getMessage());
@@ -137,12 +141,9 @@ class Archives extends Component
         $this->resetModal();
     }
 
-    /**
-     * Confirmer la suppression définitive (seulement pour admin)
-     */
     public function confirmPermanentDelete($prescriptionId)
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             session()->flash('error', 'Seuls les administrateurs peuvent supprimer définitivement.');
             return;
         }
@@ -151,12 +152,9 @@ class Archives extends Component
         $this->showDeleteModal = true;
     }
 
-    /**
-     * Suppression définitive (seulement admin)
-     */
     public function permanentDelete()
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             session()->flash('error', 'Action non autorisée.');
             return;
         }
@@ -167,11 +165,9 @@ class Archives extends Component
 
         try {
             $prescription = Prescription::findOrFail($this->selectedPrescriptionId);
-
-            // Supprimer définitivement
             $prescription->forceDelete();
-
             session()->flash('success', 'La prescription a été supprimée définitivement.');
+            $this->refreshArchiveCount(); // Refresh count after deletion
 
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
@@ -180,24 +176,18 @@ class Archives extends Component
         $this->resetModal();
     }
 
-    /**
-     * Vérifier si l'utilisateur peut désarchiver
-     */
     private function canUnarchive($prescription)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        // Les admins peuvent tout faire
         if ($user->isAdmin()) {
             return true;
         }
 
-        // Les secrétaires peuvent désarchiver
         if ($user->type === 'secretaire') {
             return true;
         }
 
-        // Les biologistes peuvent désarchiver leurs propres prescriptions
         if ($user->type === 'biologiste' && $prescription->prescripteur_id === $user->id) {
             return true;
         }
@@ -205,9 +195,6 @@ class Archives extends Component
         return false;
     }
 
-    /**
-     * Réinitialiser les modals
-     */
     public function resetModal()
     {
         $this->showUnarchiveModal = false;
@@ -215,9 +202,6 @@ class Archives extends Component
         $this->selectedPrescriptionId = null;
     }
 
-    /**
-     * Réinitialiser les filtres
-     */
     public function resetFilters()
     {
         $this->search = '';
@@ -227,12 +211,8 @@ class Archives extends Component
         $this->resetPage();
     }
 
-    /**
-     * Exporter les archives (optionnel)
-     */
     public function export()
     {
-        // Logique d'export si nécessaire
         session()->flash('info', 'Fonctionnalité d\'export en cours de développement.');
     }
 
@@ -241,6 +221,10 @@ class Archives extends Component
         $prescriptions = $this->getArchivedPrescriptions();
         $prescripteurs = $this->getPrescripteurs();
 
-        return view('livewire.archives', compact('prescriptions', 'prescripteurs'));
+        return view('livewire.archives', [
+            'prescriptions' => $prescriptions,
+            'prescripteurs' => $prescripteurs,
+            'countArchive' => $this->countArchive, // Pass count to view
+        ]);
     }
 }

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
+            $table->string('numero_dossier')->unique();
             $table->string('nom');
             $table->string('prenom')->nullable();
             $table->string('civilite');
@@ -22,6 +23,8 @@ return new class extends Migration
             $table->enum('statut', ['NOUVEAU', 'FIDELE', 'VIP'])->default('NOUVEAU');
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index('numero_dossier');
         });
     }
 

@@ -168,16 +168,16 @@ class Prescripteurs extends Component
 
             if ($this->prescripteurId) {
                 Prescripteur::findOrFail($this->prescripteurId)->update($data);
-                session()->flash('success', 'Prescripteur modifié avec succès.');
+                flash()->success('Prescripteur modifié avec succès.');
             } else {
                 Prescripteur::create($data);
-                session()->flash('success', 'Prescripteur créé avec succès.');
+                flash()->success('Prescripteur créé avec succès.');
             }
 
             $this->closePrescripteurModal();
             
         } catch (\Exception $e) {
-            session()->flash('error', 'Une erreur s\'est produite lors de l\'enregistrement.');
+             flash()->error('Une erreur s\'est produite lors de l\'enregistrement.');
         }
     }
 
@@ -188,9 +188,9 @@ class Prescripteurs extends Component
             $prescripteur->update(['is_active' => !$prescripteur->is_active]);
             
             $status = $prescripteur->is_active ? 'activé' : 'désactivé';
-            session()->flash('success', "Prescripteur {$status} avec succès.");
+            flash()->success("Prescripteur {$status} avec succès.");
         } catch (\Exception $e) {
-            session()->flash('error', 'Une erreur s\'est produite lors du changement de statut.');
+            flash()->error('Une erreur s\'est produite lors du changement de statut.');
         }
     }
 
@@ -206,17 +206,17 @@ class Prescripteurs extends Component
             if ($this->prescripteurToDelete) {
                 if ($this->prescripteurToDelete->prescriptions()->count() > 0) {
                     $this->prescripteurToDelete->delete();
-                    session()->flash('warning', 'Prescripteur archivé avec succès (prescriptions existantes).');
+                    flash()->warning('Prescripteur archivé avec succès (prescriptions existantes).');
                 } else {
                     $this->prescripteurToDelete->forceDelete();
-                    session()->flash('success', 'Prescripteur supprimé définitivement avec succès.');
+                    flash()->success('Prescripteur supprimé définitivement avec succès.');
                 }
                 
                 $this->showDeleteModal = false;
                 $this->prescripteurToDelete = null;
             }
         } catch (\Exception $e) {
-            session()->flash('error', 'Impossible de supprimer ce prescripteur.');
+                    flash()->error('Impossible de supprimer ce prescripteur.');
         }
     }
 
@@ -245,7 +245,7 @@ class Prescripteurs extends Component
         
         // Vérifier si le prescripteur est BiologieSolidaire
         if ($this->selectedPrescripteur && $this->selectedPrescripteur->status === 'BiologieSolidaire') {
-            session()->flash('info', 'Les prescripteurs de Biologie Solidaire ne perçoivent pas de commission.');
+            flash()->info('Les prescripteurs de Biologie Solidaire ne perçoivent pas de commission.');
             return;
         }
         
@@ -297,7 +297,7 @@ class Prescripteurs extends Component
                 'commission_moyenne' => 0
             ];
 
-            session()->flash('error', 'Erreur lors du chargement des commissions.');
+            flash()->error('Erreur lors du chargement des commissions.');
         }
     }
 
@@ -356,7 +356,7 @@ class Prescripteurs extends Component
                 'commission_moyenne' => 0
             ];
 
-            session()->flash('error', 'Erreur lors du filtrage des commissions: ' . $e->getMessage());
+            flash()->error('Erreur lors du filtrage des commissions: ' . $e->getMessage());
         }
     }
 

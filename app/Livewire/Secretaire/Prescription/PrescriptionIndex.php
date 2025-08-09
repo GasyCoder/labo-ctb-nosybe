@@ -20,18 +20,26 @@ class PrescriptionIndex extends Component
     use WithPagination, AuthorizesRequests;
 
     public ?Prescription $prescription = null;
+    public $countArchive; // Add property for archive count
 
     protected $queryString = [
         'search' => ['except' => ''],
-        'tab' => ['except' => 'actives'], // Onglet par défaut
+        'tab' => ['except' => 'actives'],
     ];
 
     public $tab = 'actives';
     public $search = '';
-    
+
+    // Modal properties
+    public $showDeleteModal = false;
+    public $showRestoreModal = false;
+    public $showPermanentDeleteModal = false;
+    public $showArchiveModal = false;
+    public $showUnarchiveModal = false;
+    public $selectedPrescriptionId = null;
+
     protected $pdfService;
 
-    // Define status labels for display
     public const STATUS_LABELS = [
         'EN_ATTENTE' => 'En attente',
         'EN_COURS' => 'En cours',
@@ -43,16 +51,12 @@ class PrescriptionIndex extends Component
 
     protected $listeners = [
         'prescriptionAdded' => '$refresh',
-        'deletePrescription',
-        'restorePrescription',
-        'permanentDeletePrescription',
-        'archivePrescription',
-        'unarchivePrescription',
     ];
 
     public function mount()
     {
         $this->tab = request()->query('tab', 'actives');
+        $this->refreshArchiveCount(); // Initialize count on mount
     }
 
     public function switchTab($tab)
@@ -72,6 +76,22 @@ class PrescriptionIndex extends Component
         $this->resetPage();
     }
 
+    public function refreshArchiveCount()
+    {
+        $this->countArchive = Prescription::where('status', Prescription::STATUS_ARCHIVE)->count();
+        $this->dispatch('updateArchiveCount', count: $this->countArchive); // Dispatch event
+    }
+
+    public function resetModal()
+    {
+        $this->showDeleteModal = false;
+        $this->showRestoreModal = false;
+        $this->showPermanentDeleteModal = false;
+        $this->showArchiveModal = false;
+        $this->showUnarchiveModal = false;
+        $this->selectedPrescriptionId = null;
+    }
+
     private function addStatusLabels($prescriptions)
     {
         $prescriptions->getCollection()->transform(function ($prescription) {
@@ -85,165 +105,173 @@ class PrescriptionIndex extends Component
         $this->dispatch('editPrescription', $prescriptionId);
     }
 
-    // ========================================
-    // MÉTHODES DE CONFIRMATION SWEETALERT2
-    // ========================================
-
+    // Confirmation Methods
     public function confirmDelete($prescriptionId)
     {
-        $this->dispatch('swal:confirm', [
-            'type' => 'warning',
-            'message' => 'Êtes-vous sûr de vouloir mettre cette prescription en corbeille ?',
-            'text' => 'Cette action peut être annulée depuis la corbeille.',
-            'confirmButtonText' => 'Oui, supprimer',
-            'method' => 'deletePrescription',
-            'params' => $prescriptionId
-        ]);
+        $this->selectedPrescriptionId = $prescriptionId;
+        $this->showDeleteModal = true;
     }
 
     public function confirmRestore($prescriptionId)
     {
-        $this->dispatch('swal:confirm', [
-            'type' => 'question',
-            'message' => 'Êtes-vous sûr de vouloir restaurer cette prescription ?',
-            'text' => 'Elle sera remise dans la liste active.',
-            'confirmButtonText' => 'Oui, restaurer',
-            'method' => 'restorePrescription',
-            'params' => $prescriptionId
-        ]);
+        $this->selectedPrescriptionId = $prescriptionId;
+        $this->showRestoreModal = true;
     }
 
     public function confirmPermanentDelete($prescriptionId)
     {
-        $this->dispatch('swal:confirm', [
-            'type' => 'error',
-            'message' => 'Êtes-vous sûr de vouloir supprimer définitivement cette prescription ?',
-            'text' => 'Cette action est irréversible !',
-            'confirmButtonText' => 'Oui, supprimer définitivement',
-            'method' => 'permanentDeletePrescription',
-            'params' => $prescriptionId
-        ]);
+        if (!auth()->user()->isAdmin()) {
+            session()->flash('error', 'Seuls les administrateurs peuvent supprimer définitivement.');
+            return;
+        }
+
+        $this->selectedPrescriptionId = $prescriptionId;
+        $this->showPermanentDeleteModal = true;
     }
 
     public function confirmArchive($prescriptionId)
     {
-        $this->dispatch('swal:confirm', [
-            'type' => 'info',
-            'message' => 'Voulez-vous archiver cette prescription ?',
-            'text' => 'Elle sera déplacée vers les archives.',
-            'confirmButtonText' => 'Oui, archiver',
-            'method' => 'archivePrescription',
-            'params' => $prescriptionId
-        ]);
+        $this->selectedPrescriptionId = $prescriptionId;
+        $this->showArchiveModal = true;
     }
 
     public function confirmUnarchive($prescriptionId)
     {
-        $this->dispatch('swal:confirm', [
-            'type' => 'info',
-            'message' => 'Voulez-vous désarchiver cette prescription ?',
-            'text' => 'Elle sera remise dans la liste validées.',
-            'confirmButtonText' => 'Oui, désarchiver',
-            'method' => 'unarchivePrescription',
-            'params' => $prescriptionId
-        ]);
+        $this->selectedPrescriptionId = $prescriptionId;
+        $this->showUnarchiveModal = true;
     }
 
-    // ========================================
-    // MÉTHODES D'EXÉCUTION
-    // ========================================
-
-    public function deletePrescription($prescriptionId = null)
+    // Execution Methods
+    public function deletePrescription()
     {
         try {
-            $prescription = Prescription::findOrFail($prescriptionId);
+            if (!$this->selectedPrescriptionId) {
+                return;
+            }
+
+            $prescription = Prescription::findOrFail($this->selectedPrescriptionId);
             $prescription->delete();
 
             session()->flash('success', 'Prescription mise en corbeille avec succès.');
+            $this->resetModal();
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
             Log::error('Erreur suppression prescription', [
-                'prescription_id' => $prescriptionId,
+                'prescription_id' => $this->selectedPrescriptionId,
                 'error' => $e->getMessage()
             ]);
             session()->flash('error', 'Une erreur est survenue lors de la mise en corbeille.');
+            $this->resetModal();
         }
     }
 
-    public function restorePrescription($prescriptionId = null)
+    public function restorePrescription()
     {
         try {
-            $prescription = Prescription::withTrashed()->findOrFail($prescriptionId);
+            if (!$this->selectedPrescriptionId) {
+                return;
+            }
+
+            $prescription = Prescription::withTrashed()->findOrFail($this->selectedPrescriptionId);
             $prescription->restore();
 
             session()->flash('success', 'Prescription restaurée avec succès.');
+            $this->resetModal();
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
             Log::error('Erreur restauration prescription', [
-                'prescription_id' => $prescriptionId,
+                'prescription_id' => $this->selectedPrescriptionId,
                 'error' => $e->getMessage()
             ]);
             session()->flash('error', 'Erreur lors de la restauration : ' . $e->getMessage());
+            $this->resetModal();
         }
     }
 
-    public function permanentDeletePrescription($prescriptionId = null)
+    public function permanentDeletePrescription()
     {
         try {
-            $prescription = Prescription::withTrashed()->findOrFail($prescriptionId);
+            if (!auth()->user()->isAdmin()) {
+                session()->flash('error', 'Action non autorisée.');
+                return;
+            }
+
+            if (!$this->selectedPrescriptionId) {
+                return;
+            }
+
+            $prescription = Prescription::withTrashed()->findOrFail($this->selectedPrescriptionId);
             $prescription->forceDelete();
 
             session()->flash('success', 'Prescription supprimée définitivement.');
+            $this->resetModal();
             $this->dispatch('$refresh');
+            $this->refreshArchiveCount(); // Refresh count after deletion
 
         } catch (\Exception $e) {
             Log::error('Erreur suppression définitive prescription', [
-                'prescription_id' => $prescriptionId,
+                'prescription_id' => $this->selectedPrescriptionId,
                 'error' => $e->getMessage()
             ]);
             session()->flash('error', 'Erreur lors de la suppression définitive : ' . $e->getMessage());
+            $this->resetModal();
         }
     }
 
-    public function archivePrescription($prescriptionId = null)
+    public function archivePrescription()
     {
         try {
-            $prescription = Prescription::findOrFail($prescriptionId);
+            if (!$this->selectedPrescriptionId) {
+                return;
+            }
+
+            $prescription = Prescription::findOrFail($this->selectedPrescriptionId);
 
             if ($prescription->status === 'VALIDE') {
                 $prescription->update(['status' => 'ARCHIVE']);
                 session()->flash('success', 'Prescription archivée avec succès.');
-                $this->dispatch('$refresh');
+                $this->refreshArchiveCount(); // Refresh count after archiving
             } else {
                 session()->flash('error', 'Seules les prescriptions validées peuvent être archivées.');
             }
 
+            $this->resetModal();
+            $this->dispatch('$refresh');
+
         } catch (\Exception $e) {
             Log::error('Erreur archivage prescription', [
-                'prescription_id' => $prescriptionId,
+                'prescription_id' => $this->selectedPrescriptionId,
                 'error' => $e->getMessage()
             ]);
             session()->flash('error', 'Erreur lors de l\'archivage : ' . $e->getMessage());
+            $this->resetModal();
         }
     }
 
-    public function unarchivePrescription($prescriptionId = null)
+    public function unarchivePrescription()
     {
         try {
-            $prescription = Prescription::findOrFail($prescriptionId);
+            if (!$this->selectedPrescriptionId) {
+                return;
+            }
+
+            $prescription = Prescription::findOrFail($this->selectedPrescriptionId);
             $prescription->update(['status' => 'VALIDE']);
-            
             session()->flash('success', 'Prescription désarchivée avec succès.');
+            $this->refreshArchiveCount(); // Refresh count after unarchiving
+
+            $this->resetModal();
             $this->dispatch('$refresh');
-            
+
         } catch (\Exception $e) {
             Log::error('Erreur désarchivage prescription', [
-                'prescription_id' => $prescriptionId,
+                'prescription_id' => $this->selectedPrescriptionId,
                 'error' => $e->getMessage()
             ]);
             session()->flash('error', 'Erreur lors du désarchivage : ' . $e->getMessage());
+            $this->resetModal();
         }
     }
 
@@ -280,7 +308,7 @@ class PrescriptionIndex extends Component
         $searchCondition = function ($query) use ($search) {
             $query->where('renseignement_clinique', 'like', $search)
                 ->orWhere('status', 'like', $search)
-                ->orWhere('reference', 'like', $search) // ✅ Recherche dans prescriptions.reference
+                ->orWhere('reference', 'like', $search)
                 ->orWhereHas('patient', function ($q) use ($search) {
                     $q->where('nom', 'like', $search)
                         ->orWhere('prenom', 'like', $search)
@@ -292,36 +320,33 @@ class PrescriptionIndex extends Component
                 });
         };
 
-        // Prescriptions actives (EN_ATTENTE, EN_COURS, TERMINE)
         $activePrescriptions = (clone $baseQuery)
             ->whereIn('status', ['EN_ATTENTE', 'EN_COURS', 'TERMINE'])
             ->where($searchCondition)
             ->latest()
             ->paginate(15);
 
-        // Prescriptions validées (VALIDE seulement, ARCHIVE va vers la page archives)
         $validePrescriptions = (clone $baseQuery)
             ->where('status', 'VALIDE')
             ->where($searchCondition)
             ->latest()
             ->paginate(15, ['*'], 'valide_page');
 
-        // Prescriptions supprimées
         $deletedPrescriptions = (clone $baseQuery)
             ->onlyTrashed()
             ->where($searchCondition)
             ->latest()
             ->paginate(15, ['*'], 'deleted_page');
 
-        // Add status labels to all prescription collections
         $this->addStatusLabels($activePrescriptions);
         $this->addStatusLabels($validePrescriptions);
         $this->addStatusLabels($deletedPrescriptions);
 
-        return view('livewire.secretaire.prescription.prescription-index', compact(
-            'activePrescriptions',
-            'validePrescriptions',
-            'deletedPrescriptions',
-        ));
+        return view('livewire.secretaire.prescription.prescription-index', [
+            'activePrescriptions' => $activePrescriptions,
+            'validePrescriptions' => $validePrescriptions,
+            'deletedPrescriptions' => $deletedPrescriptions,
+            'countArchive' => $this->countArchive, // Pass count to view
+        ]);
     }
 }

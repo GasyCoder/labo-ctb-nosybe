@@ -31,11 +31,13 @@ class Prescription extends Model
         'unite_age',
         'poids',
         'renseignement_clinique',
+        'remise', // ✅ AJOUT DU CHAMP REMISE
         'status',
     ];
 
     protected $casts = [
         'poids' => 'decimal:2',
+        'remise' => 'decimal:2', // ✅ CAST POUR LA REMISE
     ];
 
     // RELATIONS
@@ -138,9 +140,12 @@ class Prescription extends Model
     {
         $montantAnalyses = $this->getMontantAnalysesCalcule();
         $montantPrelevements = $this->prelevements->sum(function ($prelevement) {
-            return $prelevement->pivot->prix_unitaire * $prelevement->pivot->quantite;
+            return ($prelevement->pivot->prix_unitaire ?? 0) * ($prelevement->pivot->quantite ?? 1);
         });
-        return $montantAnalyses + $montantPrelevements;
+        
+        // ✅ SOUSTRAIRE LA REMISE DU TOTAL
+        $total = $montantAnalyses + $montantPrelevements;
+        return max(0, $total - ($this->remise ?? 0));
     }
 
     // COMMISSION SIMPLIFIÉE (utilise le champ dans paiements)
@@ -228,19 +233,50 @@ class Prescription extends Model
         return $labels[$this->status] ?? $this->status;
     }
 
+    // ✅ BOOT METHOD CORRIGÉ
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($prescription) {
-            $prescription->reference = $prescription->genererReferenceUnique();
+            if (empty($prescription->reference)) {
+                $prescription->reference = $prescription->genererReferenceUnique();
+            }
         });
     }
 
+    // ✅ GÉNÉRATION DE RÉFÉRENCE PRESCRIPTION CORRIGÉE
     public function genererReferenceUnique()
     {
         $annee = date('Y');
-        $numero = str_pad(Prescription::withTrashed()->count() + 1, 5, '0', STR_PAD_LEFT);
-        return "PAT{$annee}{$numero}";
+        
+        // Compter les prescriptions existantes pour cette année
+        $compteur = static::withTrashed()
+                         ->whereRaw('YEAR(created_at) = ?', [$annee])
+                         ->count() + 1;
+        
+        $numero = str_pad($compteur, 5, '0', STR_PAD_LEFT);
+        $reference = "PRE-{$annee}-{$numero}";
+        
+        // ✅ VÉRIFICATION D'UNICITÉ (sécurité supplémentaire)
+        while (static::withTrashed()->where('reference', $reference)->exists()) {
+            $compteur++;
+            $numero = str_pad($compteur, 5, '0', STR_PAD_LEFT);
+            $reference = "PRE-{$annee}-{$numero}";
+        }
+        
+        return $reference;
+    }
+
+    // ✅ MÉTHODE UTILITAIRE POUR OBTENIR LA PROCHAINE RÉFÉRENCE (optionnel)
+    public static function getNextReference()
+    {
+        $annee = date('Y');
+        $compteur = static::withTrashed()
+                         ->whereRaw('YEAR(created_at) = ?', [$annee])
+                         ->count() + 1;
+        
+        $numero = str_pad($compteur, 5, '0', STR_PAD_LEFT);
+        return "PRE-{$annee}-{$numero}";
     }
 }

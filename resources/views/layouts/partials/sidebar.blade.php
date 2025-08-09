@@ -19,9 +19,9 @@
             </a>
         </div>
     </div>
- @php
-    $countArchive = \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)->count();
-@endphp
+    @php
+        $countArchive = \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)->count();
+    @endphp
     <div class="nk-sidebar-body max-h-full relative overflow-hidden w-full bg-white dark:bg-gray-950 border-e border-gray-200 dark:border-gray-900">
         <div class="flex flex-col w-full h-[calc(100vh-3.5rem)]">
             <div class="h-full pt-3 pb-8" data-simplebar>
@@ -47,7 +47,9 @@
                             <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
                                 <em class="text-xl leading-none text-current transition-all duration-300 icon ni ni-archived"></em>
                             </span>
-                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Archives ({{ $countArchive }})</span>
+                            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
+                                Archives (<span id="archive-count">{{ $countArchive ?? \App\Models\Prescription::where('status', \App\Models\Prescription::STATUS_ARCHIVE)->count() }}</span>)
+                            </span>
                         </a>
                     </li>
 
@@ -185,3 +187,13 @@
     </div>
 </div>
 <div class="sidebar-toggle fixed inset-0 bg-slate-950 bg-opacity-20 z-[1030] opacity-0 invisible peer-[.sidebar-visible]:opacity-100 peer-[.sidebar-visible]:visible xl:!opacity-0 xl:!invisible"></div>
+
+@push('scripts')
+    <script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('updateArchiveCount', ({ count }) => {
+            document.getElementById('archive-count').textContent = count;
+        });
+    });
+</script>
+@endpush
