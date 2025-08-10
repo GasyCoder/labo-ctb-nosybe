@@ -223,4 +223,7 @@ class Antibiotique extends Model
             }
         });
     }
+
+     // scopes
+    public function scopeActifs($q){ return $q->where('status', true); }
 }
