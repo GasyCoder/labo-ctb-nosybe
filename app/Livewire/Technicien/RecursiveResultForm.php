@@ -308,13 +308,13 @@ class RecursiveResultForm extends Component
                     // Séparer options standards et bactéries
                     $optionsStandards = array_intersect($selectedOptions, ['non-rechercher', 'en-cours', 'culture-sterile', 'absence-germe-pathogene', 'Autre']);
                     
-                    // ✅ Sauvegarder dans resultats
+                    // ✅ Sauvegarder dans resultats avec statut EN_COURS
                     Resultat::updateOrCreate(
                         ['prescription_id' => $this->prescription->id, 'analyse_id' => $analyseId],
                         [
                             'resultats' => !empty($optionsStandards) ? json_encode($optionsStandards, JSON_UNESCAPED_UNICODE) : null,
                             'valeur' => Arr::get($data, 'autreValeur') ?: null,
-                            'status' => 'TERMINE',
+                            'status' => 'EN_COURS', // ✅ Marquer comme EN_COURS au lieu de TERMINE
                         ]
                     );
                     continue;
@@ -330,29 +330,24 @@ class RecursiveResultForm extends Component
                         'resultats'      => is_array($resultats) ? json_encode($resultats, JSON_UNESCAPED_UNICODE) : $resultats,
                         'interpretation' => $interpretation ?: null,
                         'conclusion'     => $conclusion ?: null,
-                        'status'         => 'TERMINE',
+                        'status'         => 'EN_COURS', // ✅ Marquer comme EN_COURS au lieu de TERMINE
                         'famille_id'     => $famille_id ?: null,
                         'bacterie_id'    => $bacterie_id ?: null,
                     ]
                 );
             }
 
-            // statut prescription
-            $total = $this->prescription->analyses()->count();
-            $withRes = $this->prescription->resultats()->count();
-            if ($total > 0 && $total === $withRes) {
-                if ($this->prescription->status === 'EN_ATTENTE') {
-                    $this->prescription->update(['status' => 'EN_COURS']);
-                }
-                $this->prescription->update(['status' => 'TERMINE']);
-            } else {
-                if ($this->prescription->status === 'EN_ATTENTE') {
-                    $this->prescription->update(['status' => 'EN_COURS']);
-                }
+            // ✅ Mettre à jour le statut de la prescription seulement en EN_COURS
+            if ($this->prescription->status === 'EN_ATTENTE') {
+                $this->prescription->update(['status' => 'EN_COURS']);
             }
 
             DB::commit();
-            session()->flash('message', 'Résultats enregistrés avec succès.');
+            
+            // ✅ Message de succès différent
+            session()->flash('message', 'Résultats sauvegardés avec succès. Utilisez les boutons "Terminer" pour finaliser.');
+            
+            // ✅ Rafraîchir la sidebar pour mettre à jour les statuts
             $this->dispatch('refreshSidebar');
 
         } catch (\Throwable $e) {
