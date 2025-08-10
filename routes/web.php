@@ -18,6 +18,7 @@ use App\Livewire\Biologiste\AnalyseValide;
 use App\Livewire\Secretaire\PatientDetail;
 use App\Livewire\Secretaire\Prescripteurs;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ResultatController;
 use App\Livewire\Technicien\IndexTechnicien;
 use App\Livewire\Technicien\ShowPrescription;
 use App\Livewire\Biologiste\BiologisteAnalysisForm;
@@ -74,6 +75,9 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
     Route::get('traitement', IndexTechnicien::class)->name('index');
     Route::get('/technicien/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
+
+    Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])
+    ->name('prescription.pdf');
 });
 
 // ============================================
