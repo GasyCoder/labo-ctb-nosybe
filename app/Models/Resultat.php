@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\JsonUnicode;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -17,108 +18,131 @@ class Resultat extends Model
         'analyse_id',
         'resultats',
         'valeur',
-        'tube_id',  
+        'tube_id',
         'interpretation',
         'conclusion',
         'status',
         'validated_by',
         'validated_at',
+        // pour bacterio :
+        'famille_id',
+        // 'bacterie_id',
     ];
 
-    // CASTS pour optimiser les types
+    /**
+     * ✅ CASTS CORRIGÉS avec Unicode
+     */
     protected $casts = [
         'validated_at' => 'datetime',
-        'resultats' => 'array', // Si tu stockes du JSON
+        'resultats' => JsonUnicode::class,  // ← Custom cast avec Unicode
     ];
 
-    // RELATIONS
-    public function prescription()
+    // ✅ ALTERNATIVE : Mutators/Accessors manuels
+    /**
+     * Mutator pour resultats avec Unicode
+     */
+    public function setResultatsAttribute($value)
     {
-        return $this->belongsTo(Prescription::class);
+        if (is_null($value)) {
+            $this->attributes['resultats'] = null;
+            return;
+        }
+        
+        if (is_array($value)) {
+            $this->attributes['resultats'] = json_encode($value, JSON_UNESCAPED_UNICODE);
+        } else {
+            $this->attributes['resultats'] = $value;
+        }
     }
 
-    public function analyse()
+    /**
+     * Accessor pour resultats
+     */
+    public function getResultatsAttribute($value)
     {
-        return $this->belongsTo(Analyse::class);
+        if (is_null($value)) {
+            return null;
+        }
+        
+        if (is_string($value) && $this->isJson($value)) {
+            return json_decode($value, true);
+        }
+        
+        return $value;
     }
 
-    public function tube()
+    /**
+     * ✅ MÉTHODE UTILITAIRE : Vérifier si une chaîne est du JSON
+     */
+    private function isJson($string)
     {
-        return $this->belongsTo(Tube::class);
+        if (!is_string($string)) {
+            return false;
+        }
+        
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
-    public function validatedBy()
+    /**
+     * ✅ MÉTHODE UTILITAIRE : Encoder proprement en JSON avec Unicode
+     */
+    public static function encodeJsonUnicode($data)
     {
-        return $this->belongsTo(User::class, 'validated_by');
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     }
 
-    // SCOPES pour les statuts
-    public function scopeStatus($query, $status)
+    /**
+     * ✅ MÉTHODE UTILITAIRE : Décoder JSON
+     */
+    public static function decodeJson($json)
     {
-        return $query->where('status', $status);
+        if (is_null($json) || !is_string($json)) {
+            return $json;
+        }
+        
+        return json_decode($json, true, 512, JSON_THROW_ON_ERROR);
     }
 
-    public function scopeValides($query)
-    {
-        return $query->where('status', 'VALIDE');
-    }
+    // Relations (restent identiques)
+    public function prescription() { return $this->belongsTo(Prescription::class); }
+    public function analyse() { return $this->belongsTo(Analyse::class); }
+    public function tube() { return $this->belongsTo(Tube::class); }
+    public function validatedBy() { return $this->belongsTo(User::class, 'validated_by'); }
+    public function famille() { return $this->belongsTo(BacterieFamille::class, 'famille_id'); }
+    public function bacterie() { return $this->belongsTo(Bacterie::class, 'bacterie_id'); }
 
-    public function scopeEnCours($query)
-    {
-        return $query->where('status', 'EN_COURS');
-    }
+    // Scopes (restent identiques)
+    public function scopeStatus($q,$s){ return $q->where('status',$s); }
+    public function scopeValides($q){ return $q->where('status','VALIDE'); }
+    public function scopeEnCours($q){ return $q->where('status','EN_COURS'); }
+    public function scopeEnAttente($q){ return $q->where('status','EN_ATTENTE'); }
+    public function scopeTermines($q){ return $q->where('status','TERMINE'); }
+    public function scopePathologiques($q){ return $q->where('interpretation','PATHOLOGIQUE'); }
+    public function scopeNormaux($q){ return $q->where('interpretation','NORMAL'); }
 
-    public function scopeEnAttente($query)
-    {
-        return $query->where('status', 'EN_ATTENTE');
-    }
-
-    public function scopeTermines($query)
-    {
-        return $query->where('status', 'TERMINE');
-    }
-
-    public function scopePathologiques($query)
-    {
-        return $query->where('interpretation', 'PATHOLOGIQUE');
-    }
-
-    public function scopeNormaux($query)
-    {
-        return $query->where('interpretation', 'NORMAL');
-    }
-
-    // ACCESSEURS et MUTATEURS
-    public function getEstValideAttribute()
-    {
-        return $this->status === 'VALIDE';
-    }
-
-    public function getEstPathologiqueAttribute()
-    {
-        return $this->interpretation === 'PATHOLOGIQUE';
-    }
+    // Accessors (restent identiques)
+    public function getEstValideAttribute() { return $this->status === 'VALIDE'; }
+    public function getEstPathologiqueAttribute() { return $this->interpretation === 'PATHOLOGIQUE'; }
 
     public function getValeurFormateeAttribute()
     {
         if (!$this->valeur) return null;
-        
-        $unite = $this->analyse->unite ?? '';
-        $suffixe = $this->analyse->suffixe ?? '';
-        
-        return trim($this->valeur . ' ' . $unite . ' ' . $suffixe);
+        $unite = $this->analyse?->unite ?? '';
+        $suffixe = $this->analyse?->suffixe ?? '';
+        return trim($this->valeur.' '.$unite.' '.$suffixe);
     }
 
     public function getStatutCouleurAttribute()
     {
         return match($this->status) {
             'EN_ATTENTE' => 'gray',
-            'EN_COURS' => 'blue',
-            'TERMINE' => 'orange',
-            'VALIDE' => 'green',
-            'A_REFAIRE' => 'red',
-            'ARCHIVE' => 'gray',
-            default => 'gray'
+            'EN_COURS'   => 'blue',
+            'TERMINE'    => 'orange',
+            'VALIDE'     => 'green',
+            'A_REFAIRE'  => 'red',
+            'ARCHIVE'    => 'gray',
+            default      => 'gray',
         };
     }
 
@@ -131,7 +155,7 @@ class Resultat extends Model
         };
     }
 
-    // MÉTHODES MÉTIER
+    // Métier (restent identiques)
     public function valider($userId = null)
     {
         $this->update([
@@ -141,76 +165,49 @@ class Resultat extends Model
         ]);
     }
 
-    public function terminer()
-    {
-        $this->update(['status' => 'TERMINE']);
-    }
-
-    public function marquerARefaire()
-    {
-        $this->update(['status' => 'A_REFAIRE']);
-    }
+    public function terminer() { $this->update(['status' => 'TERMINE']); }
+    public function marquerARefaire() { $this->update(['status' => 'A_REFAIRE']); }
 
     public function estDansIntervalle()
     {
-        if (!$this->valeur || !$this->analyse->valeur_ref) {
-            return null; // Impossible de déterminer
-        }
-
-        // Logique pour vérifier si la valeur est dans l'intervalle de référence
+        if (!$this->valeur || !($this->analyse?->valeur_ref)) return null;
         $valeurRef = $this->analyse->valeur_ref;
         $valeur = (float) $this->valeur;
 
-        // Exemple: "120 - 160" ou "<5.18" ou "H: 62-123 F: 53-97"
-        if (preg_match('/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/', $valeurRef, $matches)) {
-            $min = (float) $matches[1];
-            $max = (float) $matches[2];
+        if (preg_match('/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/', $valeurRef, $m)) {
+            $min = (float) $m[1]; $max = (float) $m[2];
             return $valeur >= $min && $valeur <= $max;
         }
+        if (preg_match('/<\s*(\d+\.?\d*)/', $valeurRef, $m)) { $max = (float) $m[1]; return $valeur < $max; }
+        if (preg_match('/>\s*(\d+\.?\d*)/', $valeurRef, $m)) { $min = (float) $m[1]; return $valeur > $min; }
 
-        if (preg_match('/<\s*(\d+\.?\d*)/', $valeurRef, $matches)) {
-            $max = (float) $matches[1];
-            return $valeur < $max;
-        }
-
-        if (preg_match('/>\s*(\d+\.?\d*)/', $valeurRef, $matches)) {
-            $min = (float) $matches[1];
-            return $valeur > $min;
-        }
-
-        return null; // Format non reconnu
+        return null;
     }
 
     public function interpreterAutomatiquement()
     {
-        $dansIntervalle = $this->estDansIntervalle();
-        
-        if ($dansIntervalle === true) {
-            $this->update(['interpretation' => 'NORMAL']);
-        } elseif ($dansIntervalle === false) {
-            $this->update(['interpretation' => 'PATHOLOGIQUE']);
-        }
-        // Si null, on ne change pas l'interprétation
+        $ok = $this->estDansIntervalle();
+        if ($ok === true)  $this->update(['interpretation' => 'NORMAL']);
+        if ($ok === false) $this->update(['interpretation' => 'PATHOLOGIQUE']);
     }
 
-    // MÉTHODES STATIQUES utiles
     public static function statistiques()
     {
         return [
-            'total' => static::count(),
-            'en_attente' => static::enAttente()->count(),
-            'en_cours' => static::enCours()->count(),
-            'termines' => static::termines()->count(),
-            'valides' => static::valides()->count(),
-            'pathologiques' => static::pathologiques()->count(),
+            'total'       => static::count(),
+            'en_attente'  => static::enAttente()->count(),
+            'en_cours'    => static::enCours()->count(),
+            'termines'    => static::termines()->count(),
+            'valides'     => static::valides()->count(),
+            'pathologiques'=> static::pathologiques()->count(),
         ];
     }
 
     public static function pourPrescription($prescriptionId)
     {
         return static::where('prescription_id', $prescriptionId)
-                    ->with(['analyse', 'validatedBy'])
-                    ->orderBy('created_at')
-                    ->get();
+            ->with(['analyse','validatedBy'])
+            ->orderBy('created_at')
+            ->get();
     }
 }
