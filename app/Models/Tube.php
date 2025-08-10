@@ -57,11 +57,6 @@ class Tube extends Model
         return $this->hasMany(Resultat::class);
     }
 
-    // public function incidents()
-    // {
-    //     return $this->hasMany(IncidentTube::class);
-    // }
-
     // SCOPES
     public function scopeStatut($query, $statut)
     {
