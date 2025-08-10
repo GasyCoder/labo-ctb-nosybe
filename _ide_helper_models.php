@@ -80,6 +80,29 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * @property-read \App\Models\Analyse|null $analyse
+ * @property-read mixed $est_paye
+ * @property-read mixed $est_termine
+ * @property-read mixed $est_valide
+ * @property-read mixed $statut_couleur
+ * @property-read \App\Models\Prescription|null $prescription
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription aRefaire()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription enAttente()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription enCours()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription nonPaye()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription paye()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription status($status)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription termine()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription valide()
+ */
+	class AnalysePrescription extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
  * @property int $id
  * @property int $prescription_id
  * @property int $analyse_id
