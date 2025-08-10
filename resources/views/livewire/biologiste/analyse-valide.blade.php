@@ -25,55 +25,43 @@
 
     <div class="p-6">
         <!-- Statistiques -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">TERMINÉ</p>
-                        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ $analyseTermines->total() }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">VALIDÉ</p>
-                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $analyseValides->total() }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">URGENCES</p>
-                        <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ $stats['urgences_nuit'] + $stats['urgences_jour'] }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">TOTAL</p>
-                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $analyseTermines->total() + $analyseValides->total() }}</p>
-                    </div>
-                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-chart-bar text-blue-600 dark:text-blue-400"></i>
-                    </div>
-                </div>
-            </div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-md lg:max-w-none">
+    <!-- Terminé -->
+    <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 px-3 py-2 rounded-xl border border-orange-200 dark:border-orange-700">
+        <div class="text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">Terminé</div>
+        <div class="text-xl font-bold text-orange-800 dark:text-orange-300">{{ $analyseTermines->total() }}</div>
+        <div class="flex justify-end mt-1">
+            <i class="fas fa-clock text-orange-600 dark:text-orange-400 text-sm"></i>
         </div>
+    </div>
+    
+    <!-- Validé -->
+    <div class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 px-3 py-2 rounded-xl border border-green-200 dark:border-green-700">
+        <div class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Validé</div>
+        <div class="text-xl font-bold text-green-800 dark:text-green-300">{{ $analyseValides->total() }}</div>
+        <div class="flex justify-end mt-1">
+            <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-sm"></i>
+        </div>
+    </div>
+    
+    <!-- Urgences -->
+    <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 px-3 py-2 rounded-xl border border-red-200 dark:border-red-700">
+        <div class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide">Urgences</div>
+        <div class="text-xl font-bold text-red-800 dark:text-red-300">{{ $stats['urgences_nuit'] + $stats['urgences_jour'] }}</div>
+        <div class="flex justify-end mt-1">
+            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-sm"></i>
+        </div>
+    </div>
+    
+    <!-- Total -->
+    <div class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 px-3 py-2 rounded-xl border border-blue-200 dark:border-blue-700">
+        <div class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Total</div>
+        <div class="text-xl font-bold text-blue-800 dark:text-blue-300">{{ $analyseTermines->total() + $analyseValides->total() }}</div>
+        <div class="flex justify-end mt-1">
+            <i class="fas fa-chart-bar text-blue-600 dark:text-blue-400 text-sm"></i>
+        </div>
+    </div>
+</div>
 
         <!-- Contenu principal -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
