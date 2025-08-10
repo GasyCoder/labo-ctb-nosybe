@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Admin\Antibiotiques;
 use App\Livewire\Secretaire\Patients;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Secretaire\Paiements;
+use App\Livewire\Admin\BacterieFamilies;
+use App\Livewire\Biologiste\AnalyseValide;
 use App\Livewire\Secretaire\PatientDetail;
 use App\Livewire\Secretaire\Prescripteurs;
 use App\Http\Controllers\ProfileController;
+use App\Livewire\Technicien\IndexTechnicien;
+use App\Livewire\Technicien\ShowPrescription;
 use App\Livewire\Biologiste\BiologisteAnalysisForm;
-use App\Livewire\Biologiste\AnalyseValide;
-use App\Livewire\Admin\BacterieFamilies;
-use App\Livewire\Techniciens\IndexTechniciens;
 use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
@@ -72,7 +72,8 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 // ROUTES SPÉCIFIQUES AUX TECHNICIENS
 // ============================================
 Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
-    Route::get('traitement', IndexTechniciens::class)->name('index');
+    Route::get('traitement', IndexTechnicien::class)->name('index');
+    Route::get('/technicien/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
 });
 
 // ============================================
