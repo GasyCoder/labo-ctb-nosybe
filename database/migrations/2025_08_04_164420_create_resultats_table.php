@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('prescription_id')->constrained('prescriptions')->onDelete('cascade');
             $table->foreignId('analyse_id')->constrained('analyses')->onDelete('cascade');
             $table->text('resultats')->nullable();
-            $table->foreignId('tube_id')->constrained('tubes')->onDelete('cascade');
+            $table->foreignId('tube_id')->nullable()->constrained('tubes')->onDelete('set null');
             $table->text('valeur')->nullable();
             $table->enum('interpretation', ['NORMAL', 'PATHOLOGIQUE'])->nullable();
             $table->text('conclusion')->nullable();
@@ -28,6 +28,8 @@ return new class extends Migration
                 'A_REFAIRE',     // Résultat à refaire
                 'ARCHIVE',       // Résultat archivé
             ])->default('EN_ATTENTE');
+            $table->foreignId('famille_id')->nullable()->constrained('bacterie_familles')->nullOnDelete();
+            $table->foreignId('bacterie_id')->nullable()->constrained('bacteries')->nullOnDelete();
             $table->foreignId('validated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('validated_at')->nullable();
             $table->softDeletes();
