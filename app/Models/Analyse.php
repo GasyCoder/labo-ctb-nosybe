@@ -27,71 +27,59 @@ class Analyse extends Model
         'status',
     ];
 
-    // CASTS pour les types de données
     protected $casts = [
         'prix' => 'decimal:2',
         'is_bold' => 'boolean',
         'status' => 'boolean',
-        'valeurs_predefinies' => 'array', // JSON automatiquement converti en array
+        'valeurs_predefinies' => 'array',
         'ordre' => 'integer',
     ];
 
-    // Relation parent : cette analyse appartient à un panel (si parent_id existe)
+    // Relations hiérarchie
     public function parent()
     {
-        return $this->belongsTo(Analyse::class, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
-    // Relation enfants : ce panel a plusieurs analyses enfants
     public function enfants()
     {
-        return $this->hasMany(Analyse::class, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('ordre')->orderBy('id');
     }
 
-    // Relation avec examen
+    // Récursion profonde
+    public function enfantsRecursive()
+    {
+        return $this->enfants()->with(['type','examen','enfantsRecursive']);
+    }
+
+    // Relations annexes
     public function examen()
     {
         return $this->belongsTo(Examen::class, 'examen_id');
     }
 
-    // Relation avec type
     public function type()
     {
         return $this->belongsTo(Type::class, 'type_id');
     }
 
-    // Relation avec les résultats
     public function resultats()
     {
         return $this->hasMany(Resultat::class);
     }
 
-    // SCOPES utiles
-    public function scopeActives($query)
-    {
-        return $query->where('status', true);
-    }
+    // Scopes utiles
+    public function scopeActives($q) { return $q->where('status', true); }
+    public function scopeParents($q) { return $q->where('level', 'PARENT'); }
+    public function scopeNormales($q){ return $q->where('level', 'NORMAL'); }
+    public function scopeEnfants($q) { return $q->where('level', 'CHILD'); }
+    public function scopeRacines($q) { return $q->whereNull('parent_id')->orWhere('level','PARENT'); }
 
-    public function scopeParents($query)
-    {
-        return $query->where('level', 'PARENT');
-    }
-
-    public function scopeNormales($query)
-    {
-        return $query->where('level', 'NORMAL');
-    }
-
-    public function scopeEnfants($query)
-    {
-        return $query->where('level', 'CHILD');
-    }
-
-    // ACCESSEURS et MUTATEURS
+    // Accessors
     public function getValeurCompleteAttribute()
     {
         if ($this->valeur_ref && $this->unite) {
-            return $this->valeur_ref . ' ' . $this->unite;
+            return $this->valeur_ref.' '.$this->unite;
         }
         return $this->valeur_ref;
     }
@@ -103,12 +91,41 @@ class Analyse extends Model
 
     public function getADesEnfantsAttribute()
     {
-        return $this->enfants()->count() > 0;
+        return $this->enfants()->exists();
     }
 
-    // MÉTHODES utiles
-    public function getPrixFormate()
+    // AJOUT IMPORTANT : Accesseur pour formatted_results
+    public function getFormattedResultsAttribute()
     {
-        return number_format($this->prix, 0, ',', ' ') . ' Ar';
+        if (!$this->valeurs_predefinies || !is_array($this->valeurs_predefinies)) {
+            return [];
+        }
+        return $this->valeurs_predefinies;
+    }
+
+    // AJOUT : Accesseur pour result_disponible (compatibilité ancien code)
+    public function getResultDisponibleAttribute()
+    {
+        return [
+            'val_ref' => $this->valeur_ref,
+            'unite' => $this->unite,
+            'suffixe' => $this->suffixe,
+        ];
+    }
+
+    // Méthodes utilitaires
+    public function getPrixFormate() { return number_format($this->prix, 0, ',', ' ').' Ar'; }
+
+    public function descendantsIds(): array
+    {
+        $ids = [];
+        $stack = [$this->loadMissing('enfants')];
+        while ($node = array_pop($stack)) {
+            foreach ($node->enfants as $child) {
+                $ids[] = $child->id;
+                $stack[] = $child->loadMissing('enfants');
+            }
+        }
+        return $ids;
     }
 }
