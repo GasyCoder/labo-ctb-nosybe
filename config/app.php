@@ -21,7 +21,7 @@ return [
     // Site Information
     'site_name' => env('SITE_NAME', 'GASYCODER'),
     'site_email' => env('SITE_EMAIL', 'info@softnio.com'),
-
+    'json_encode_options' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
     /*
     |--------------------------------------------------------------------------
     | Application Environment
