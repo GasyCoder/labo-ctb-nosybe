@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             ExamenSeeder::class,
             PrelevementSeeder::class,
             BacterieFamilleSeeder::class,
-            AnalysesSeeder::class,
+            AnalysesSqlSeeder::class,
             PrescripteurSeeder::class,
             SettingsSeeder::class
         ]);
