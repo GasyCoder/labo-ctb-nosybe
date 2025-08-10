@@ -37,6 +37,8 @@ namespace App\Models{
  * @property-read \App\Models\Examen|null $examen
  * @property-read mixed $a_des_enfants
  * @property-read mixed $est_parent
+ * @property-read mixed $formatted_results
+ * @property-read mixed $result_disponible
  * @property-read mixed $valeur_complete
  * @property-read Analyse|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Resultat> $resultats
@@ -50,6 +52,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse parents()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse racines()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereDeletedAt($value)
@@ -78,6 +81,39 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
+ * @property int $prescription_id
+ * @property int $analyse_id
+ * @property int $bacterie_id
+ * @property string|null $notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read \App\Models\Analyse $analyse
+ * @property-read \App\Models\Bacterie $bacterie
+ * @property-read \App\Models\Prescription $prescription
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ResultatAntibiotique> $resultatAntibiotiques
+ * @property-read int|null $resultat_antibiotiques_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereAnalyseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereBacterieId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme wherePrescriptionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme withTrashed(bool $withTrashed = true)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme withoutTrashed()
+ */
+	class Antibiogramme extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
  * @property int $famille_id
  * @property string $designation
  * @property string|null $commentaire
@@ -92,6 +128,7 @@ namespace App\Models{
  * @property-read mixed $full_name
  * @property-read mixed $status_badge
  * @property-read mixed $status_text
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiotique actifs()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiotique actives()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiotique byFamille($familleId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiotique inactives()
@@ -499,25 +536,29 @@ namespace App\Models{
  * @property int $id
  * @property int $prescription_id
  * @property int $analyse_id
- * @property array<array-key, mixed>|null $resultats
- * @property int $tube_id
+ * @property mixed|null $resultats
+ * @property int|null $tube_id
  * @property string|null $valeur
  * @property string|null $interpretation
  * @property string|null $conclusion
  * @property string $status
+ * @property int|null $famille_id
+ * @property int|null $bacterie_id
  * @property int|null $validated_by
  * @property \Illuminate\Support\Carbon|null $validated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Analyse $analyse
+ * @property-read \App\Models\Bacterie|null $bacterie
+ * @property-read \App\Models\BacterieFamille|null $famille
  * @property-read mixed $est_pathologique
  * @property-read mixed $est_valide
  * @property-read mixed $interpretation_couleur
  * @property-read mixed $statut_couleur
  * @property-read mixed $valeur_formatee
  * @property-read \App\Models\Prescription $prescription
- * @property-read \App\Models\Tube $tube
+ * @property-read \App\Models\Tube|null $tube
  * @property-read \App\Models\User|null $validatedBy
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat enAttente()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat enCours()
@@ -527,13 +568,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat pathologiques()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat status($status)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat status($s)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat termines()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat valides()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereAnalyseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereBacterieId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereConclusion($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereDeletedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereFamilleId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereInterpretation($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat wherePrescriptionId($value)
@@ -548,6 +591,31 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat withoutTrashed()
  */
 	class Resultat extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $antibiogramme_id
+ * @property int $antibiotique_id
+ * @property string $interpretation
+ * @property numeric|null $diametre_mm
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Antibiogramme $antibiogramme
+ * @property-read \App\Models\Antibiotique $antibiotique
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereAntibiogrammeId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereAntibiotiqueId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereDiametreMm($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereInterpretation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereUpdatedAt($value)
+ */
+	class ResultatAntibiotique extends \Eloquent {}
 }
 
 namespace App\Models{
