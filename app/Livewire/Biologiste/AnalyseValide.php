@@ -96,43 +96,68 @@ class AnalyseValide extends Component
         $this->resetPage();
     }
 
-    public function openAnalyse($prescriptionId)
+    /**
+     * ✅ NOUVEAU : Consulter les résultats du technicien avant validation
+     */
+    public function viewAnalyseDetails($prescriptionId)
     {
         try {
             $prescription = Prescription::findOrFail($prescriptionId);
-            return $this->redirect(route('biologiste.valide.show', ['prescription' => $prescription]));
+
+            // Redirection vers la page de consultation des résultats
+            // Redirection vers la page de traitement
+            return redirect()->route('technicien.prescription.show', $prescription);
         } catch (\Exception $e) {
             $this->alert('error', 'Impossible d\'ouvrir cette analyse');
         }
     }
 
-    public function generatePDF($prescriptionId)
+    /**
+     * ✅ CORRIGÉ : Valider une analyse (TERMINE → VALIDE)
+     */
+    public function validateAnalyse(int $prescriptionId)
     {
         try {
-            $prescription = Prescription::with(['patient', 'analyses', 'resultats'])
-                ->findOrFail($prescriptionId);
+            DB::beginTransaction();
 
-            if ($prescription->status !== Prescription::STATUS_VALIDE) {
-                $this->alert('warning', 'Seules les analyses validées peuvent être exportées en PDF');
-                return;
+            $prescription = Prescription::findOrFail($prescriptionId);
+
+            // Vérifier que l'analyse est bien terminée par le technicien
+            if ($prescription->status !== Prescription::STATUS_TERMINE) {
+                throw new \Exception('Cette analyse doit être terminée par le technicien avant validation');
             }
 
-            // Ici vous pouvez intégrer votre service de génération PDF
-            // $pdfUrl = $this->pdfService->generatePDF($prescription);
+            // Valider l'analyse
+            $this->validateSingleAnalyse($prescriptionId);
 
-            $this->alert('success', 'PDF généré avec succès');
+            DB::commit();
 
-        } catch (\Exception $e) {
-            Log::error('Erreur génération PDF:', [
+            $this->loadStatistics();
+            $this->alert('success', 'Analyse validée avec succès !');
+
+            Log::info('Analyse validée par biologiste', [
                 'prescription_id' => $prescriptionId,
-                'error' => $e->getMessage()
+                'reference' => $prescription->reference,
+                'biologiste_id' => Auth::id(),
             ]);
 
-            $this->alert('error', 'Erreur lors de la génération du PDF');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Erreur lors de la validation de l\'analyse', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->alert('error', 'Erreur lors de la validation : ' . $e->getMessage());
         }
     }
 
-    public function redoPrescription($prescriptionId)
+    /**
+     * ✅ AMÉLIORÉ : Remettre à refaire avec commentaire
+     */
+    public function redoPrescription($prescriptionId, $commentaire = null)
     {
         try {
             DB::beginTransaction();
@@ -146,6 +171,7 @@ class AnalyseValide extends Component
             // Mettre à jour le statut de la prescription
             $prescription->update([
                 'status' => Prescription::STATUS_A_REFAIRE,
+                'commentaire_biologiste' => $commentaire,
                 'updated_by' => Auth::id()
             ]);
 
@@ -174,6 +200,12 @@ class AnalyseValide extends Component
             $this->loadStatistics();
             $this->alert('success', 'La prescription a été marquée à refaire');
 
+            Log::info('Prescription remise à refaire par biologiste', [
+                'prescription_id' => $prescriptionId,
+                'commentaire' => $commentaire,
+                'biologiste_id' => Auth::id(),
+            ]);
+
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Erreur lors de la mise à refaire:', [
@@ -186,6 +218,7 @@ class AnalyseValide extends Component
         }
     }
 
+  
     public function bulkValidate()
     {
         if (empty($this->selectedPrescriptions)) {
@@ -226,7 +259,8 @@ class AnalyseValide extends Component
         $baseQuery = Prescription::with([
             'patient',
             'prescripteur:id,nom,prenom,is_active',
-            'analyses'
+            'analyses',
+            'resultats' // ✅ AJOUTÉ : Charger les résultats pour affichage
         ])
             ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
 

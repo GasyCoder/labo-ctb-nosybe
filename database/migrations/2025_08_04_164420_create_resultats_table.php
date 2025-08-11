@@ -38,6 +38,8 @@ return new class extends Migration
                       ->nullOnDelete();
             $table->foreignId('validated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('validated_at')->nullable();
+            $table->unsignedBigInteger('famille_id')->nullable();
+
             $table->softDeletes();
             $table->timestamps();
         });
