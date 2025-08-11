@@ -22,49 +22,85 @@ class AntibiogrammeTable extends Component
     public $newInterpretation = 'S';
     public $newDiametre = null;
 
+    // ✅ NOUVELLES PROPRIÉTÉS (affichage)
+    public $compact = false;    // Pour affichage compact dans accordion
+    public $hideHeader = false; // Pour masquer l'en-tête
+
+    /* =======================
+     |  Helpers Flash
+     |=======================*/
+    private function flashSuccess(string $message): void
+    {
+        if (\function_exists('flash')) {
+            flash()->success($message);
+        } else {
+            session()->flash('message', $message);
+        }
+    }
+
+    private function flashError(string $message): void
+    {
+        if (\function_exists('flash')) {
+            flash()->error($message);
+        } else {
+            session()->flash('error', $message);
+        }
+    }
+
+    private function flashInfo(string $message): void
+    {
+        if (\function_exists('flash')) {
+            flash()->info($message);
+        } else {
+            session()->flash('info', $message);
+        }
+    }
+
     /**
      * ✅ Règles de validation
      */
     protected $rules = [
-        'newAntibiotique' => 'required|exists:antibiotiques,id',
-        'newInterpretation' => 'required|in:S,I,R',
-        'newDiametre' => 'nullable|numeric|min:0|max:50',
+        'newAntibiotique'    => 'required|exists:antibiotiques,id',
+        'newInterpretation'  => 'required|in:S,I,R',
+        'newDiametre'        => 'nullable|numeric|min:0|max:50',
     ];
 
     /**
      * ✅ Messages d'erreur personnalisés
      */
     protected $messages = [
-        'newAntibiotique.required' => 'Veuillez sélectionner un antibiotique.',
-        'newAntibiotique.exists' => 'L\'antibiotique sélectionné n\'existe pas.',
+        'newAntibiotique.required'   => 'Veuillez sélectionner un antibiotique.',
+        'newAntibiotique.exists'     => 'L\'antibiotique sélectionné n\'existe pas.',
         'newInterpretation.required' => 'Veuillez choisir une interprétation.',
-        'newInterpretation.in' => 'L\'interprétation doit être S, I ou R.',
-        'newDiametre.numeric' => 'Le diamètre doit être un nombre.',
-        'newDiametre.min' => 'Le diamètre doit être positif.',
-        'newDiametre.max' => 'Le diamètre ne peut pas dépasser 50mm.',
+        'newInterpretation.in'       => 'L\'interprétation doit être S, I ou R.',
+        'newDiametre.numeric'        => 'Le diamètre doit être un nombre.',
+        'newDiametre.min'            => 'Le diamètre doit être positif.',
+        'newDiametre.max'            => 'Le diamètre ne peut pas dépasser 50mm.',
     ];
 
-    public function mount($prescriptionId, $analyseId, $bacterieId)
+    public function mount($prescriptionId, $analyseId, $bacterieId, $compact = false, $hideHeader = false)
     {
         $this->prescriptionId = $prescriptionId;
-        $this->analyseId = $analyseId;
-        $this->bacterieId = $bacterieId;
-        
+        $this->analyseId      = $analyseId;
+        $this->bacterieId     = $bacterieId;
+        $this->compact        = $compact;
+        $this->hideHeader     = $hideHeader;
+
         $this->loadData();
     }
 
     /**
-     * ✅ LOGIQUE CORRIGÉE : Ne pas créer automatiquement l'antibiogramme
+     * ✅ Ne pas créer automatiquement l'antibiogramme
      */
     public function loadData()
     {
         try {
-            // ✅ CHANGEMENT PRINCIPAL : Chercher seulement, ne pas créer automatiquement
+            // Chercher seulement (pas de création auto)
             $this->antibiogramme = Antibiogramme::where([
                 'prescription_id' => $this->prescriptionId,
-                'analyse_id' => $this->analyseId,
-                'bacterie_id' => $this->bacterieId,
-            ])->first(); // ← first() au lieu de firstOrCreate()
+                'analyse_id'      => $this->analyseId,
+                'bacterie_id'     => $this->bacterieId,
+            ])->first();
 
             // Charger antibiotiques disponibles
             $antibiotiquesUtilises = [];
@@ -78,28 +114,37 @@ class AntibiogrammeTable extends Component
                 ->whereNotIn('id', $antibiotiquesUtilises)
                 ->orderBy('designation')
                 ->get();
-            
+
             // Charger résultats existants
             $this->loadResultats();
+
+            Log::info('AntibiogrammeTable chargé', [
+                'prescription_id'          => $this->prescriptionId,
+                'analyse_id'               => $this->analyseId,
+                'bacterie_id'              => $this->bacterieId,
+                'antibiogramme_existe'     => !is_null($this->antibiogramme),
+                'antibiotiques_disponibles'=> count($this->antibiotiques),
+                'resultats_count'          => count($this->resultats),
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Erreur lors du chargement de l\'antibiogramme', [
                 'prescription_id' => $this->prescriptionId,
-                'analyse_id' => $this->analyseId,
-                'bacterie_id' => $this->bacterieId,
-                'error' => $e->getMessage()
+                'analyse_id'      => $this->analyseId,
+                'bacterie_id'     => $this->bacterieId,
+                'error'           => $e->getMessage()
             ]);
-            
-            session()->flash('error', 'Erreur lors du chargement de l\'antibiogramme.');
+
+            $this->flashError('Erreur lors du chargement de l\'antibiogramme.');
         }
     }
 
     /**
-     * ✅ LOGIQUE CORRIGÉE : Chargement des résultats
+     * ✅ Chargement des résultats
      */
     private function loadResultats()
     {
-        // ✅ Si pas d'antibiogramme, pas de résultats
+        // Si pas d'antibiogramme → pas de résultats
         if (!$this->antibiogramme) {
             $this->resultats = [];
             return;
@@ -111,81 +156,84 @@ class AntibiogrammeTable extends Component
             ->get()
             ->map(function ($resultat) {
                 return [
-                    'id' => $resultat->id,
-                    'antibiotique' => [
-                        'id' => $resultat->antibiotique->id,
-                        'designation' => $resultat->antibiotique->designation,
+                    'id'             => $resultat->id,
+                    'antibiotique'   => [
+                        'id'          => $resultat->antibiotique->id ?? null,
+                        'designation' => $resultat->antibiotique->designation ?? '—',
                     ],
                     'interpretation' => $resultat->interpretation,
-                    'diametre_mm' => $resultat->diametre_mm,
-                    'created_at' => $resultat->created_at,
+                    'diametre_mm'    => $resultat->diametre_mm,
+                    'created_at'     => $resultat->created_at,
                 ];
             })
             ->toArray();
     }
 
     /**
-     * ✅ LOGIQUE CORRIGÉE : Créer l'antibiogramme SEULEMENT lors du premier ajout
+     * ✅ Créer l'antibiogramme SEULEMENT lors du premier ajout
      */
     public function addAntibiotique()
     {
-        // ✅ Validation avec gestion d'erreurs
+        // Validation
         $this->validate();
 
         DB::beginTransaction();
-        
+
         try {
-            // ✅ CRÉER L'ANTIBIOGRAMME SEULEMENT ICI, au premier ajout d'antibiotique
+            // Créer l'antibiogramme seulement maintenant
             if (!$this->antibiogramme) {
-                $this->antibiogramme = Antibiogramme::create([
+                $this->antibiogramme = Antibiogramme::firstOrCreate([
                     'prescription_id' => $this->prescriptionId,
-                    'analyse_id' => $this->analyseId,
-                    'bacterie_id' => $this->bacterieId,
+                    'analyse_id'      => $this->analyseId,
+                    'bacterie_id'     => $this->bacterieId,
                 ]);
-                
-                Log::info('Nouvel antibiogramme créé', [
+
+                Log::info('Antibiogramme créé ou trouvé', [
                     'antibiogramme_id' => $this->antibiogramme->id,
-                    'prescription_id' => $this->prescriptionId,
-                    'analyse_id' => $this->analyseId,
-                    'bacterie_id' => $this->bacterieId,
+                    'prescription_id'  => $this->prescriptionId,
+                    'analyse_id'       => $this->analyseId,
+                    'bacterie_id'      => $this->bacterieId,
                 ]);
             }
 
-            // Vérifier si déjà existant (double sécurité)
-            $existing = ResultatAntibiotique::where([
-                'antibiogramme_id' => $this->antibiogramme->id,
-                'antibiotique_id' => $this->newAntibiotique,
-            ])->first();
+            // Ajouter ou mettre à jour le résultat
+            $resultatAntibiotique = ResultatAntibiotique::firstOrCreate(
+                [
+                    'antibiogramme_id' => $this->antibiogramme->id,
+                    'antibiotique_id'  => $this->newAntibiotique,
+                ],
+                [
+                    'interpretation'   => $this->newInterpretation,
+                    'diametre_mm'      => $this->newDiametre ?: null,
+                ]
+            );
 
-            if ($existing) {
-                session()->flash('error', 'Cet antibiotique est déjà dans l\'antibiogramme.');
-                return;
+            if (!$resultatAntibiotique->wasRecentlyCreated) {
+                $resultatAntibiotique->update([
+                    'interpretation' => $this->newInterpretation,
+                    'diametre_mm'    => $this->newDiametre ?: null,
+                ]);
+                $message = 'Antibiotique mis à jour avec succès.';
+            } else {
+                $message = 'Antibiotique ajouté avec succès.';
             }
-
-            // Créer le résultat d'antibiotique
-            $resultatAntibiotique = ResultatAntibiotique::create([
-                'antibiogramme_id' => $this->antibiogramme->id,
-                'antibiotique_id' => $this->newAntibiotique,
-                'interpretation' => $this->newInterpretation,
-                'diametre_mm' => $this->newDiametre ?: null,
-            ]);
 
             DB::commit();
 
-            Log::info('Antibiotique ajouté à l\'antibiogramme', [
+            Log::info('Antibiotique ajouté/mis à jour dans l\'antibiogramme', [
                 'antibiogramme_id' => $this->antibiogramme->id,
-                'antibiotique_id' => $this->newAntibiotique,
-                'resultat_id' => $resultatAntibiotique->id,
+                'antibiotique_id'  => $this->newAntibiotique,
+                'resultat_id'      => $resultatAntibiotique->id,
+                'was_created'      => $resultatAntibiotique->wasRecentlyCreated,
             ]);
 
-            // ✅ Réinitialiser les champs du formulaire
+            // Reset champs formulaire
             $this->reset(['newAntibiotique', 'newInterpretation', 'newDiametre']);
-            $this->newInterpretation = 'S'; // Remettre valeur par défaut
-            
-            // ✅ Recharger SEULEMENT les données nécessaires
+            $this->newInterpretation = 'S';
+
+            // Recharger données & MAJ liste disponibles
             $this->loadResultats();
-            
-            // ✅ Mettre à jour la liste des antibiotiques disponibles
+
             $antibiotiquesUtilises = ResultatAntibiotique::where('antibiogramme_id', $this->antibiogramme->id)
                 ->pluck('antibiotique_id')
                 ->toArray();
@@ -194,127 +242,137 @@ class AntibiogrammeTable extends Component
                 ->whereNotIn('id', $antibiotiquesUtilises)
                 ->orderBy('designation')
                 ->get();
-            
-            // ✅ Message de succès sans refresh
-            session()->flash('message', 'Antibiotique ajouté avec succès.');
+
+            // ✅ Notification
+            $this->flashSuccess($message);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erreur lors de l\'ajout d\'antibiotique', [
                 'antibiogramme_id' => $this->antibiogramme?->id,
-                'antibiotique_id' => $this->newAntibiotique,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'antibiotique_id'  => $this->newAntibiotique,
+                'error'            => $e->getMessage(),
+                'trace'            => $e->getTraceAsString()
             ]);
-            
-            session()->flash('error', 'Erreur lors de l\'ajout de l\'antibiotique : ' . $e->getMessage());
+
+            $this->flashError('Erreur lors de l\'ajout de l\'antibiotique : ' . $e->getMessage());
         }
     }
 
     /**
-     * ✅ MÉTHODE CORRIGÉE : Mise à jour sans rafraîchissement
+     * ✅ Mise à jour inline sans rechargement complet
      */
     public function updateResultat($resultatId, $field, $value)
     {
         try {
             $resultat = ResultatAntibiotique::find($resultatId);
-            
+
             if (!$resultat) {
-                session()->flash('error', 'Résultat d\'antibiotique introuvable.');
+                $this->flashError('Résultat d\'antibiotique introuvable.');
                 return;
             }
 
-            // ✅ Validation dynamique selon le champ
+            // Validation selon le champ
             if ($field === 'interpretation') {
                 $this->validate([
                     'interpretation' => 'required|in:S,I,R',
                 ], [
                     'interpretation.required' => 'L\'interprétation est requise.',
-                    'interpretation.in' => 'L\'interprétation doit être S, I ou R.',
+                    'interpretation.in'       => 'L\'interprétation doit être S, I ou R.',
                 ], ['interpretation' => $value]);
-                
+
             } elseif ($field === 'diametre_mm') {
                 $this->validate([
                     'diametre_mm' => 'nullable|numeric|min:0|max:50',
                 ], [
                     'diametre_mm.numeric' => 'Le diamètre doit être un nombre.',
-                    'diametre_mm.min' => 'Le diamètre doit être positif.',
-                    'diametre_mm.max' => 'Le diamètre ne peut pas dépasser 50mm.',
+                    'diametre_mm.min'     => 'Le diamètre doit être positif.',
+                    'diametre_mm.max'     => 'Le diamètre ne peut pas dépasser 50mm.',
                 ], ['diametre_mm' => $value]);
             }
-            
-            // ✅ Mise à jour avec valeur correctement formatée
+
+            // Mise à jour
             $updateValue = ($field === 'diametre_mm') ? ($value ?: null) : $value;
             $resultat->update([$field => $updateValue]);
-            
+
             Log::info('Résultat d\'antibiotique mis à jour', [
                 'resultat_id' => $resultatId,
-                'field' => $field,
-                'new_value' => $updateValue,
+                'field'       => $field,
+                'new_value'   => $updateValue,
             ]);
-            
-            // ✅ Recharger seulement les données locales
+
+            // Recharger localement
             $this->loadResultats();
-            
+
+            // ✅ Notification
+            $this->flashSuccess('Résultat mis à jour.');
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // ✅ Gestion spéciale des erreurs de validation
-            session()->flash('error', 'Erreur de validation : ' . implode(', ', $e->validator->errors()->all()));
-            
+            $this->flashError('Erreur de validation : ' . implode(', ', $e->validator->errors()->all()));
+
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour du résultat', [
                 'resultat_id' => $resultatId,
-                'field' => $field,
-                'value' => $value,
-                'error' => $e->getMessage()
+                'field'       => $field,
+                'value'       => $value,
+                'error'       => $e->getMessage()
             ]);
-            
-            session()->flash('error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+
+            $this->flashError('Erreur lors de la mise à jour : ' . $e->getMessage());
         }
     }
 
     /**
-     * ✅ MÉTHODE CORRIGÉE : Suppression avec nettoyage automatique
+     * ✅ Suppression avec nettoyage automatique
      */
     public function removeResultat($resultatId)
     {
         DB::beginTransaction();
-        
+
         try {
             $resultat = ResultatAntibiotique::find($resultatId);
-            
+
             if (!$resultat) {
-                session()->flash('error', 'Résultat d\'antibiotique introuvable.');
+                $this->flashError('Résultat d\'antibiotique introuvable.');
                 return;
             }
 
             $antibiotiqueName = $resultat->antibiotique->designation ?? 'Inconnu';
+            $antibiogrammeId  = $this->antibiogramme->id ?? $resultat->antibiogramme_id;
+
             $resultat->delete();
-            
-            // ✅ NETTOYAGE AUTOMATIQUE : Si plus de résultats, supprimer l'antibiogramme
-            $remainingResults = ResultatAntibiotique::where('antibiogramme_id', $this->antibiogramme->id)->count();
-            
+
+            // Si plus de résultats → supprimer l'antibiogramme
+            $remainingResults = ResultatAntibiotique::where('antibiogramme_id', $antibiogrammeId)->count();
+
             if ($remainingResults === 0) {
                 Log::info('Suppression de l\'antibiogramme vide', [
-                    'antibiogramme_id' => $this->antibiogramme->id
+                    'antibiogramme_id' => $antibiogrammeId
                 ]);
-                
-                $this->antibiogramme->delete();
-                $this->antibiogramme = null;
+
+                // si le modèle est chargé, delete puis null
+                if ($this->antibiogramme && $this->antibiogramme->id === $antibiogrammeId) {
+                    $this->antibiogramme->delete();
+                    $this->antibiogramme = null;
+                } else {
+                    // suppression directe si non chargé
+                    Antibiogramme::where('id', $antibiogrammeId)->delete();
+                }
             }
-            
+
             DB::commit();
-            
+
             Log::info('Résultat d\'antibiotique supprimé', [
-                'resultat_id' => $resultatId,
-                'antibiotique' => $antibiotiqueName,
-                'antibiogramme_supprime' => $remainingResults === 0,
+                'resultat_id'           => $resultatId,
+                'antibiotique'          => $antibiotiqueName,
+                'antibiogramme_supprime'=> $remainingResults === 0,
             ]);
-            
-            // ✅ Recharger les données locales
+
+            // Recharger localement
             $this->loadResultats();
-            
-            // ✅ Remettre l'antibiotique dans la liste disponible
+
+            // Remettre l'antibiotique dans la liste disponible
             $antibiotiquesUtilises = [];
             if ($this->antibiogramme) {
                 $antibiotiquesUtilises = ResultatAntibiotique::where('antibiogramme_id', $this->antibiogramme->id)
@@ -326,50 +384,32 @@ class AntibiogrammeTable extends Component
                 ->whereNotIn('id', $antibiotiquesUtilises)
                 ->orderBy('designation')
                 ->get();
-            
-            session()->flash('message', "Antibiotique \"{$antibiotiqueName}\" retiré avec succès.");
-            
+
+            // ✅ Notification
+            $this->flashSuccess("Antibiotique « {$antibiotiqueName} » retiré avec succès.");
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erreur lors de la suppression du résultat', [
                 'resultat_id' => $resultatId,
-                'error' => $e->getMessage()
+                'error'       => $e->getMessage()
             ]);
-            
-            session()->flash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
+
+            $this->flashError('Erreur lors de la suppression : ' . $e->getMessage());
         }
     }
 
-    /**
-     * ✅ MÉTHODE D'INFORMATION : Vérifier si l'antibiogramme existe
-     */
+    /** Info : l'antibiogramme existe ? */
     public function hasAntibiogramme()
     {
         return !is_null($this->antibiogramme);
     }
 
-    /**
-     * ✅ MÉTHODE D'INFORMATION : Compter les antibiotiques
-     */
+    /** Info : nombre d’antibiotiques saisis */
     public function getAntibiotiquesCount()
     {
         return count($this->resultats);
-    }
-
-    /**
-     * ✅ MÉTHODE D'INFORMATION : Statistiques pour debug
-     */
-    public function getStatistiques()
-    {
-        return [
-            'antibiogramme_existe' => $this->hasAntibiogramme(),
-            'total_antibiotiques' => count($this->resultats),
-            'sensibles' => collect($this->resultats)->where('interpretation', 'S')->count(),
-            'intermediaires' => collect($this->resultats)->where('interpretation', 'I')->count(),
-            'resistants' => collect($this->resultats)->where('interpretation', 'R')->count(),
-            'avec_diametre' => collect($this->resultats)->whereNotNull('diametre_mm')->count(),
-        ];
     }
 
     public function render()
