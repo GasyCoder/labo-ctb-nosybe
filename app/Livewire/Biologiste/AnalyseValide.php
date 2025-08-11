@@ -123,7 +123,7 @@ class AnalyseValide extends Component
             $prescription = Prescription::findOrFail($prescriptionId);
 
             // Vérifier que l'analyse est bien terminée par le technicien
-            if ($prescription->status !== Prescription::STATUS_TERMINE) {
+            if ($prescription->status !== Prescription::STATUS_EN_COURS) {
                 throw new \Exception('Cette analyse doit être terminée par le technicien avant validation');
             }
 
@@ -164,7 +164,7 @@ class AnalyseValide extends Component
 
             $prescription = Prescription::findOrFail($prescriptionId);
 
-            if (!in_array($prescription->status, [Prescription::STATUS_VALIDE, Prescription::STATUS_TERMINE])) {
+            if (!in_array($prescription->status, [Prescription::STATUS_VALIDE, Prescription::STATUS_EN_COURS])) {
                 throw new \Exception('Cette prescription ne peut pas être remise à refaire');
             }
 
@@ -218,30 +218,7 @@ class AnalyseValide extends Component
         }
     }
 
-    public function generatePDF($prescriptionId)
-    {
-        try {
-            $prescription = Prescription::with(['patient', 'analyses', 'resultats'])
-                ->findOrFail($prescriptionId);
-
-            if ($prescription->status !== Prescription::STATUS_VALIDE) {
-                $this->alert('warning', 'Seules les analyses validées peuvent être exportées en PDF');
-                return;
-            }
-
-            // Redirection vers la génération PDF
-            return redirect()->route('biologiste.prescription.pdf', $prescription);
-
-        } catch (\Exception $e) {
-            Log::error('Erreur génération PDF:', [
-                'prescription_id' => $prescriptionId,
-                'error' => $e->getMessage()
-            ]);
-
-            $this->alert('error', 'Erreur lors de la génération du PDF');
-        }
-    }
-
+  
     public function bulkValidate()
     {
         if (empty($this->selectedPrescriptions)) {
@@ -255,7 +232,7 @@ class AnalyseValide extends Component
             $count = 0;
             foreach ($this->selectedPrescriptions as $prescriptionId) {
                 $prescription = Prescription::find($prescriptionId);
-                if ($prescription && $prescription->status === Prescription::STATUS_TERMINE) {
+                if ($prescription && $prescription->status === Prescription::STATUS_EN_COURS) {
                     if ($this->validateSingleAnalyse($prescriptionId)) {
                         $count++;
                     }
@@ -326,7 +303,7 @@ class AnalyseValide extends Component
             ->paginate($this->perPage, ['*'], 'page');
 
         $analyseTermines = (clone $baseQuery)
-            ->where('status', Prescription::STATUS_TERMINE)
+            ->where('status', Prescription::STATUS_EN_COURS)
             ->where($searchCondition)
             ->where($advancedFilters)
             ->latest()
@@ -351,7 +328,7 @@ class AnalyseValide extends Component
         if ($this->tab === 'valide') {
             $query->where('status', Prescription::STATUS_VALIDE);
         } else {
-            $query->where('status', Prescription::STATUS_TERMINE);
+            $query->where('status', Prescription::STATUS_EN_COURS);
         }
 
         return $query->get();
@@ -360,13 +337,13 @@ class AnalyseValide extends Component
     private function loadStatistics()
     {
         $this->stats = [
-            'total_termine' => Prescription::where('status', Prescription::STATUS_TERMINE)->count(),
+            'total_termine' => Prescription::where('status', Prescription::STATUS_EN_COURS)->count(),
             'total_valide' => Prescription::where('status', Prescription::STATUS_VALIDE)->count(),
             'urgences_nuit' => Prescription::where('patient_type', 'URGENCE-NUIT')
-                ->whereIn('status', [Prescription::STATUS_TERMINE, Prescription::STATUS_VALIDE])
+                ->whereIn('status', [Prescription::STATUS_EN_COURS, Prescription::STATUS_VALIDE])
                 ->count(),
             'urgences_jour' => Prescription::where('patient_type', 'URGENCE-JOUR')
-                ->whereIn('status', [Prescription::STATUS_TERMINE, Prescription::STATUS_VALIDE])
+                ->whereIn('status', [Prescription::STATUS_EN_COURS, Prescription::STATUS_VALIDE])
                 ->count(),
         ];
     }
@@ -376,7 +353,7 @@ class AnalyseValide extends Component
         try {
             $prescription = Prescription::findOrFail($prescriptionId);
 
-            if ($prescription->status !== Prescription::STATUS_TERMINE) {
+            if ($prescription->status !== Prescription::STATUS_EN_COURS) {
                 return false;
             }
 
