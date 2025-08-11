@@ -13,11 +13,41 @@ use Illuminate\Support\Facades\Auth;
 class AnalysesSidebar extends Component
 {
     public int $prescriptionId;
-    public ?int $selectedParentId = null; // ✅ Ajout pour l'état actif
+    public ?int $selectedParentId = null; // ✅ État actif
 
-    // exposé à la vue
+    // Exposé à la vue
     public array $analysesParents = [];
     public array $resultatsExistants = [];
+
+    /* =======================
+     |  Helpers Flash
+     |=======================*/
+    private function flashSuccess(string $message): void
+    {
+        if (\function_exists('flash')) {
+            flash()->success($message);
+        } else {
+            session()->flash('message', $message);
+        }
+    }
+
+    private function flashError(string $message): void
+    {
+        if (\function_exists('flash')) {
+            flash()->error($message);
+        } else {
+            session()->flash('error', $message);
+        }
+    }
+
+    private function flashInfo(string $message): void
+    {
+        if (\function_exists('flash')) {
+            flash()->info($message);
+        } else {
+            session()->flash('info', $message);
+        }
+    }
 
     public function mount(int $prescriptionId): void
     {
@@ -25,74 +55,75 @@ class AnalysesSidebar extends Component
         $this->loadAnalyses();
     }
 
+
+
     /**
-     * ✅ MÉTHODE ALTERNATIVE : Finalisation basée sur les statuts individuels
+     * ✅ Finalisation alternative basée sur statuts individuels
      */
     public function markPrescriptionAsCompletedAlternative()
     {
         try {
             DB::beginTransaction();
-            
+
             $prescription = Prescription::findOrFail($this->prescriptionId);
-            
-            // ✅ NOUVELLE APPROCHE : Vérifier que tous les parents sont terminés
+
+            // Vérifier que tous les parents sont terminés
             $analysesParentsIncompletes = collect($this->analysesParents)
                 ->where('status', '!=', 'TERMINE')
                 ->count();
-            
+
             Log::info('Vérification alternative finalisation', [
-                'prescription_id' => $this->prescriptionId,
-                'total_parents' => count($this->analysesParents),
-                'parents_incomplets' => $analysesParentsIncompletes,
-                'parents_details' => collect($this->analysesParents)->map(function($p) {
+                'prescription_id'   => $this->prescriptionId,
+                'total_parents'     => count($this->analysesParents),
+                'parents_incomplets'=> $analysesParentsIncompletes,
+                'parents_details'   => collect($this->analysesParents)->map(function($p) {
                     return [
-                        'id' => $p['id'],
-                        'code' => $p['code'], 
+                        'id'     => $p['id'],
+                        'code'   => $p['code'],
                         'status' => $p['status']
                     ];
                 })->toArray()
             ]);
-            
+
             if ($analysesParentsIncompletes === 0 && count($this->analysesParents) > 0) {
                 // Marquer tous les résultats comme terminés
                 $prescription->resultats()->update(['status' => 'TERMINE']);
-                
+
                 // Marquer la prescription comme terminée
                 $prescription->update(['status' => 'TERMINE']);
-                
+
                 Log::info('Prescription marquée comme terminée (méthode alternative)', [
                     'prescription_id' => $this->prescriptionId,
-                    'reference' => $prescription->reference,
-                    'total_parents' => count($this->analysesParents),
-                    'user_id' => Auth::id(),
+                    'reference'       => $prescription->reference,
+                    'total_parents'   => count($this->analysesParents),
+                    'user_id'         => Auth::id(),
                 ]);
-                
+
                 DB::commit();
-                
-                // Émettre un événement pour redirection
+
+                // Événement pour redirection
                 $this->dispatch('prescriptionCompleted')->to(ShowPrescription::class);
-                
-                session()->flash('message', 'Prescription marquée comme terminée avec succès !');
-                
+
+                $this->flashSuccess('Prescription marquée comme terminée avec succès !');
             } else {
-                session()->flash('error', 'Toutes les analyses doivent être terminées avant de finaliser la prescription.');
+                $this->flashError('Toutes les analyses doivent être terminées avant de finaliser la prescription.');
             }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erreur lors de la finalisation alternative', [
                 'prescription_id' => $this->prescriptionId,
-                'error' => $e->getMessage(),
+                'error'           => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Erreur lors de la finalisation : ' . $e->getMessage());
+
+            $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());
         }
     }
 
 
     /**
-     * ✅ MÉTHODE AMÉLIORÉE : Chargement des analyses avec statuts détaillés
+     * ✅ Chargement des analyses avec statuts détaillés
      */
     public function loadAnalyses(): void
     {
@@ -105,30 +136,34 @@ class AnalysesSidebar extends Component
             ->findOrFail($this->prescriptionId);
 
         $this->resultatsExistants = $prescription->resultats->pluck('analyse_id')->all();
-        $attachedIds = $prescription->analyses->pluck('id')->all();
+        $attachedIds              = $prescription->analyses->pluck('id')->all();
 
         $parents = $prescription->analyses->filter(function($analyse) use ($attachedIds) {
-            return $analyse->level === 'PARENT' 
+            return $analyse->level === 'PARENT'
                 || is_null($analyse->parent_id)
                 || !in_array($analyse->parent_id, $attachedIds);
         });
 
         $this->analysesParents = [];
         foreach ($parents as $parent) {
-            // ✅ CORRECTION : Exclure les analyses de type LABEL du comptage
             $enfants = Analyse::where('parent_id', $parent->id)
                 ->where('status', true)
                 ->whereHas('type', function($q) {
-                    $q->where('name', '!=', 'LABEL'); // ✅ Exclure les LABEL
+                    $q->where('name', '!=', 'LABEL');
                 })
                 ->pluck('id')->all();
-                
+
             $enfantsCompleted = count(array_intersect($enfants, $this->resultatsExistants));
 
-            // ✅ NOUVEAU : Déterminer le statut de l'analyse parent
+            // statut calculé (tu peux laisser ta logique actuelle si tu veux garder la couleur)
             $status = $this->determineAnalyseStatus($parent->id, $enfants, $enfantsCompleted);
 
-            // Si orpheline avec parent, charger le code parent
+            // ✅ éligibilité à la finalisation (tout est prêt)
+            $eligible = !empty($enfants)
+                ? $this->checkAllChildrenRecursively($enfants)    // tous les descendants ont un résultat
+                : in_array($parent->id, $this->resultatsExistants); // pas d’enfants → le parent lui-même a un résultat
+
+            // code d’affichage
             $displayCode = $parent->code;
             if ($parent->parent_id && !in_array($parent->parent_id, $attachedIds)) {
                 $realParent = Analyse::find($parent->parent_id);
@@ -143,29 +178,96 @@ class AnalysesSidebar extends Component
                 'designation'       => $parent->designation,
                 'enfants_count'     => count($enfants),
                 'enfants_completed' => $enfantsCompleted,
-                'status'            => $status, // ✅ NOUVEAU
+                'status'            => $status,
+                'eligible'          => $eligible,      // 👈 ajouté
             ];
         }
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE : Déterminer le statut d'une analyse
+     * ✅ Déterminer le statut d'une analyse (récursif)
      */
     private function determineAnalyseStatus(int $parentId, array $enfants, int $enfantsCompleted): string
     {
         if (empty($enfants)) {
-            // Analyse sans enfants, vérifier si elle a un résultat
+            // Analyse sans enfants → vérifier résultat direct
             return in_array($parentId, $this->resultatsExistants) ? 'TERMINE' : 'VIDE';
         }
 
-        if ($enfantsCompleted === 0) {
-            return 'VIDE';
-        } elseif ($enfantsCompleted === count($enfants)) {
+        // Vérification récursive des enfants
+        $allChildrenCompleted = $this->checkAllChildrenRecursively($enfants);
+
+        if ($allChildrenCompleted) {
             return 'TERMINE';
-        } else {
+        } elseif ($enfantsCompleted > 0 || $this->hasAnyChildResults($enfants)) {
             return 'EN_COURS';
+        } else {
+            return 'VIDE';
         }
     }
+
+    /**
+     * ✅ Vérifier récursivement tous les enfants
+     */
+    private function checkAllChildrenRecursively(array $enfantIds): bool
+    {
+        foreach ($enfantIds as $enfantId) {
+            if (!$this->isAnalyseCompleteRecursively($enfantId)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * ✅ Une analyse est-elle complète ? (récursif)
+     */
+    private function isAnalyseCompleteRecursively(int $analyseId): bool
+    {
+        // Si résultat direct
+        if (in_array($analyseId, $this->resultatsExistants)) {
+            return true;
+        }
+
+        // Sinon, vérifier ses enfants (hors LABEL)
+        $enfants = Analyse::where('parent_id', $analyseId)
+            ->where('status', true)
+            ->whereHas('type', function($q) {
+                $q->where('name', '!=', 'LABEL');
+            })
+            ->pluck('id')->all();
+
+        if (empty($enfants)) {
+            return false;
+        }
+
+        return $this->checkAllChildrenRecursively($enfants);
+    }
+
+    /**
+     * ✅ Au moins un enfant a des résultats ? (récursif)
+     */
+    private function hasAnyChildResults(array $enfantIds): bool
+    {
+        foreach ($enfantIds as $enfantId) {
+            if (in_array($enfantId, $this->resultatsExistants)) {
+                return true;
+            }
+
+            $sousEnfants = Analyse::where('parent_id', $enfantId)
+                ->where('status', true)
+                ->whereHas('type', function($q) {
+                    $q->where('name', '!=', 'LABEL');
+                })
+                ->pluck('id')->all();
+
+            if (!empty($sousEnfants) && $this->hasAnyChildResults($sousEnfants)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     #[On('refreshSidebar')]
     public function refreshSidebar(): void
@@ -174,7 +276,7 @@ class AnalysesSidebar extends Component
     }
 
     /**
-     * ✅ MÉTHODE AMÉLIORÉE : Sélection avec URL ancrée
+     * ✅ Sélection avec event parent
      */
     public function selectAnalyseParent(int $parentId): void
     {
@@ -183,99 +285,98 @@ class AnalysesSidebar extends Component
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE : Marquer une analyse individuelle comme terminée
+     * ✅ Marquer une analyse individuelle comme terminée
      */
     public function markAnalyseAsCompleted(int $parentId)
     {
         try {
             DB::beginTransaction();
-            
+
             $prescription = Prescription::findOrFail($this->prescriptionId);
-            
-            // ✅ CORRECTION : Récupérer les enfants en excluant les LABEL
+
+            // Enfants hors LABEL
             $enfants = Analyse::where('parent_id', $parentId)
                 ->where('status', true)
                 ->whereHas('type', function($q) {
-                    $q->where('name', '!=', 'LABEL'); // ✅ Exclure les LABEL
+                    $q->where('name', '!=', 'LABEL');
                 })
                 ->pluck('id')->all();
-            
+
             if (empty($enfants)) {
-                // Si pas d'enfants (ou que des LABEL), c'est l'analyse elle-même
+                // Pas d'enfants (ou seulement LABEL) → on cible l’analyse elle-même
                 $enfants = [$parentId];
             }
-            
-            // Vérifier que tous les enfants ont des résultats
+
+            // Tous les enfants ont-ils des résultats ?
             $resultatsCount = $prescription->resultats()
                 ->whereIn('analyse_id', $enfants)
                 ->count();
-            
+
             if ($resultatsCount === count($enfants)) {
-                // Marquer tous les résultats de cette analyse comme terminés
+                // Marquer ces résultats terminés
                 $prescription->resultats()
                     ->whereIn('analyse_id', $enfants)
                     ->update(['status' => 'TERMINE']);
-                
+
                 Log::info('Analyse marquée comme terminée', [
-                    'prescription_id' => $this->prescriptionId,
-                    'parent_id' => $parentId,
-                    'enfants_count' => count($enfants),
+                    'prescription_id'      => $this->prescriptionId,
+                    'parent_id'            => $parentId,
+                    'enfants_count'        => count($enfants),
                     'enfants_with_results' => $resultatsCount,
-                    'user_id' => Auth::id(),
+                    'user_id'              => Auth::id(),
                 ]);
-                
+
                 DB::commit();
-                
+
                 // Rafraîchir la sidebar
                 $this->loadAnalyses();
-                
+
                 // Notifier le composant parent
                 $this->dispatch('analyseCompleted', parentId: $parentId);
-                
-                session()->flash('message', 'Analyse marquée comme terminée !');
-                
+
+                $this->flashSuccess('Analyse marquée comme terminée !');
             } else {
-                session()->flash('error', 'Tous les résultats doivent être saisis avant de terminer cette analyse.');
+                $this->flashError('Tous les résultats doivent être saisis avant de terminer cette analyse.');
             }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erreur lors de la finalisation de l\'analyse', [
                 'prescription_id' => $this->prescriptionId,
-                'parent_id' => $parentId,
-                'error' => $e->getMessage(),
+                'parent_id'       => $parentId,
+                'error'           => $e->getMessage(),
             ]);
-            
-            session()->flash('error', 'Erreur lors de la finalisation : ' . $e->getMessage());
+
+            $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());
         }
     }
 
     /**
-     * ✅ MÉTHODE CORRIGÉE : Marquer la prescription comme terminée
+     * ✅ Marquer la prescription comme terminée (comptage via pivot)
      */
     public function markPrescriptionAsCompleted()
     {
         try {
             DB::beginTransaction();
-            
+
             $prescription = Prescription::findOrFail($this->prescriptionId);
-            
-            // ✅ CORRECTION : Compter via la table pivot prescription_analyse
+
+            // Compter via la table pivot (hors LABEL)
             $totalAnalyses = DB::table('prescription_analyse')
                 ->join('analyses', 'prescription_analyse.analyse_id', '=', 'analyses.id')
                 ->join('types', 'analyses.type_id', '=', 'types.id')
                 ->where('prescription_analyse.prescription_id', $this->prescriptionId)
                 ->where('types.name', '!=', 'LABEL')
                 ->count();
-                
+
             $completedAnalyses = $prescription->resultats()->count();
-            
+
             Log::info('Vérification finalisation prescription CORRIGÉE', [
-                'prescription_id' => $this->prescriptionId,
-                'total_analyses_non_label_via_pivot' => $totalAnalyses,
-                'completed_analyses' => $completedAnalyses,
-                'analyses_details' => DB::table('prescription_analyse')
+                'prescription_id'                     => $this->prescriptionId,
+                'total_analyses_non_label_via_pivot'  => $totalAnalyses,
+                'completed_analyses'                  => $completedAnalyses,
+                'analyses_details'                    => DB::table('prescription_analyse')
                     ->join('analyses', 'prescription_analyse.analyse_id', '=', 'analyses.id')
                     ->join('types', 'analyses.type_id', '=', 'types.id')
                     ->where('prescription_analyse.prescription_id', $this->prescriptionId)
@@ -283,50 +384,50 @@ class AnalysesSidebar extends Component
                     ->get()
                     ->toArray()
             ]);
-            
+
             if ($totalAnalyses === $completedAnalyses && $totalAnalyses > 0) {
                 // Marquer tous les résultats comme terminés
                 $prescription->resultats()->update(['status' => 'TERMINE']);
-                
+
                 // Marquer la prescription comme terminée
                 $prescription->update(['status' => 'TERMINE']);
-                
+
                 Log::info('Prescription marquée comme terminée', [
-                    'prescription_id' => $this->prescriptionId,
-                    'reference' => $prescription->reference,
-                    'total_analyses' => $totalAnalyses,
-                    'completed_analyses' => $completedAnalyses,
-                    'user_id' => Auth::id(),
+                    'prescription_id'   => $this->prescriptionId,
+                    'reference'         => $prescription->reference,
+                    'total_analyses'    => $totalAnalyses,
+                    'completed_analyses'=> $completedAnalyses,
+                    'user_id'           => Auth::id(),
                 ]);
-                
+
                 DB::commit();
-                
-                // Émettre un événement pour redirection
+
+                // Événement pour redirection
                 $this->dispatch('prescriptionCompleted')->to(ShowPrescription::class);
-                
-                session()->flash('message', 'Prescription marquée comme terminée avec succès !');
-                
+
+                $this->flashSuccess('Prescription marquée comme terminée avec succès !');
+
             } else {
                 Log::warning('Finalisation impossible - comptage incorrect', [
-                    'prescription_id' => $this->prescriptionId,
-                    'total_analyses' => $totalAnalyses,
-                    'completed_analyses' => $completedAnalyses,
-                    'condition_met' => $totalAnalyses === $completedAnalyses
+                    'prescription_id'   => $this->prescriptionId,
+                    'total_analyses'    => $totalAnalyses,
+                    'completed_analyses'=> $completedAnalyses,
+                    'condition_met'     => $totalAnalyses === $completedAnalyses
                 ]);
-                
-                session()->flash('error', "Toutes les analyses doivent être complétées avant de terminer la prescription. ({$completedAnalyses}/{$totalAnalyses})");
+
+                $this->flashError("Toutes les analyses doivent être complétées avant de terminer la prescription. ({$completedAnalyses}/{$totalAnalyses})");
             }
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Erreur lors de la finalisation de la prescription', [
                 'prescription_id' => $this->prescriptionId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error'           => $e->getMessage(),
+                'trace'           => $e->getTraceAsString()
             ]);
-            
-            session()->flash('error', 'Erreur lors de la finalisation : ' . $e->getMessage());
+
+            $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());
         }
     }
 
