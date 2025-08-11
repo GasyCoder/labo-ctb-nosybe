@@ -105,6 +105,45 @@ class AnalyseValide extends Component
             $this->alert('error', 'Impossible d\'ouvrir cette analyse');
         }
     }
+    public function startAnalysis(int $prescriptionId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $prescription = Prescription::findOrFail($prescriptionId);
+
+            // Changer le statut à EN_COURS si ce n'est pas déjà le cas
+            if ($prescription->status === 'EN_COURS') {
+                $prescription->update(['status' => 'VALIDE']);
+
+                Log::info('Prescription passée en cours', [
+                    'prescription_id' => $prescriptionId,
+                    'reference' => $prescription->reference,
+                    'user_id' => Auth::id(),
+                ]);
+            }
+
+            DB::commit();
+
+            // Message de succès
+            session()->flash('message', 'Analyse démarrée avec succès !');
+
+            // Redirection vers la page de traitement
+            return redirect()->route('technicien.prescription.show', $prescription);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Erreur lors du démarrage de l\'analyse', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            session()->flash('error', 'Erreur lors du démarrage de l\'analyse : ' . $e->getMessage());
+        }
+    }
+
 
     public function generatePDF($prescriptionId)
     {
