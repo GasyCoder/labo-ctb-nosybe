@@ -105,7 +105,8 @@ class AnalyseValide extends Component
             $prescription = Prescription::findOrFail($prescriptionId);
 
             // Redirection vers la page de consultation des résultats
-            return $this->redirect(route('biologiste.analyse.review', ['prescription' => $prescription]));
+            // Redirection vers la page de traitement
+            return redirect()->route('technicien.prescription.show', $prescription);
         } catch (\Exception $e) {
             $this->alert('error', 'Impossible d\'ouvrir cette analyse');
         }
