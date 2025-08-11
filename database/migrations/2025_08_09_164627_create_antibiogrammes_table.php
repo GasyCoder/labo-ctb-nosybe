@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('bacterie_id')->constrained('bacteries')->onDelete('cascade');
             $table->text('notes')->nullable();
             $table->timestamps();
-            $table->softDeletes();
             
             $table->unique(['prescription_id', 'analyse_id', 'bacterie_id']);
         });

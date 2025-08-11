@@ -1,12 +1,12 @@
 {{-- show-prescription --}}
-<div class="mt-8 min-h-screen bg-gray-50">
+<div class="mt-8 min-h-screen bg-gray-50 dark:bg-slate-900">
     {{-- Header optimisé --}}
     @include('livewire.technicien.partials.header-prescription-technicien')
 
     {{-- Main Content --}}
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen dark:bg-slate-900">
         {{-- Sidebar améliorée --}}
-        <div class="w-80 bg-white border-r border-gray-200">
+        <div class="w-80 bg-white dark:bg-slate-900">
             <div class="overflow-y-auto h-full">
                 <livewire:technicien.analyses-sidebar 
                     :prescription-id="$prescription->id" 
@@ -20,7 +20,7 @@
             <div class="p-6">
                 {{-- MODE PARENT - Formulaire de saisie --}}
                 @if($selectedParentId)
-                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="bg-white dark:bg-slate-900 rounded-lg overflow-hidden">
                         <div class="p-6">
                             <livewire:technicien.recursive-result-form 
                                 :prescription-id="$prescription->id"
@@ -28,7 +28,7 @@
                                 :key="'recursive-form-'.$selectedParentId" />
                         </div>
                     </div>
-
+ 
                 {{-- EMPTY STATE - Invite à sélectionner --}}
                 @else
                     <div class="flex items-center justify-center h-full">
@@ -56,33 +56,4 @@
             </div>
         </div>
     </div>
-
-    {{-- Notifications Toast --}}
-    @if (session()->has('message'))
-        <div class="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50" 
-             x-data="{ show: true }" 
-             x-show="show" 
-             x-init="setTimeout(() => show = false, 5000)">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('message') }}
-            </div>
-        </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="fixed top-4 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-50"
-             x-data="{ show: true }" 
-             x-show="show" 
-             x-init="setTimeout(() => show = false, 5000)">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('error') }}
-            </div>
-        </div>
-    @endif
 </div>

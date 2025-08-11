@@ -5,12 +5,12 @@
 $statusConfig = [
     'EN_ATTENTE' => [
         'class' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', 
-        'icon' => 'clock', 
+        'icon' => 'eye-off', 
         'text' => 'En attente'
     ],
     'EN_COURS' => [
         'class' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', 
-        'icon' => 'refresh', 
+        'icon' => 'eye', 
         'text' => 'En cours'
     ],
     'TERMINE' => [

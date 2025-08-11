@@ -25,7 +25,7 @@
                     <button type="button"
                             wire:key="parent-{{ $parent['id'] }}"
                             wire:click.prevent="selectAnalyseParent({{ $parent['id'] }})"
-                            class="w-full text-left p-4 pr-12 rounded-lg border transition-colors
+                            class="w-full text-left p-2 pr-2 rounded-lg border transition-colors
                                    {{ $selectedParentId == $parent['id'] 
                                       ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' 
                                       : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50' }}
@@ -69,18 +69,20 @@
                     </button>
 
                     {{-- Bouton terminer individuel (visible si en cours ou prêt) --}}
-                    @if($parent['status'] === 'EN_COURS' && $parent['enfants_completed'] === $parent['enfants_count'])
-                        <button wire:click="markAnalyseAsCompleted({{ $parent['id'] }})"
-                                wire:loading.attr="disabled"
-                                wire:target="markAnalyseAsCompleted({{ $parent['id'] }})"
-                                class="absolute top-2 right-2 p-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-md transition-colors"
-                                title="Terminer cette analyse">
-                            <span wire:loading.remove wire:target="markAnalyseAsCompleted({{ $parent['id'] }})">
+                    @if(($parent['eligible'] ?? false) && $parent['status'] !== 'EN_COURS')
+                        <button
+                            wire:click="markAnalyseAsCompleted({{ $parent['id'] }})"
+                            wire:loading.attr="disabled"
+                            wire:target="markAnalyseAsCompleted"  {{-- 👈 sans (id) --}}
+                            class="absolute top-2 right-2 z-10 p-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-md transition-colors"
+                            title="Terminer cette analyse"
+                        >
+                            <span wire:loading.remove wire:target="markAnalyseAsCompleted">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                 </svg>
                             </span>
-                            <span wire:loading wire:target="markAnalyseAsCompleted({{ $parent['id'] }})">
+                            <span wire:loading wire:target="markAnalyseAsCompleted">
                                 <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -88,6 +90,7 @@
                             </span>
                         </button>
                     @endif
+
                 </div>
             @endforeach
             

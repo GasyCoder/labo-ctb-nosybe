@@ -1,14 +1,14 @@
 <?php
-// app/Models/Antibiogramme.php
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Antibiogramme extends Model
 {
-    use SoftDeletes;
+    use HasFactory;
+    // ✅ RETIRER SoftDeletes
 
     protected $fillable = [
         'prescription_id',
@@ -17,7 +17,13 @@ class Antibiogramme extends Model
         'notes',
     ];
 
-    // Relations avec vos modèles existants
+    protected $casts = [
+        'prescription_id' => 'integer',
+        'analyse_id' => 'integer',
+        'bacterie_id' => 'integer',
+    ];
+
+    // Relations
     public function prescription()
     {
         return $this->belongsTo(Prescription::class);
@@ -33,7 +39,7 @@ class Antibiogramme extends Model
         return $this->belongsTo(Bacterie::class);
     }
 
-    public function resultatAntibiotiques()
+    public function resultatsAntibiotiques()
     {
         return $this->hasMany(ResultatAntibiotique::class);
     }

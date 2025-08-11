@@ -28,6 +28,14 @@ return new class extends Migration
                 'A_REFAIRE',     // Résultat à refaire
                 'ARCHIVE',       // Résultat archivé
             ])->default('EN_ATTENTE');
+            $table->foreignId('famille_id')
+                      ->nullable()
+                      ->constrained('bacterie_familles')
+                      ->nullOnDelete();
+            $table->foreignId('bacterie_id')
+                      ->nullable()
+                      ->constrained('bacteries')
+                      ->nullOnDelete();
             $table->foreignId('validated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('validated_at')->nullable();
             $table->softDeletes();
