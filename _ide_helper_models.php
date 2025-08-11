@@ -110,15 +110,14 @@ namespace App\Models{
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property string|null $deleted_at
  * @property-read \App\Models\Analyse $analyse
  * @property-read \App\Models\Bacterie $bacterie
  * @property-read \App\Models\Prescription $prescription
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ResultatAntibiotique> $resultatAntibiotiques
- * @property-read int|null $resultat_antibiotiques_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ResultatAntibiotique> $resultatsAntibiotiques
+ * @property-read int|null $resultats_antibiotiques_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereAnalyseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereBacterieId($value)
@@ -128,8 +127,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme wherePrescriptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme withTrashed(bool $withTrashed = true)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme withoutTrashed()
  */
 	class Antibiogramme extends \Eloquent {}
 }
