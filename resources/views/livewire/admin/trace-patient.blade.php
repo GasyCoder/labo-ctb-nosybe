@@ -151,7 +151,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Valeur perdue</p>
-                        <p class="text-xl font-bold text-green-800 dark:text-green-300">{{ number_format($prescriptionsTotalValue, 0, ',', ' ') }} F</p>
+                        <p class="text-xl font-bold text-green-800 dark:text-green-300">{{ number_format($prescriptionsTotalValue, 0, ',', ' ') }} Ar</p>
                         <p class="text-xs text-green-700 dark:text-green-400 mt-1">(montant total)</p>
                     </div>
                     <i class="fas fa-money-bill-wave text-green-600 dark:text-green-400 text-xl"></i>
@@ -365,7 +365,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm font-medium text-gray-900 dark:text-white">
-                                    {{ number_format($prescription->montant_total, 0, ',', ' ') }} F
+                                    {{ number_format($prescription->montant_total, 0, ',', ' ') }} Ar
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
