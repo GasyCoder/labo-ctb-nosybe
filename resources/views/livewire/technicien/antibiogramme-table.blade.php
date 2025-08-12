@@ -1,6 +1,5 @@
 {{-- resources/views/livewire/technicien/antibiogramme-table.blade.php --}}
-
-<div class="overflow-hidden bg-white dark:bg-slate-900" onclick="event.stopPropagation();">
+<div class="overflow-hidden bg-white dark:bg-slate-900 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700" onclick="event.stopPropagation();">
     
     {{-- ✅ Header conditionnel (masqué si dans accordion) --}}
     @unless(isset($hideHeader) && $hideHeader)
@@ -30,7 +29,7 @@
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Antibiotique</label>
                     <select wire:model="newAntibiotique" 
                             onclick="event.stopPropagation();"
-                            class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-green-500 transition-colors">
+                            class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:focus:border-green-500 transition-colors">
                         <option value="">Choisir...</option>
                         @foreach($antibiotiques as $antibiotique)
                             <option value="{{ $antibiotique->id }}">{{ $antibiotique->designation }}</option>
@@ -42,7 +41,7 @@
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Interprétation</label>
                     <select wire:model="newInterpretation" 
                             onclick="event.stopPropagation();"
-                            class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-green-500 transition-colors">
+                            class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:focus:border-green-500 transition-colors">
                         <option value="S">S</option>
                         <option value="I">I</option>
                         <option value="R">R</option>
@@ -53,13 +52,13 @@
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ø (mm)</label>
                     <input type="number" wire:model="newDiametre" step="0.1" min="0" max="50"
                            onclick="event.stopPropagation();"
-                           class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-500 transition-colors"
+                           class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:focus:border-green-500 transition-colors"
                            placeholder="15.5">
                 </div>
                 
                 <button wire:click.stop.prevent="addAntibiotique" 
                         onclick="event.stopPropagation(); event.preventDefault();"
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm flex items-center justify-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -72,7 +71,7 @@
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Antibiotique</label>
                     <select wire:model="newAntibiotique" 
                             onclick="event.stopPropagation();"
-                            class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
+                            class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors">
                         <option value="">Choisir un antibiotique...</option>
                         @foreach($antibiotiques as $antibiotique)
                             <option value="{{ $antibiotique->id }}">{{ $antibiotique->designation }}</option>
@@ -84,7 +83,7 @@
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Interprétation</label>
                     <select wire:model="newInterpretation" 
                             onclick="event.stopPropagation();"
-                            class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
+                            class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors">
                         <option value="S">S (Sensible)</option>
                         <option value="I">I (Intermédiaire)</option>
                         <option value="R">R (Résistant)</option>
@@ -95,14 +94,14 @@
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Diamètre (mm)</label>
                     <input type="number" wire:model="newDiametre" step="0.1" min="0" max="50"
                            onclick="event.stopPropagation();"
-                           class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors"
+                           class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors"
                            placeholder="Ex: 15.5">
                 </div>
                 
                 <div class="lg:col-span-2">
                     <button wire:click.stop.prevent="addAntibiotique" 
                             onclick="event.stopPropagation(); event.preventDefault();"
-                            class="w-full px-4 py-2.5 bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-slate-800 transition-all duration-200 shadow-sm">
+                            class="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-slate-800 transition-all duration-200 shadow-sm">
                         <span class="flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -118,7 +117,7 @@
     {{-- ✅ Table des résultats --}}
     @if(count($resultats) > 0)
         <div class="overflow-x-auto" onclick="event.stopPropagation();">
-            <table class="w-full">
+            <table class="w-full divide-y divide-slate-200 dark:divide-slate-700">
                 <thead class="bg-slate-50 dark:bg-slate-800">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
@@ -137,7 +136,7 @@
                 </thead>
                 <tbody class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-700">
                     @foreach($resultats as $resultat)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                             <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
                                 {{ $resultat['antibiotique']['designation'] }}
                             </td>
@@ -146,11 +145,11 @@
                                         onclick="event.stopPropagation();"
                                         class="px-2 py-1 border rounded text-xs font-medium transition-colors focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800
                                                @if($resultat['interpretation'] === 'S') 
-                                                   bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800 focus:ring-green-500
+                                                   bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 focus:ring-green-500
                                                @elseif($resultat['interpretation'] === 'I') 
-                                                   bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800 focus:ring-yellow-500
+                                                   bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700 focus:ring-yellow-500
                                                @else 
-                                                   bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800 focus:ring-red-500
+                                                   bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700 focus:ring-red-500
                                                @endif">
                                     <option value="S" {{ $resultat['interpretation'] === 'S' ? 'selected' : '' }}>S</option>
                                     <option value="I" {{ $resultat['interpretation'] === 'I' ? 'selected' : '' }}>I</option>
@@ -163,7 +162,7 @@
                                        wire:change.stop="updateResultat({{ $resultat['id'] }}, 'diametre_mm', $event.target.value)"
                                        onclick="event.stopPropagation();"
                                        step="0.1" min="0" max="50"
-                                       class="w-16 px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs text-center text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-500 transition-colors"
+                                       class="w-16 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-xs text-center text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
                                        placeholder="--">
                             </td>
                             <td class="px-4 py-3 text-center">
@@ -196,5 +195,4 @@
             </p>
         </div>
     @endif
-
 </div>
