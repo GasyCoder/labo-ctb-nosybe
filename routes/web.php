@@ -25,6 +25,7 @@ use App\Livewire\Biologiste\BiologisteAnalysisForm;
 use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
+use App\Http\Controllers\BiologistePrescriptionController;
 
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
@@ -40,11 +41,10 @@ Route::get('/', function () {
 // ROUTES COMMUNES (TOUS LES UTILISATEURS CONNECTÉS)
 // ============================================
 Route::middleware(['auth', 'verified'])->group(function () {
-
     // Dashboard principal
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
-    // Profil utilisateur (inspiré de l'exemple avec plus de détails)
+    // Profil utilisateur
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
@@ -53,9 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Archives
     Route::get('/archives', Archives::class)->name('archives');
-    
 });
-
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX SECRÉTAIRES
@@ -75,17 +73,17 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
     Route::get('traitement', IndexTechnicien::class)->name('index');
     Route::get('/technicien/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
-
-    Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])
-    ->name('prescription.pdf');
+    Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
 });
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX BIOLOGISTES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')->name('biologiste.')->group(function () {
-    Route::get('/analyse-valide', AnalyseValide::class)->name('analyse.index');
+    Route::get('/analyse-valide', AnalyseValide::class)->name('analyse.index'); // Nom de route unifié
+    Route::get('/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
     Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
+    Route::post('/prescription/{prescription}/validate', [BiologistePrescriptionController::class, 'validate'])->name('prescription.validate');
 });
 
 // ============================================
@@ -112,11 +110,8 @@ Route::middleware(['auth', 'verified', 'role:technicien,biologiste,admin'])->pre
 // ROUTES SPÉCIFIQUES AUX ADMINS
 // ============================================
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Administration
     Route::get('utilisateurs', UsersIndex::class)->name('users');
     Route::get('parametres', Settings::class)->name('settings');
 });
 
 require __DIR__ . '/auth.php';
-
-

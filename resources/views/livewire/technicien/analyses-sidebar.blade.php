@@ -95,6 +95,7 @@
             @endforeach
             
             {{-- Bouton terminer ensemble --}}
+                @if (auth()->user()->type === 'technicien')
             <div class="pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
                 <button wire:click="markPrescriptionAsCompletedAlternative" 
                         wire:loading.attr="disabled"
@@ -115,7 +116,7 @@
                     </span>
                 </button>
             </div>
-
+@endif
             {{-- État vide --}}
             @if(empty($analysesParents))
                 <div class="text-center py-12">
