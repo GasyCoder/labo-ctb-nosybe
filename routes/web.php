@@ -9,6 +9,7 @@ use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Bacteries;
 use App\Livewire\Admin\UsersIndex;
 use App\Livewire\Admin\Prelevements;
+use App\Livewire\Admin\TracePatient;
 use Illuminate\Support\Facades\Auth;
 use App\Livewire\Admin\Antibiotiques;
 use App\Livewire\Secretaire\Patients;
@@ -26,6 +27,7 @@ use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
 use App\Http\Controllers\BiologistePrescriptionController;
+
 
 // ============================================
 // ROUTES PUBLIQUES ET REDIRECTIONS
@@ -112,6 +114,8 @@ Route::middleware(['auth', 'verified', 'role:technicien,biologiste,admin'])->pre
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('utilisateurs', UsersIndex::class)->name('users');
     Route::get('parametres', Settings::class)->name('settings');
+    Route::get('trace-patients', TracePatient::class)->name('trace-patients');
+    
 });
 
 require __DIR__ . '/auth.php';

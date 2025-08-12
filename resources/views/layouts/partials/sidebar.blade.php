@@ -40,7 +40,23 @@
                             <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">Accueil</span>
                         </a>
                     </li>
-<!-- Archives -->
+                    @if(auth()->check() && auth()->user()->type === 'admin')
+    @php
+        $countTrace = \App\Models\Patient::onlyTrashed()->count();
+    @endphp
+
+    <li class="nk-menu-item py-0{{ request()->routeIs('admin.trace-patients') ? ' active' : '' }} group/item">
+        <a href="{{ route('admin.trace-patients') }}" class="nk-menu-link flex relative items-center align-middle py-2 ps-5 pe-8 font-heading font-bold tracking-snug group">
+            <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
+                <em class="text-xl leading-none text-current transition-all duration-300 icon ni ni-trash"></em>
+            </span>
+            <span class="group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0 flex-grow-1 inline-block whitespace-nowrap transition-all duration-300 text-sm text-slate-600 dark:text-slate-500 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
+                Corbeille  (<span id="trace-count">{{ $countTrace }}</span>)
+            </span>
+        </a>
+    </li>
+@endif
+                    <!-- Archives -->
                     <li class="nk-menu-item py-0{{ request()->routeIs('archives') ? ' active' : '' }} group/item">
                         <a href="{{ route('archives') }}" class="nk-menu-link flex relative items-center align-middle py-2 ps-5 pe-8 font-heading font-bold tracking-snug group">
                             <span class="font-normal tracking-normal w-8 inline-flex flex-grow-0 flex-shrink-0 text-slate-400 group-[.active]/item:text-primary-500 group-hover:text-primary-500">
@@ -223,6 +239,15 @@
     document.addEventListener('livewire:init', () => {
         Livewire.on('updateArchiveCount', ({ count }) => {
             document.getElementById('archive-count').textContent = count;
+        });
+    });
+    </script>
+@endpush
+@push('scripts')
+    <script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('updateTraceCount', ({ count }) => {
+            document.getElementById('trace-count').textContent = count;
         });
     });
     </script>
