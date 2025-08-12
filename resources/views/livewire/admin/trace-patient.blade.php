@@ -1,7 +1,7 @@
 <!-- resources/views/livewire/admin/trace-patient.blade.php -->
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+<div class="min-h-screen transition-colors duration-200">
     <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="dark:border-gray-700 shadow-sm">
         <div class="px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
