@@ -95,7 +95,7 @@
             @endforeach
             
             {{-- Bouton terminer ensemble (visible quand toutes les analyses sont complétées) --}}
-            @if($allCompleted && $totalEnfants > 0)
+          
                 <div class="pt-4 border-t border-gray-200 mt-4">
                     <button wire:click="markPrescriptionAsCompletedAlternative" 
                             wire:loading.attr="disabled"
@@ -116,7 +116,7 @@
                         </span>
                     </button>
                 </div>
-            @endif
+            
 
             {{-- État vide --}}
             @if(empty($analysesParents))
