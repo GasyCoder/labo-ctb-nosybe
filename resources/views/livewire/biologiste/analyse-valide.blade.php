@@ -1,7 +1,7 @@
 <!-- Interface principale - analyse-valide.blade.php -->
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+<div class="min-h-screen transition-colors duration-200">
     <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+    <div class="dark:border-gray-700 shadow-sm ">
         <div class="px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
@@ -25,7 +25,7 @@
 
     <div class="p-6">
         <!-- Statistiques -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 max-w-md lg:max-w-none">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6 max-w-md lg:max-w-none">
     <!-- Terminé -->
     <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 px-3 py-2 rounded-xl border border-orange-200 dark:border-orange-700">
         <div class="text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">Terminé</div>
