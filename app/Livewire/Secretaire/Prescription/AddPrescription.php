@@ -28,6 +28,8 @@ class AddPrescription extends Component
 
     public bool $isEditMode = false;
     public bool $activer_remise = false; // ✅ AJOUT DE LA PROPRIÉTÉ PUBLIQUE
+
+    public ?Prescription $prescription = null;
     
     // 👤 DONNÉES PATIENT
     public ?Patient $patient = null;
@@ -114,6 +116,18 @@ class AddPrescription extends Component
             : 'Nouvelle prescription';
     }
 
+
+    //  =================
+public function imprimerFacture()
+{
+    if (!$this->prescription) {
+        flash()->error('Aucune prescription à imprimer');
+        return;
+    }
+    
+    // Redirection vers la route de facturation
+    return redirect()->route('prescription.facture', ['prescription' => $this->prescription->id]);
+}
 
     // =====================================
     // 🌐 GESTION URL ET NAVIGATION
