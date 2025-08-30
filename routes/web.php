@@ -60,23 +60,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Archives
     Route::get('/archives', Archives::class)->name('archives');
 });
-
 // ============================================
 // ROUTES SPÉCIFIQUES AUX SECRÉTAIRES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')->name('secretaire.')->group(function () {
     Route::get('prescription/listes', PrescriptionIndex::class)->name('prescription.index');
     Route::get('nouvel-prescription', AddPrescription::class)->name('prescription.create');
-    // Route::get('pdf', AddPrescription::class)->name('facture-impression');
     Route::get('/prescription/edit/{prescriptionId}', EditPrescription::class)->name('prescription.edit');
     Route::get('patients', Patients::class)->name('patients');
     Route::get('patients/{patient}', PatientDetail::class)->name('patient.detail');
     Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
     Route::get('dashboard', Dashboard::class)->name('dashboard');
-// ✅ CORRECTION : Utiliser une seule route avec le contrôleur FactureController
-Route::get('/prescription/{prescription}/facture', [FactureController::class, 'show'])
-    ->name('prescription.facture');
     
+    // ✅ CORRECTION : Utiliser une seule route avec le contrôleur FactureController
+    Route::get('/prescription/{prescription}/facture', [FactureController::class, 'show'])
+        ->name('prescription.facture'); // Nom correct de la route
 });
 
 

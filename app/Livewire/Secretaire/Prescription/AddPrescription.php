@@ -28,6 +28,7 @@ class AddPrescription extends Component
 
     public bool $isEditMode = false;
     public bool $activer_remise = false; // ✅ AJOUT DE LA PROPRIÉTÉ PUBLIQUE
+    public bool $afficherFactureComplete = false; // ✅ NOUVELLE PROPRIÉTÉ POUR LA FACTURE
 
     public ?Prescription $prescription = null;
     
@@ -57,7 +58,7 @@ class AddPrescription extends Component
     public ?int $categorieOuverte = null;
     public $parentRecherche = null;
     
-    // 🧾 PRÉLÈVEMENTS SÉLECTIONNÉS
+    // 🧾 PRÉLÈVEMENTS SÉLECTIONNÉES
     public array $prelevementsSelectionnes = [];
     public string $recherchePrelevement = '';
     
@@ -95,6 +96,54 @@ class AddPrescription extends Component
         $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
     }
 
+    // =====================================
+    // ✅ MÉTHODES POUR LA FACTURE
+    // =====================================
+    
+    public function afficherFactureComplete()
+    {
+        $this->afficherFactureComplete = true;
+    }
+
+    public function fermerFacture()
+    {
+        $this->afficherFactureComplete = false;
+    }
+
+  public function facture()
+{
+    if (!$this->prescription) {
+        // Essayez de récupérer la prescription par référence si possible
+        if ($this->reference) {
+            $this->prescription = Prescription::where('reference', $this->reference)->first();
+        }
+        
+        if (!$this->prescription) {
+            return redirect()->back()->with('error', 'Aucune prescription à facturer');
+        }
+    }
+    Log::info('Génération de la facture pour la prescription ID: ' . $this->prescription->id);
+    
+    return view('livewire.secretaire.prescription.facture-impression', [
+        'prescription' => $this->prescription
+    ]);
+}
+
+public function getTitle()
+{
+    if ($this->prescription) {
+        return 'Référence: ' . $this->prescription->reference;
+    } elseif ($this->reference) {
+        return 'Référence: ' . $this->reference;
+    } else {
+        return 'Nouvelle prescription';
+    }
+}
+
+    // =====================================
+    // 📊 PROPRIÉTÉS CALCULÉES
+    // =====================================
+    
     public function getMethodesPaiementProperty()
     {
         return PaymentMethod::where('is_active', true)
@@ -108,26 +157,6 @@ class AddPrescription extends Component
         $setting = Setting::first();
         $this->activer_remise = $setting?->activer_remise ?? false;
     }
-
-    public function getTitle()
-    {
-        return $this->reference 
-            ? 'Référence: ' . $this->reference 
-            : 'Nouvelle prescription';
-    }
-
-
-    //  =================
-public function imprimerFacture()
-{
-    if (!$this->prescription) {
-        flash()->error('Aucune prescription à imprimer');
-        return;
-    }
-    
-    // Redirection vers la route de facturation
-    return redirect()->route('prescription.facture', ['prescription' => $this->prescription->id]);
-}
 
     // =====================================
     // 🌐 GESTION URL ET NAVIGATION
@@ -181,7 +210,6 @@ public function imprimerFacture()
         }
     }
 
-
     // =====================================
     // 👤 ÉTAPE 1: GESTION PATIENT
     // =====================================
@@ -234,7 +262,7 @@ public function imprimerFacture()
             'prescripteurId', 'age', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
             'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
-            'rechercheAnalyse', 'recherchePrelevement'
+            'rechercheAnalyse', 'recherchePrelevement', 'afficherFactureComplete'
         ]);
         
         // Réinitialiser l'étape et l'URL
@@ -576,7 +604,6 @@ public function imprimerFacture()
         }
 
         $this->allerEtape('paiement');
-
     }
 
     // =====================================
@@ -666,7 +693,7 @@ public function imprimerFacture()
             'remise' => 'nullable|numeric|min:0',
         ], [
             'modePaiement.required' => 'Veuillez sélectionner un mode de paiement',
-            'modePaiement.in' => 'Mode de paiement non valide ou inactif',
+            'modePaiement.in' => 'Mode de paiement non valide ou inactivé',
             'montantPaye.required' => 'Le montant payé est obligatoire',
             'montantPaye.min' => 'Le montant payé doit être positif',
         ]);
@@ -703,19 +730,22 @@ public function imprimerFacture()
             }
             
             // 1. Créer la prescription
-            $prescription = Prescription::create([
-                'patient_id' => $this->patient->id,
-                'prescripteur_id' => $this->prescripteurId,
-                'secretaire_id' => Auth::id(),
-                'patient_type' => $this->patientType,
-                'age' => $this->age,
-                'unite_age' => $this->uniteAge,
-                'poids' => $this->poids,
-                'renseignement_clinique' => $this->renseignementClinique,
-                'remise' => $this->remise,
-                'status' => 'EN_ATTENTE'
-            ]);
-            
+        $prescription = Prescription::create([
+            'patient_id' => $this->patient->id,
+            'prescripteur_id' => $this->prescripteurId,
+            'secretaire_id' => Auth::id(),
+            'patient_type' => $this->patientType,
+            'age' => $this->age,
+            'unite_age' => $this->uniteAge,
+            'poids' => $this->poids,
+            'renseignement_clinique' => $this->renseignementClinique,
+            'remise' => $this->remise,
+            'status' => 'EN_ATTENTE'
+        ]);
+        $this->prescription = $prescription;
+        
+        // Mise à jour avec la référence définitive
+        $this->reference = $prescription->reference;
             // 2. Associer les analyses (vérification des IDs)
             $analyseIds = array_keys($this->analysesPanier);
             $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
@@ -765,8 +795,11 @@ public function imprimerFacture()
             } else {
                 $this->allerEtape('confirmation');
             }
-             // Mise à jour avec la référence définitive
+            
+            // Mise à jour avec la référence définitive
             $this->reference = $prescription->reference;
+            $this->prescription = $prescription;
+            
             DB::commit();
             
             flash()->success('Prescription enregistrée avec succès!');
@@ -851,7 +884,6 @@ public function imprimerFacture()
         
         session()->flash('success', $message);
     }
-
 
     // =====================================
     // 📊 COMPUTED PROPERTIES

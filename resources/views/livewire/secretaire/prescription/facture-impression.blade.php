@@ -1,318 +1,369 @@
-{{-- resources/views/livewire/secretaire/prescription/facture-impression.blade.php --}}
-<div class="facture-container" style="width: 210mm; min-height: 297mm; background: white; font-family: Arial, sans-serif; font-size: 12px; margin: 0 auto; padding: 15mm;">
-    
-    {{-- EN-TÊTE LABORATOIRE --}}
-    <div class="header-section" style="border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 70%;">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
-                        GCARE
-                    </div>
-                    <div style="font-size: 11px; line-height: 1.4;">
-                        Galana-Galana, RC 2010 B00465, STAT 72102 1 2010 010 482
-                        <br>Lot II S 24 Galana-Galana, Toliariada, TS: (020) 94 521 71
-                        <br>Cll: 032 48 482 49, Email: info@gcare.mg
-                        <br>Compte Bancaire: MCB TANA - 00000 00003 00045593 48 - BOA TANA - 00001 02799 01 202 1 450 16 Em
-                        <br>Compte: BIC MG IFT - 78 60 61 202 1 1-450 16 Em
-                    </div>
-                </td>
-                <td style="width: 30%; text-align: right; vertical-align: top;">
-                    {{-- Logo/Cachet zone --}}
-                    <div style="border: 1px solid #ccc; width: 80px; height: 80px; margin: 0 0 0 auto; display: flex; align-items: center; justify-content: center; background: #f9f9f9;">
-                        <span style="font-size: 10px; color: #666;">LOGO</span>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    {{-- INFORMATIONS FACTURE --}}
-    <div class="facture-info" style="margin-bottom: 20px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 50%;">
-                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">FACTURE</div>
-                    <div style="font-size: 11px;">
-                        <strong>Facture N°:</strong> {{ $prescription->reference ?? $reference ?? 'PRES-2025-XXXXX' }}<br>
-                        <strong>Date:</strong> {{ $prescription ? $prescription->created_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i') }}<br>
-                        <strong>Type Patient:</strong> {{ $patientType ?? 'EXTERNE' }}
-                    </div>
-                </td>
-                <td style="width: 50%; text-align: right;">
-                    <div style="font-size: 16px; font-weight: bold; color: #d32f2f;">
-                        Arrête la présente facture à la somme de :
-                        <br>{{ number_format($total, 0, ',', ' ') }} Ar
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    {{-- INFORMATIONS CLIENT --}}
-    <div class="client-info" style="border: 1px solid #000; padding: 10px; margin-bottom: 15px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 50%;">
-                    <div style="font-weight: bold; margin-bottom: 8px;">PATIENT</div>
-                    <div style="font-size: 11px; line-height: 1.4;">
-                        <strong>Nom:</strong> {{ $patient->nom ?? '' }} {{ $patient->prenom ?? '' }}<br>
-                        @if($patient?->telephone)
-                            <strong>Tél:</strong> {{ $patient->telephone }}<br>
-                        @endif
-                        @if($patient?->email)
-                            <strong>Email:</strong> {{ $patient->email }}<br>
-                        @endif
-                        <strong>Âge:</strong> {{ $age ?? 0 }} {{ $uniteAge ?? 'ans' }}
-                        @if($poids)
-                            | <strong>Poids:</strong> {{ $poids }} kg
-                        @endif
-                    </div>
-                </td>
-                <td style="width: 50%; vertical-align: top;">
-                    <div style="font-weight: bold; margin-bottom: 8px;">PRESCRIPTEUR</div>
-                    <div style="font-size: 11px; line-height: 1.4;">
-                        @php
-                            $prescripteur = null;
-                            if($prescripteurId) {
-                                $prescripteur = \App\Models\Prescripteur::find($prescripteurId);
-                            }
-                        @endphp
-                        @if($prescripteur)
-                            <strong>Dr:</strong> {{ $prescripteur->nom }} {{ $prescripteur->prenom }}<br>
-                            @if($prescripteur->specialite)
-                                <strong>Spécialité:</strong> {{ $prescripteur->specialite }}<br>
-                            @endif
-                            @if($prescripteur->telephone)
-                                <strong>Tél:</strong> {{ $prescripteur->telephone }}<br>
-                            @endif
-                        @else
-                            Dr. [Prescripteur non défini]
-                        @endif
-                    </div>
-                </td>
-            </tr>
-        </table>
-        
-        @if($renseignementClinique)
-            <div style="margin-top: 10px; font-size: 11px;">
-                <strong>Renseignements cliniques:</strong> {{ $renseignementClinique }}
-            </div>
-        @endif
-    </div>
-
-    {{-- TABLEAU DES ANALYSES --}}
-    <div class="analyses-table" style="margin-bottom: 15px;">
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 11px;">
-            <thead>
-                <tr style="background-color: #f5f5f5;">
-                    <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 5%;">S</th>
-                    <th style="border: 1px solid #000; padding: 6px; text-align: left; width: 45%;">Libellé</th>
-                    <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 10%;">Code</th>
-                    <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 8%;">Qté</th>
-                    <th style="border: 1px solid #000; padding: 6px; text-align: center; width: 12%;">Unité</th>
-                    <th style="border: 1px solid #000; padding: 6px; text-align: right; width: 20%;">Montant (MGA)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $numeroLigne = 1; @endphp
-                
-                {{-- ANALYSES --}}
-                @foreach($analysesPanier as $analyse)
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">{{ $numeroLigne++ }}</td>
-                        <td style="border: 1px solid #000; padding: 4px;">
-                            {{ $analyse['designation'] }}
-                            @if(isset($analyse['is_parent']) && $analyse['is_parent'])
-                                <br><em style="font-size: 10px; color: #666;">(Panel complet)</em>
-                            @elseif($analyse['parent_nom'] !== 'Analyse individuelle')
-                                <br><em style="font-size: 10px; color: #666;">{{ $analyse['parent_nom'] }}</em>
-                            @endif
-                        </td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center; font-family: monospace;">{{ $analyse['code'] ?? 'N/A' }}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">1</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">Test</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: right; font-weight: bold;">
-                            {{ number_format($analyse['prix_effectif'], 0, ',', ' ') }}
-                        </td>
-                    </tr>
-                @endforeach
-
-                {{-- PRÉLÈVEMENTS (si présents) --}}
-                @foreach($prelevementsSelectionnes as $prelevement)
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">{{ $numeroLigne++ }}</td>
-                        <td style="border: 1px solid #000; padding: 4px;">
-                            {{ $prelevement['nom'] }}
-                            @if($prelevement['description'])
-                                <br><em style="font-size: 10px; color: #666;">{{ $prelevement['description'] }}</em>
-                            @endif
-                        </td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center; font-family: monospace;">PREL</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">{{ $prelevement['quantite'] }}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">{{ $prelevement['type_tube_requis'] ?? 'SEC' }}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: right; font-weight: bold;">
-                            {{ number_format(($prelevement['prix'] * $prelevement['quantite']), 0, ',', ' ') }}
-                        </td>
-                    </tr>
-                @endforeach
-
-                {{-- LIGNE VIDE si besoin --}}
-                @for($i = $numeroLigne; $i <= 8; $i++)
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 8px; text-align: center;">{{ $i }}</td>
-                        <td style="border: 1px solid #000; padding: 8px;">&nbsp;</td>
-                        <td style="border: 1px solid #000; padding: 8px;">&nbsp;</td>
-                        <td style="border: 1px solid #000; padding: 8px;">&nbsp;</td>
-                        <td style="border: 1px solid #000; padding: 8px;">&nbsp;</td>
-                        <td style="border: 1px solid #000; padding: 8px;">&nbsp;</td>
-                    </tr>
-                @endfor
-            </tbody>
-        </table>
-    </div>
-
-    {{-- SECTION TOTAUX --}}
-    <div class="totaux-section" style="margin-bottom: 20px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 60%;">
-                    {{-- Informations de paiement --}}
-                    <div style="font-size: 11px;">
-                        <strong>Mode de paiement:</strong> 
-                        @php
-                            $paymentMethod = \App\Models\PaymentMethod::where('code', $modePaiement)->first();
-                        @endphp
-                        {{ $paymentMethod?->name ?? $modePaiement }}<br>
-                        
-                        @if($prescription)
-                            <strong>Secrétaire:</strong> {{ $prescription->secretaire->name ?? Auth::user()->name }}<br>
-                        @endif
-                        
-                        <strong>Statut:</strong> 
-                        @if($prescription)
-                            {{ $prescription->status == 'EN_ATTENTE' ? 'En attente d\'analyse' : $prescription->status }}
-                        @else
-                            Payé
-                        @endif
-                    </div>
-                </td>
-                <td style="width: 40%; text-align: right;">
-                    <table style="border: 1px solid #000; width: 100%; border-collapse: collapse; font-size: 11px;">
-                        <tr>
-                            <td style="border: 1px solid #000; padding: 4px; font-weight: bold; background-color: #f5f5f5;">SOUS-TOTAL</td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: right; font-weight: bold;">
-                                @php
-                                    $sousTotal = 0;
-                                    foreach($analysesPanier as $analyse) {
-                                        $sousTotal += $analyse['prix_effectif'];
-                                    }
-                                    foreach($prelevementsSelectionnes as $prelevement) {
-                                        $sousTotal += ($prelevement['prix'] * $prelevement['quantite']);
-                                    }
-                                @endphp
-                                {{ number_format($sousTotal, 0, ',', ' ') }} Ar
-                            </td>
-                        </tr>
-                        @if($remise > 0)
-                            <tr>
-                                <td style="border: 1px solid #000; padding: 4px; font-weight: bold;">REMISE</td>
-                                <td style="border: 1px solid #000; padding: 4px; text-align: right; font-weight: bold; color: #d32f2f;">
-                                    -{{ number_format($remise, 0, ',', ' ') }} Ar
-                                </td>
-                            </tr>
-                        @endif
-                        <tr style="background-color: #f0f0f0;">
-                            <td style="border: 1px solid #000; padding: 6px; font-weight: bold; font-size: 12px;">TOTAL</td>
-                            <td style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold; font-size: 12px;">
-                                {{ number_format($total, 0, ',', ' ') }} Ar
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    {{-- INFORMATIONS TUBES (si générés) --}}
-    @if(!empty($tubesGeneres))
-        <div class="tubes-info" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; background-color: #f9f9f9;">
-            <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px;">TUBES GÉNÉRÉS</div>
-            <div style="font-size: 10px; display: flex; flex-wrap: wrap; gap: 10px;">
-                @foreach($tubesGeneres as $tube)
-                    <span style="background: white; border: 1px solid #999; padding: 3px 6px; border-radius: 3px; font-family: monospace;">
-                        {{ $tube['numero_tube'] ?? $tube['code_barre'] }}
-                    </span>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-    {{-- PIED DE PAGE --}}
-    <div class="footer-section" style="border-top: 1px solid #ccc; padding-top: 10px; margin-top: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-            <tr>
-                <td style="width: 50%; vertical-align: top;">
-                    <div style="line-height: 1.4;">
-                        <strong>Conditions:</strong><br>
-                        - Résultats disponibles sous 24-48h<br>
-                        - Retrait sur présentation de cette facture<br>
-                        - Conservation des échantillons: 7 jours<br>
-                        - Horaires: Lun-Ven 7h-17h, Sam 7h-12h
-                    </div>
-                </td>
-                <td style="width: 50%; text-align: right; vertical-align: bottom;">
-                    {{-- Code-barres simulé --}}
-                    <div style="border: 1px solid #000; padding: 5px; background: white; display: inline-block; font-family: monospace; font-size: 8px;">
-                        <div style="background: repeating-linear-gradient(90deg, #000 0px, #000 1px, #fff 1px, #fff 2px); height: 30px; width: 150px; margin-bottom: 2px;"></div>
-                        {{ $prescription->reference ?? $reference ?? 'PRES-2025-XXXXX' }}
-                    </div>
-                </td>
-            </tr>
-        </table>
-        
-        <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #666;">
-            Laboratoire GCARE - Galana-Galana, Toliariada - Tél: (020) 94 521 71
-        </div>
-    </div>
-</div>
-
-{{-- STYLES D'IMPRESSION --}}
-<style>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facture {{ $prescription->reference ?? 'N/A' }} - C-Lab/C-Care</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
     @media print {
-        body { margin: 0; padding: 0; }
-        .facture-container { 
-            margin: 0 !important; 
-            box-shadow: none !important;
-            max-width: none !important;
-        }
-        .no-print { display: none !important; }
-    }
-    
-    .facture-container {
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      .no-print {
+        display: none !important;
+      }
+      body {
+        padding: 0;
+        margin: 0;
+        background: white;
+        font-size: 12pt;
+      }
+      .invoice-container {
+        box-shadow: none;
+        margin: 0;
+        padding: 15px;
+        width: 100%;
+      }
+      .break-before {
+        page-break-before: always;
+      }
+      .break-after {
+        page-break-after: always;
+      }
+      .avoid-break {
         page-break-inside: avoid;
+      }
     }
     
-    table { 
-        page-break-inside: avoid; 
+    body {
+      font-family: 'DejaVu Sans', Arial, sans-serif;
+      background-color: #f3f4f6;
+      padding: 20px;
     }
     
-    tr { 
-        page-break-inside: avoid; 
+    .invoice-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-</style>
+    
+    .header-table {
+      width: 100%;
+      margin-bottom: 15px;
+      border-collapse: collapse;
+    }
+    
+    .header-table td {
+      padding: 3px 5px;
+      vertical-align: top;
+      border: none;
+    }
+    
+    .divider {
+      border-top: 1px solid #000;
+      margin: 10px 0;
+    }
+    
+    .footer {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      text-align: center;
+      color: #555;
+    }
+    
+    .stamp {
+      position: absolute;
+      right: 50px;
+      opacity: 0.8;
+      transform: rotate(15deg);
+    }
+    
+    .amount-section {
+      margin: 15px 0;
+    }
+    
+    .payment-info {
+      margin-top: 20px;
+    }
+    
+    .button-container {
+      margin-bottom: 20px;
+      text-align: right;
+    }
+    
+    .btn {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-print {
+      background-color: #2196F3;
+    }
+    
+    .btn-download {
+      background-color: #FF9800;
+    }
+    
+    .btn-back {
+      background-color: #9e9e9e;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    
+    .text-right {
+      text-align: right;
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .font-bold {
+      font-weight: bold;
+    }
+    
+    .mt-4 {
+      margin-top: 1rem;
+    }
+    
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="invoice-container" id="invoice">
+    <div class="button-container no-print">
+      <button onclick="window.history.back()" class="btn btn-back">
+        ← Retour
+      </button>
+      <button onclick="printInvoice()" class="btn btn-print">
+        🖨️ Imprimer
+      </button>
+      <button onclick="generatePDF()" class="btn btn-download">
+        📥 Télécharger PDF
+      </button>
+    </div>
 
-{{-- SCRIPT POUR L'IMPRESSION --}}
-<script>
-    window.imprimerFacture = function() {
-        window.print();
-    };
+    <table class="header-table">
+      <tr>
+        <td width="50%">
+          <strong>PID</strong> : {{ $prescription->patient->id ?? 'N/A' }}<br>
+          <strong>Visit ID</strong> : {{ $prescription->id ?? 'N/A' }}<br>
+          <strong>Nom du patient</strong> : {{ $prescription->patient->civilite ?? '' }} {{ $prescription->patient->nom ?? '' }} {{ $prescription->patient->prenom ?? '' }}<br>
+          <strong>DDN/sexe</strong> : {{ isset($prescription->patient->date_naissance) ? $prescription->patient->date_naissance->format('d/m/Y') : 'N/A' }}/{{ $prescription->patient->genre ?? 'N/A' }}<br>
+          <strong>N° de portable</strong> : {{ $prescription->patient->telephone ?? 'N/A' }}<br>
+          <strong>Address</strong> : {{ $prescription->patient->adresse ?? 'N/A' }}
+        </td>
+        <td width="50%" style="text-align: right;">
+          <strong>Date de facturation</strong> : {{ $prescription->created_at->format('d/m/Y H:i') }}<br>
+          <strong>Numéro de facture</strong> : {{ $prescription->reference }}<br>
+          <strong>Panel</strong> : {{ $prescription->patient_type }}<br>
+          <strong>STAT</strong> : <br>
+          <strong>N.I.F</strong> : <br>
+          <strong>Type de client</strong> : <br>
+          <strong>Référé par</strong> : {{ $prescription->prescripteur->nom_complet ?? $prescription->prescripteur->nom ?? 'N/A' }}
+        </td>
+      </tr>
+    </table>
+
+    <div class="divider"></div>
+
+    <h2 style="text-align: center; font-weight: bold; font-size: 1.5rem;">FACTURE</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Détails / Désignation</th>
+          <th>Unités</th>
+          <th>Tarif (MGA)</th>
+          <th>Remise (MGA)</th>
+          <th>Montant (MGA)</th>
+        </tr>
+      </thead>
+      <tbody>
+        @php 
+          $total = 0; 
+          $index = 1;
+        @endphp
+        
+        <!-- Analyses -->
+        @foreach($prescription->analyses as $analyse)
+          @php
+            $prix = $analyse->prix;
+            $total += $prix;
+          @endphp
+          <tr>
+            <td>{{ $index++ }}</td>
+            <td>{{ $analyse->designation }}</td>
+            <td class="text-right">1.00</td>
+            <td class="text-right">{{ number_format($prix, 2, '.', ' ') }}</td>
+            <td class="text-right">0.00</td>
+            <td class="text-right">{{ number_format($prix, 2, '.', ' ') }}</td>
+          </tr>
+        @endforeach
+        
+        <!-- Prélèvements -->
+        @foreach($prescription->prelevements as $prelevement)
+          @php
+            $quantite = $prelevement->pivot->quantite ?? 1;
+            $prixUnitaire = $prelevement->pivot->prix_unitaire ?? $prelevement->prix ?? 0;
+            $prix = $prixUnitaire * $quantite;
+            $total += $prix;
+          @endphp
+          <tr>
+            <td>{{ $index++ }}</td>
+            <td>{{ $prelevement->nom }} (x{{ $quantite }})</td>
+            <td class="text-right">{{ number_format($quantite, 2, '.', ' ') }}</td>
+            <td class="text-right">{{ number_format($prixUnitaire, 2, '.', ' ') }}</td>
+            <td class="text-right">0.00</td>
+            <td class="text-right">{{ number_format($prix, 2, '.', ' ') }}</td>
+          </tr>
+        @endforeach
+        
+        <!-- Remise -->
+        @if($prescription->remise > 0)
+          <tr>
+            <td>{{ $index++ }}</td>
+            <td>Remise</td>
+            <td class="text-right">1.00</td>
+            <td class="text-right">-{{ number_format($prescription->remise, 2, '.', ' ') }}</td>
+            <td class="text-right">{{ number_format($prescription->remise, 2, '.', ' ') }}</td>
+            <td class="text-right">-{{ number_format($prescription->remise, 2, '.', ' ') }}</td>
+          </tr>
+          @php $total -= $prescription->remise; @endphp
+        @endif
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5" class="text-right font-bold">Total (MGA)</td>
+          <td class="text-right font-bold">{{ number_format($total, 2, '.', ' ') }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="divider"></div>
+
+    <div class="amount-section">
+      <p><strong>Arrêté la présente facture à la somme de :</strong></p>
+      <p class="font-bold">{{ nombreEnLettres($total) }} Ariary</p>
+      
+      <table class="header-table">
+        <tr>
+          <td width="50%">
+            Montant total (hors TVA) : ______<br>
+            Montant total de la TVA : ______<br>
+            TVA incluse : ______
+          </td>
+          <td width="50%">
+            Montant de la remise : {{ number_format($prescription->remise, 2, '.', ' ') }}<br>
+            Montant assuré : ______<br>
+            Montant payé : {{ number_format($total, 2, '.', ' ') }}<br>
+            Montant du solde : 0.00
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="payment-info">
+      <p><strong>Date et heure du reçu</strong></p>
+      <table>
+        <tr>
+          <th>Date</th>
+          <th>Montant</th>
+          <th>Mode de paiement</th>
+          <th>Collecté par</th>
+        </tr>
+        <tr>
+          <td>{{ $prescription->created_at->format('d/m/Y H:i') }}</td>
+          <td class="text-right">{{ number_format($total, 2, '.', ' ') }}</td>
+          <td>{{ $prescription->paiement->paymentMethod->nom ?? 'ESPECES' }}</td>
+          <td>{{ Auth::user()->name }}</td>
+        </tr>
+      </table>
+      
+      <div class="mt-4">
+        <p>Payable par le patient : {{ number_format($total, 2, '.', ' ') }}</p>
+        <p>Payé par le patient : {{ number_format($total, 2, '.', ' ') }}</p>
+        <p>Montant du solde : 0.00</p>
+        <p>Préparé par : {{ Auth::user()->name }}</p>
+      </div>
+    </div>
+
+    <div style="position: relative;">
+      <div class="stamp no-print">
+        <div style="border: 2px solid red; padding: 10px; text-align: center; color: red; font-weight: bold; border-radius: 5px;">
+          PAYÉ
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>C-Lab/C-Care</strong></p>
+      <p>NIF: 2000522438 - RC : 2010B00456 - STAT:72102 11 2010 010483</p>
+      <p>Siège Lot 25A Antarctic Antehiroka - Tél. : 020 78 450 61 - 032 11 450 61 - Email : info@c-care.mg</p>
+      <p>Comptes bancaires : MCB TANA : 00006 00003 00000845663 49 / BMOI TANA : 00004 00001 02157920101 23</p>
+    </div>
+  </div>
+
+  <script>
+    function printInvoice() {
+      window.print();
+    }
     
-    // Auto-impression si paramètre présent
-    @if(request()->has('print'))
-        window.addEventListener('load', function() {
-            setTimeout(() => window.print(), 500);
-        });
-    @endif
-</script>
+    function generatePDF() {
+      const element = document.getElementById('invoice');
+      
+      // Configuration pour html2pdf
+      const opt = {
+        margin: 10,
+        filename: 'facture_{{ $prescription->reference }}.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      // Générer le PDF et le télécharger
+      html2pdf().set(opt).from(element).save();
+    }
+    
+    // Fonction pour formater les nombres
+    function formatNumber(number) {
+      return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+    }
+  </script>
+</body>
+</html>
