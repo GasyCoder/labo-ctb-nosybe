@@ -31,7 +31,7 @@ class User extends Authenticatable
         'type',
     ];
 
-
+    // ✅ IMPORTANT: Spécifier que l'authentification se fait par username
     public function getAuthIdentifierName()
     {
         return 'username';
@@ -42,21 +42,18 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    // ✅ Correction des casts
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
     
-
     // ========== ACCESSEURS ==========
     /**
      * Obtenir le nom du type d'utilisateur
      */
-    // Dans app/Models/User.php
-
     public function getTypeNameAttribute()
     {
         return [

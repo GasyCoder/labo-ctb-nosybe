@@ -26,12 +26,12 @@ return new class extends Migration
         });
 
         Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
+            $table->string('id', 255)->primary()->charset('utf8mb4')->collation('utf8mb4_bin'); // varchar(255) with proper charset/collation
+            $table->unsignedBigInteger('user_id')->nullable()->index('sessions_user_id_index'); // bigint(20) unsigned + index
+            $table->string('ip_address', 45)->nullable(); // varchar(45)
+            $table->text('user_agent')->nullable(); // text
+            $table->longText('payload'); // longtext
+            $table->integer('last_activity')->index('sessions_last_activity_index'); // int(11) + index
         });
 
         // ✅ NOUVELLE TABLE AJOUTÉE

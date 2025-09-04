@@ -155,7 +155,7 @@
                                             Chargement...
                                         </span>
                                     </button>
-                                    <a href="{{ route('technicien.prescription.pdf', $prescription) }}" 
+                                    <a href="#" 
                                     class="bg-red-600 text-white px-4 py-2 rounded ml-2">
                                         📄 PDF
                                     </a>

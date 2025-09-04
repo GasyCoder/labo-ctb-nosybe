@@ -164,57 +164,47 @@ class ResultatController extends Controller
     /**
      * Organiser les résultats par type/examen avec hiérarchie
      */
-    private function organiserResultatsParType(Prescription $prescription)
-    {
-        $resultatsGroupes = collect();
+ private function organiserResultatsParType(Prescription $prescription)
+{
+    $resultatsGroupes = collect();
 
-        // Grouper d'abord par type ou examen
-        $groupes = $prescription->resultats->groupBy(function ($resultat) {
-            $analyse = $resultat->analyse;
-
-            if ($analyse->type) {
-                return [
-                    'cle' => 'type_' . $analyse->type->id,
-                    'nom' => strtoupper($analyse->type->libelle ?? $analyse->type->name),
-                    'ordre' => $analyse->type->id
-                ];
-            }
-
-            if ($analyse->examen) {
-                return [
-                    'cle' => 'examen_' . $analyse->examen->id,
-                    'nom' => strtoupper($analyse->examen->name),
-                    'ordre' => 1000 + $analyse->examen->id
-                ];
-            }
-
+    // Grouper uniquement par type pour simplifier
+    $groupes = $prescription->resultats->groupBy(function ($resultat) {
+        $analyse = $resultat->analyse;
+        if ($analyse->type) {
             return [
-                'cle' => 'autres',
-                'nom' => 'ANALYSES DIVERSES',
-                'ordre' => 9999
+                'cle' => 'type_' . $analyse->type->id,
+                'nom' => strtoupper($analyse->type->libelle ?? $analyse->type->name),
+                'ordre' => $analyse->type->id
             ];
-        });
-
-        // Organiser chaque groupe avec hiérarchie parent-enfant
-        foreach ($groupes as $groupeInfo => $resultats) {
-            $groupeData = is_array($groupeInfo) ? $groupeInfo : [
-                'cle' => 'unknown',
-                'nom' => 'NON CLASSÉ',
-                'ordre' => 10000
-            ];
-
-            $resultatsOrganises = $this->organiserHierarchieParentEnfant($resultats);
-
-            $resultatsGroupes->push([
-                'nom' => $groupeData['nom'],
-                'ordre' => $groupeData['ordre'],
-                'resultats' => $resultatsOrganises
-            ]);
         }
+        return [
+            'cle' => 'autres',
+            'nom' => 'ANALYSES DIVERSES',
+            'ordre' => 9999
+        ];
+    });
 
-        // Trier par ordre
-        return $resultatsGroupes->sortBy('ordre');
+    foreach ($groupes as $groupeInfo => $resultats) {
+        $groupeData = is_array($groupeInfo) ? $groupeInfo : [
+            'cle' => 'unknown',
+            'nom' => 'NON CLASSÉ',
+            'ordre' => 10000
+        ];
+
+        // Éviter les doublons dans les résultats
+        $resultatsUniques = $resultats->unique('analyse.id');
+        $resultatsOrganises = $this->organiserHierarchieParentEnfant($resultatsUniques);
+
+        $resultatsGroupes->push([
+            'nom' => $groupeData['nom'],
+            'ordre' => $groupeData['ordre'],
+            'resultats' => $resultatsOrganises
+        ]);
     }
+
+    return $resultatsGroupes->sortBy('ordre')->unique('nom');
+}
 
     /**
      * Organiser les résultats avec hiérarchie parent-enfant
