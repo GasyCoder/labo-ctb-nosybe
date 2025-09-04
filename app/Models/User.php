@@ -26,10 +26,16 @@ class User extends Authenticatable
     // ========== ATTRIBUTS ==========
     protected $fillable = [
         'name',
-        'email',
+        'username',
         'password',
         'type',
     ];
+
+
+    public function getAuthIdentifierName()
+    {
+        return 'username';
+    }
 
     protected $hidden = [
         'password',
@@ -181,13 +187,13 @@ class User extends Authenticatable
     }
 
     /**
-     * Recherche par nom ou email
+     * Recherche par nom ou username
      */
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
+              ->orWhere('username', 'like', "%{$search}%");
         });
     }
 

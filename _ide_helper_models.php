@@ -80,12 +80,17 @@ namespace App\Models{
 
 namespace App\Models{
 /**
- * @property-read \App\Models\Analyse|null $analyse
+ * @property int $id
+ * @property int $prescription_id
+ * @property int $analyse_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Analyse $analyse
  * @property-read mixed $est_paye
  * @property-read mixed $est_termine
  * @property-read mixed $est_valide
  * @property-read mixed $statut_couleur
- * @property-read \App\Models\Prescription|null $prescription
+ * @property-read \App\Models\Prescription $prescription
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription aRefaire()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription enAttente()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription enCours()
@@ -97,6 +102,11 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription status($status)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription termine()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription valide()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereAnalyseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription wherePrescriptionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereUpdatedAt($value)
  */
 	class AnalysePrescription extends \Eloquent {}
 }
@@ -110,7 +120,6 @@ namespace App\Models{
  * @property string|null $notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property string|null $deleted_at
  * @property-read \App\Models\Analyse $analyse
  * @property-read \App\Models\Bacterie $bacterie
  * @property-read \App\Models\Prescription $prescription
@@ -122,7 +131,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereAnalyseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereBacterieId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereNotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme wherePrescriptionId($value)
@@ -806,7 +814,7 @@ namespace App\Models{
 /**
  * @property int $id
  * @property string $name
- * @property string $email
+ * @property string $username
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
@@ -836,7 +844,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User secretaires()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User techniciens()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
@@ -844,6 +851,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereType($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUsername($value)
  */
 	class User extends \Eloquent {}
 }

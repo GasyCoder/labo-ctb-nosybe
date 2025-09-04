@@ -12,28 +12,28 @@ class UserSeeder extends Seeder
     {
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@test.com',
-            'type' => 'admin', // OK
-            'password' => Hash::make('password'),
+            'username' => 'adminlabo',
+            'type' => 'admin',
+            'password' => Hash::make('adminlabo'),
         ]);
 
         User::create([
             'name' => 'Secretaire Test',
-            'email' => 'secretaire@test.com',
-            'type' => 'secretaire', // Doit exister dans l'enum !
+            'username' => 'secretaire',
+            'type' => 'secretaire',
             'password' => Hash::make('password'),
         ]);
 
         User::create([
             'name' => 'Technicien Test',
-            'email' => 'technicien@test.com',
+            'username' => 'technicien',
             'type' => 'technicien',
             'password' => Hash::make('password'),
         ]);
 
         User::create([
             'name' => 'Biologiste Test',
-            'email' => 'biologiste@test.com',
+            'username' => 'biologiste',
             'type' => 'biologiste',
             'password' => Hash::make('password'),
         ]);

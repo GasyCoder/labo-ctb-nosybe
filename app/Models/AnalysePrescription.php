@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AnalysePrescription extends Model
 {
-    protected $table = 'analyse_prescriptions';
+    protected $table = 'prescription_analyse';
 
     public $incrementing = true;
 

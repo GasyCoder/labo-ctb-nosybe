@@ -60,6 +60,7 @@ class Prescription extends Model
     {
         return $this->belongsToMany(Analyse::class, 'prescription_analyse')->withTimestamps();
     }
+    
 
     // RELATION CORRIGÉE : Résultats directement liés à la prescription
     public function resultats()

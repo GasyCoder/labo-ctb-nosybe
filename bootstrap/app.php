@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             // Votre middleware existant
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'role.redirect' => \App\Http\Middleware\RoleRedirectMiddleware::class,
             
             // Middlewares complémentaires pour plus de flexibilité
             'admin' => \App\Http\Middleware\AdminMiddleware::class,

@@ -36,13 +36,27 @@ Route::redirect('/', '/login')->name('home');
 Route::redirect('/register', '/login')->name('register.redirect');
 
 Route::get('/', function () {
-    return Auth::check() ? redirect('/dashboard') : redirect('/login');
+    if (Auth::check()) {
+        // Redirection selon le type d'utilisateur
+        switch (Auth::user()->type) {
+            case 'biologiste':
+                return redirect()->route('biologiste.analyse.index');
+            case 'technicien':
+                return redirect()->route('technicien.index');
+            case 'secretaire':
+                return redirect()->route('secretaire.prescription.index');
+            case 'admin':
+                return redirect()->route('dashboard');
+            default:
+                return redirect()->route('dashboard');
+        }
+    }
+    return redirect('/login');
 })->name('root');
-
 // ============================================
 // ROUTES COMMUNES (TOUS LES UTILISATEURS CONNECTÉS)
 // ============================================
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // Dashboard principal
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
@@ -75,7 +89,7 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
     Route::get('traitement', IndexTechnicien::class)->name('index');
     Route::get('/technicien/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
-    Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
+    // Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
 });
 
 // ============================================
@@ -86,6 +100,11 @@ Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')
     Route::get('/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
     Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
     Route::post('/prescription/{prescription}/validate', [BiologistePrescriptionController::class, 'validate'])->name('prescription.validate');
+
+    // ✅ NOUVELLES ROUTES POUR LES RÉSULTATS PDF
+    Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
+    Route::get('/prescription/{prescription}/preview', [ResultatController::class, 'preview'])->name('prescription.preview');
+    Route::get('/prescription/{prescription}/stats', [ResultatController::class, 'statistics'])->name('prescription.statistics');
 });
 
 // ============================================
