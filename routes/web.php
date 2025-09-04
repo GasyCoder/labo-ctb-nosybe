@@ -146,6 +146,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     
 });
 
+// // Route temporaire pour debug - à supprimer ensuite
+// Route::get('/logout', function () {
+//     Auth::logout();
+//     return redirect('/');
+// })->name('logout.get');
 
 
 require __DIR__ . '/auth.php';

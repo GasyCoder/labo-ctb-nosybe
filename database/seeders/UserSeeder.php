@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
 
         User::create([
             'name' => 'Secretaire Test',
-            'username' => 'secretaire',
+            'username' => 'secretaire', // Correction: format cohérent
             'type' => 'secretaire',
             'password' => Hash::make('password'),
         ]);
