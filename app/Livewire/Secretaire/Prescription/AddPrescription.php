@@ -729,23 +729,24 @@ public function getTitle()
                 throw new \Exception('Prescripteur invalide');
             }
             
-            // 1. Créer la prescription
-        $prescription = Prescription::create([
-            'patient_id' => $this->patient->id,
-            'prescripteur_id' => $this->prescripteurId,
-            'secretaire_id' => Auth::id(),
-            'patient_type' => $this->patientType,
-            'age' => $this->age,
-            'unite_age' => $this->uniteAge,
-            'poids' => $this->poids,
-            'renseignement_clinique' => $this->renseignementClinique,
-            'remise' => $this->remise,
-            'status' => 'EN_ATTENTE'
-        ]);
-        $this->prescription = $prescription;
-        
-        // Mise à jour avec la référence définitive
-        $this->reference = $prescription->reference;
+            // 1. Créer la prescription - ✅ CORRECTION: Auth::user()->id
+            $prescription = Prescription::create([
+                'patient_id' => $this->patient->id,
+                'prescripteur_id' => $this->prescripteurId,
+                'secretaire_id' => Auth::user()->id, // ✅ CORRECTION ICI
+                'patient_type' => $this->patientType,
+                'age' => $this->age,
+                'unite_age' => $this->uniteAge,
+                'poids' => $this->poids,
+                'renseignement_clinique' => $this->renseignementClinique,
+                'remise' => $this->remise,
+                'status' => 'EN_ATTENTE'
+            ]);
+            $this->prescription = $prescription;
+            
+            // Mise à jour avec la référence définitive
+            $this->reference = $prescription->reference;
+            
             // 2. Associer les analyses (vérification des IDs)
             $analyseIds = array_keys($this->analysesPanier);
             $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
@@ -773,8 +774,7 @@ public function getTitle()
                 }
             }
             
-            // ✅ 4. Enregistrer le paiement avec payment_method_id
-            // Récupérer l'ID de la méthode de paiement sélectionnée
+            // 4. Enregistrer le paiement avec payment_method_id
             $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
             
             if (!$paymentMethod) {
@@ -784,8 +784,8 @@ public function getTitle()
             Paiement::create([
                 'prescription_id' => $prescription->id,
                 'montant' => $this->total,
-                'payment_method_id' => $paymentMethod->id, // ✅ Utilise payment_method_id
-                'recu_par' => Auth::id()
+                'payment_method_id' => $paymentMethod->id,
+                'recu_par' => Auth::user()->id // ✅ CORRECTION ICI AUSSI
             ]);
             
             // 5. Générer les tubes (seulement si prélèvements présents)

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Secretaire\Prescription;
+namespace App\Livewire\Secretaire\Prescription;
 
 use Livewire\Component;
 use App\Models\Prescription;

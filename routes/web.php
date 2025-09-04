@@ -27,7 +27,6 @@ use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
 use App\Http\Controllers\BiologistePrescriptionController;
-use App\Models\Prescription; // ✅ Ajoutez cette ligne
 use App\Http\Controllers\FactureController;
 
 
@@ -85,10 +84,6 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
     Route::get('patients/{patient}', PatientDetail::class)->name('patient.detail');
     Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
     Route::get('dashboard', Dashboard::class)->name('dashboard');
-    
-    // ✅ CORRECTION : Utiliser une seule route avec le contrôleur FactureController
-    Route::get('/prescription/{prescription}/facture', [FactureController::class, 'show'])
-        ->name('prescription.facture'); // Nom correct de la route
 });
 
 
