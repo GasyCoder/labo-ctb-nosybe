@@ -328,7 +328,7 @@
     <div class="container">
         <!-- ===== LOGO ET LIGNE ROUGE ===== -->
         <div class="header-section">
-            <img src="{{ public_path('assets/images/logo.png') }}" alt="LABORATOIRE LA REFERENCE" class="header-logo">
+            <img src="{{ public_path('assets/images/logo.png') }}" alt="LABORATOIRE CTB Nosy Be" class="header-logo">
         </div>
         <div class="red-line"></div>
 
@@ -503,12 +503,12 @@
 
         <!-- ===== PIED DE PAGE ===== -->
         <div class="footer">
-            <div class="footer-line">Laboratoire d'Analyses Médicales LA REFERENCE</div>
+            <div class="footer-line">Laboratoire d'Analyses Médicales CTB Nosy Be</div>
             <div class="footer-line">N° d'Agrément : {{ config('app.lab_agreement', '000/00') }}</div>
             <div class="footer-line">
                 Tél: {{ config('app.lab_phone', '+261 XX XX XX XX') }} | 
-                Email: contact@laboratoire-reference.mg | 
-                www.laboratoire-reference.mg
+                Email: contact@laboratoire-ctb.mg | 
+                www.laboratoire-ctb.mg
             </div>
         </div>
     </div>
