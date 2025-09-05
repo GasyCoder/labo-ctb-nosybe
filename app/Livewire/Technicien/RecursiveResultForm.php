@@ -61,12 +61,38 @@ class RecursiveResultForm extends Component
         }
     }
 
+
+    /**
+     * Obtient la valeur d'interprétation avec défaut "NORMAL"
+     */
+    public function getInterpretation($analyseId): string
+    {
+        return $this->results[$analyseId]['interpretation'] ?? 'NORMAL';
+    }
+
+    /**
+     * Initialise les valeurs par défaut pour une nouvelle analyse
+     */
+    private function initializeDefaultValues(int $analyseId): void
+    {
+        if (!isset($this->results[$analyseId]) || !is_array($this->results[$analyseId])) {
+            $this->results[$analyseId] = [];
+        }
+        
+        // Définir "NORMAL" comme défaut si aucune interprétation n'existe
+        if (!isset($this->results[$analyseId]['interpretation']) || 
+            empty($this->results[$analyseId]['interpretation'])) {
+            $this->results[$analyseId]['interpretation'] = 'NORMAL';
+        }
+    }
+
+
     public function mount(int $prescriptionId, ?int $parentId = null): void
     {
         $this->prescription = Prescription::findOrFail($prescriptionId);
         $this->parentId     = $parentId;
 
-        // ✅ Message d’accueil (patient si dispo)
+        // Messages d'accueil existants...
         $nom    = $this->prescription->patient?->nom ?? null;
         $prenom = $this->prescription->patient?->prenom ?? null;
 
@@ -79,6 +105,45 @@ class RecursiveResultForm extends Component
         $this->loadAnalysisTree();
         $this->loadBacteriaData();
         $this->hydrateExistingResults();
+        
+        // ✅ Nouveau: Initialiser les valeurs par défaut pour toutes les analyses
+        $this->initializeDefaults();
+    }
+
+    /**
+     * Initialise les valeurs par défaut pour toutes les analyses
+     */
+    private function initializeDefaults(): void
+    {
+        $allAnalyses = collect();
+        
+        // Collecter toutes les analyses (récursivement)
+        foreach ($this->roots as $root) {
+            $allAnalyses->push($root);
+            if ($root->enfantsRecursive) {
+                $allAnalyses = $allAnalyses->merge($this->collectAllChildren($root->enfantsRecursive));
+            }
+        }
+        
+        // Initialiser les valeurs par défaut pour chaque analyse
+        foreach ($allAnalyses as $analyse) {
+            $this->initializeDefaultValues($analyse->id);
+        }
+    }
+
+    /**
+     * Collecte récursivement tous les enfants
+     */
+    private function collectAllChildren($children)
+    {
+        $result = collect();
+        foreach ($children as $child) {
+            $result->push($child);
+            if ($child->enfantsRecursive) {
+                $result = $result->merge($this->collectAllChildren($child->enfantsRecursive));
+            }
+        }
+        return $result;
     }
 
     private function loadAnalysisTree(): void

@@ -4,6 +4,7 @@ namespace App\Livewire\Secretaire\Prescription;
 
 use App\Models\Patient;
 use Livewire\Component;
+use App\Models\Paiement;
 use App\Models\Prescription;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\AnalysePrescription;
 use Illuminate\Support\Facades\Log;
 use App\Services\ResultatPdfService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -105,6 +107,43 @@ class PrescriptionIndex extends Component
         $this->dispatch('editPrescription', $prescriptionId);
     }
 
+    // =====================================
+    // 💰 GESTION DU STATUT DE PAIEMENT
+    // =====================================
+    
+    public function togglePaiementStatus($prescriptionId)
+    {
+        try {
+            $prescription = Prescription::with('paiements')->findOrFail($prescriptionId);
+            $paiement = $prescription->paiements->first();
+            
+            if (!$paiement) {
+                session()->flash('error', 'Aucun paiement trouvé pour cette prescription.');
+                return;
+            }
+            
+            // Inverser le statut
+            $nouveauStatut = !$paiement->status;
+            $paiement->update(['status' => $nouveauStatut]);
+            
+            $message = $nouveauStatut 
+                ? 'Paiement marqué comme payé avec succès.' 
+                : 'Paiement marqué comme non payé avec succès.';
+                
+            session()->flash('success', $message);
+            
+            // Rafraîchir la vue
+            $this->dispatch('$refresh');
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur modification statut paiement', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Erreur lors de la modification du statut de paiement.');
+        }
+    }
+
     // Confirmation Methods
     public function confirmDelete($prescriptionId)
     {
@@ -120,7 +159,7 @@ class PrescriptionIndex extends Component
 
     public function confirmPermanentDelete($prescriptionId)
     {
-        if (!auth()->user()->isAdmin()) {
+        if (!Auth::user()->isAdmin()) {
             session()->flash('error', 'Seuls les administrateurs peuvent supprimer définitivement.');
             return;
         }
@@ -193,7 +232,7 @@ class PrescriptionIndex extends Component
     public function permanentDeletePrescription()
     {
         try {
-            if (!auth()->user()->isAdmin()) {
+            if (!Auth::user()->isAdmin()) {
                 session()->flash('error', 'Action non autorisée.');
                 return;
             }
@@ -301,7 +340,9 @@ class PrescriptionIndex extends Component
             'patient:id,nom,prenom,telephone',
             'prescripteur:id,nom',
             'analyses',
-            'resultats'
+            'resultats',
+            'paiements.paymentMethod', // ← Ajouter la relation avec les paiements
+            'paiements.utilisateur:id,name'
         ])
             ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
 

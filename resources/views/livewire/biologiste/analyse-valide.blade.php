@@ -176,3 +176,13 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('openPdfInNewTab', (event) => {
+            window.open(event.url, '_blank');
+        });
+    });
+    </script>
+@endpush

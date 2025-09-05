@@ -99,7 +99,8 @@ class IndexTechnicien extends Component
                             ->orWhere('prenom', 'like', '%' . $this->search . '%');
                     })
                     ->orWhereHas('prescripteur', function ($sq) {
-                        $sq->where('nom_complet', 'like', '%' . $this->search . '%');
+                        $sq->where('nom', 'like', '%' . $this->search . '%')
+                        ->where('prenom', 'like', '%' . $this->search . '%');
                     });
                 });
             })

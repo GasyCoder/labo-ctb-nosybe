@@ -389,6 +389,40 @@
                         </div>
                     </div>
 
+                    {{-- STATUT DU PAIEMENT --}}
+                    <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 mb-4">
+                        <h3 class="text-sm font-medium text-slate-800 dark:text-slate-100 mb-3 flex items-center">
+                            <em class="ni ni-check-circle mr-1.5 text-purple-500 text-xs"></em>
+                            Statut du paiement
+                        </h3>
+                        
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Marquer comme payé
+                                </span>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    {{ $paiementStatut ? 'Le paiement sera enregistré comme payé' : 'Le paiement sera enregistré comme non payé' }}
+                                </p>
+                            </div>
+                            
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" wire:model.live="paiementStatut" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        
+                        {{-- Indicateur visuel du statut --}}
+                        <div class="mt-2 p-2 rounded {{ $paiementStatut ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200' }}">
+                            <div class="flex items-center text-xs">
+                                <span class="w-2 h-2 rounded-full mr-2 {{ $paiementStatut ? 'bg-green-500' : 'bg-orange-500' }}"></span>
+                                <span class="{{ $paiementStatut ? 'text-green-700' : 'text-orange-700' }}">
+                                    {{ $paiementStatut ? 'Paiement confirmé - Facture payée' : 'Paiement en attente - Facture impayée' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- ACTIONS --}}
                     <div class="flex flex-col">
                         <button wire:click="validerPaiement" 

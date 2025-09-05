@@ -26,8 +26,8 @@ class Patient extends Model
         'Madame',
         'Monsieur', 
         'Mademoiselle',
-        'Enfant_garçon',
-        'Enfant_fille'
+        'Enfant-garçon',
+        'Enfant-fille'
     ];
 
     // Relations

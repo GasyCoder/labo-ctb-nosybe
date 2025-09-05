@@ -1,5 +1,5 @@
 {{-- Vue principale optimisée --}}
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+<div>
     <div class="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {{-- Header simplifié --}}
@@ -76,6 +76,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Statut
                             </th>
+                            <th class="px-6 py-4">Paiement</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Actions
                             </th>
@@ -96,7 +97,7 @@
                                         </div>
                                         <div>
                                             <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                                {{ $prescription->patient->nom }} {{ $prescription->patient->prenom }}
+                                                {{ Str::limit(($prescription->patient->nom ?? 'N/A') . ' ' . ($prescription->patient->prenom ?? ''), 18) }}
                                             </div>
                                             @if($prescription->patient->age && $prescription->unite_age)
                                                 <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -108,12 +109,12 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900 dark:text-white">
-                                        {{ $prescription->prescripteur->nom_complet }}
+                                        {{ Str::limit(($prescription->prescripteur->nom ?? 'N/A') . ' ' . ($prescription->prescripteur->prenom ?? 'N/A'), 18) }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                        {{ $prescription->analyses->count() }} analyse(s)
+                                        {{ $prescription->analyses->count() }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -125,17 +126,27 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    <x-prescription-status :status="$prescription->status" />
+                                </td>
+                                {{-- Statut Paiement --}}
+                                <td class="px-6 py-4">
                                     @php
-                                        $statusConfig = [
-                                            'EN_ATTENTE' => ['bg' => 'bg-amber-100 dark:bg-amber-900/30', 'text' => 'text-amber-800 dark:text-amber-400'],
-                                            'EN_COURS' => ['bg' => 'bg-blue-100 dark:bg-blue-900/30', 'text' => 'text-blue-800 dark:text-blue-400'],
-                                            'TERMINE' => ['bg' => 'bg-green-100 dark:bg-green-900/30', 'text' => 'text-green-800 dark:text-green-400'],
-                                        ];
-                                        $config = $statusConfig[$prescription->status] ?? ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'];
+                                        $paiement = $prescription->paiements->first();
+                                        $estPaye = $paiement ? $paiement->status : false;
                                     @endphp
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $config['bg'] }} {{ $config['text'] }}">
-                                        {{ $prescription->status_label }}
-                                    </span>
+                                    
+                                    @if($paiement)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                                            {{ $estPaye ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
+                                            <span class="w-1.5 h-1.5 rounded-full mr-1.5 {{ $estPaye ? 'bg-green-400' : 'bg-red-400' }}"></span>
+                                            {{ $estPaye ? 'Payé' : 'Non Payé' }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                                            <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>
+                                            Aucun paiement
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <button wire:click="startAnalysis({{ $prescription->id }})" 
@@ -155,10 +166,6 @@
                                             Chargement...
                                         </span>
                                     </button>
-                                    <a href="#" 
-                                    class="bg-red-600 text-white px-4 py-2 rounded ml-2">
-                                        📄 PDF
-                                    </a>
                                 </td>
                             </tr>
                         @empty

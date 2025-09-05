@@ -59,7 +59,7 @@ class ResultatController extends Controller
     {
         return $prescription->load([
             // ✅ PATIENT - Colonnes existantes
-            'patient:id,numero_dossier,nom,prenom,telephone,email,statut,date_naissance,sexe',
+            'patient:id,numero_dossier,nom,prenom,telephone,email,statut,date_naissance',
             
             // ✅ PRESCRIPTEUR - Colonnes de base
             'prescripteur:id,nom,prenom,grade,specialite',

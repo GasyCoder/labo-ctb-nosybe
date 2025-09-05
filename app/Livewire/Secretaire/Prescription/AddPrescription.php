@@ -72,6 +72,8 @@ class AddPrescription extends Component
     public float $total = 0;
     public float $monnaieRendue = 0;
     public $reference;
+
+    public bool $paiementStatut = true; // true = Payé, false = Non Payé
     
     // 🧪 TUBES
     public array $tubesGeneres = [];
@@ -86,7 +88,7 @@ class AddPrescription extends Component
             'etape', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'modePaiement', 'montantPaye', 
-            'remise', 'total', 'monnaieRendue', 'reference', 'tubesGeneres'
+            'remise', 'total', 'monnaieRendue', 'reference', 'tubesGeneres', 'paiementStatut' // ← Ajoutez ceci
         ];
     }
 
@@ -156,11 +158,10 @@ class AddPrescription extends Component
 
     public function updated($property, $value): void
     {
-        // Auto-save pour les propriétés importantes
         $autoSaveProperties = [
             'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
-            'modePaiement', 'montantPaye', 'remise'
+            'modePaiement', 'montantPaye', 'remise', 'paiementStatut' // ← Ajoutez ceci
         ];
 
         if (in_array($property, $autoSaveProperties)) {
@@ -500,13 +501,13 @@ class AddPrescription extends Component
                 'genre' => 'F',
                 'type' => 'adulte'
             ],
-            'Enfant garçon' => [
-                'label' => '👦 Garçon',
+            'Enfant-garçon' => [
+                'label' => '👦 Enfant garçon',
                 'genre' => 'M',
                 'type' => 'enfant'
             ],
-            'Enfant fille' => [
-                'label' => '👧 Fille', 
+            'Enfant-fille' => [
+                'label' => '👧 Enfant fille', 
                 'genre' => 'F',
                 'type' => 'enfant'
             ]
@@ -943,7 +944,8 @@ class AddPrescription extends Component
                 'prescription_id' => $prescription->id,
                 'montant' => $this->total,
                 'payment_method_id' => $paymentMethod->id,
-                'recu_par' => Auth::user()->id
+                'recu_par' => Auth::user()->id,
+                'status' => $this->paiementStatut 
             ]);
             
             // 5. Générer les tubes

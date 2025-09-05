@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Admin\Antibiotiques;
 use App\Livewire\Secretaire\Patients;
 use Illuminate\Support\Facades\Route;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use App\Livewire\Admin\BacterieFamilies;
 use App\Livewire\Biologiste\AnalyseValide;
 use App\Livewire\Secretaire\PatientDetail;
@@ -28,7 +29,7 @@ use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Http\Controllers\BiologistePrescriptionController;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use App\Http\Controllers\Biologiste\PrescriptionPdfController;
 
 
 
@@ -118,10 +119,8 @@ Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')
     Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
     Route::post('/prescription/{prescription}/validate', [BiologistePrescriptionController::class, 'validate'])->name('prescription.validate');
 
-    // ✅ ROUTES POUR LES RÉSULTATS PDF (BIOLOGISTE)
-    Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
-    Route::get('/prescription/{prescription}/preview', [ResultatController::class, 'preview'])->name('prescription.preview');
-    Route::get('/prescription/{prescription}/stats', [ResultatController::class, 'statistics'])->name('prescription.statistics');
+   Route::get('/prescription/{prescription}/pdf', [PrescriptionPdfController::class, 'show'])
+            ->name('prescription.pdf');
 });
 
 // ============================================

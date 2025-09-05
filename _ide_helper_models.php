@@ -83,6 +83,9 @@ namespace App\Models{
  * @property int $id
  * @property int $prescription_id
  * @property int $analyse_id
+ * @property string|null $valeur_min
+ * @property string|null $valeur_max
+ * @property string|null $valeur_normal
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Analyse $analyse
@@ -107,6 +110,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription wherePrescriptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereValeurMax($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereValeurMin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereValeurNormal($value)
  */
 	class AnalysePrescription extends \Eloquent {}
 }
@@ -265,17 +271,23 @@ namespace App\Models{
  * @property numeric $commission_prescripteur
  * @property int|null $payment_method_id
  * @property int $recu_par
+ * @property bool $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read mixed $methode_paiement_label
  * @property-read mixed $modee_paiement
+ * @property-read mixed $status_badge_class
+ * @property-read mixed $status_color
+ * @property-read mixed $status_label
  * @property-read \App\Models\PaymentMethod|null $paymentMethod
  * @property-read \App\Models\Prescription $prescription
  * @property-read \App\Models\User $utilisateur
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement nonPayés()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement payés()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCommissionPrescripteur($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCreatedAt($value)
@@ -285,6 +297,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement wherePaymentMethodId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement wherePrescriptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereRecuPar($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement withoutTrashed()
@@ -568,7 +581,7 @@ namespace App\Models{
  * @property int $id
  * @property int $prescription_id
  * @property int $analyse_id
- * @property mixed|null $resultats
+ * @property string|null $resultats
  * @property int|null $tube_id
  * @property string|null $valeur
  * @property string|null $interpretation
@@ -584,11 +597,16 @@ namespace App\Models{
  * @property-read \App\Models\Analyse $analyse
  * @property-read \App\Models\Bacterie|null $bacterie
  * @property-read \App\Models\BacterieFamille|null $famille
+ * @property-read mixed $display_value_pdf
  * @property-read mixed $est_pathologique
  * @property-read mixed $est_valide
+ * @property-read mixed $germe_data
  * @property-read mixed $interpretation_couleur
+ * @property-read mixed $leucocytes_data
+ * @property-read mixed $resultats_pdf
  * @property-read mixed $statut_couleur
  * @property-read mixed $valeur_formatee
+ * @property-read mixed $valeur_pdf
  * @property-read \App\Models\Prescription $prescription
  * @property-read \App\Models\Tube|null $tube
  * @property-read \App\Models\User|null $validatedBy

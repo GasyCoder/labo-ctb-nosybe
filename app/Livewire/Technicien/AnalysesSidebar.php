@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 class AnalysesSidebar extends Component
 {
     public int $prescriptionId;
-    public ?int $selectedParentId = null; // ✅ État actif
+    public ?int $selectedParentId = null;
 
     // Exposé à la vue
     public array $analysesParents = [];
@@ -40,90 +40,14 @@ class AnalysesSidebar extends Component
         }
     }
 
-    private function flashInfo(string $message): void
-    {
-        if (\function_exists('flash')) {
-            flash()->info($message);
-        } else {
-            session()->flash('info', $message);
-        }
-    }
-
     public function mount(int $prescriptionId): void
     {
         $this->prescriptionId = $prescriptionId;
         $this->loadAnalyses();
     }
 
-
-
     /**
-     * ✅ Finalisation alternative basée sur statuts individuels
-     */
-    public function markPrescriptionAsCompletedAlternative()
-    {
-        try {
-            DB::beginTransaction();
-
-            $prescription = Prescription::findOrFail($this->prescriptionId);
-
-            // Vérifier que tous les parents sont terminés
-            $analysesParentsIncompletes = collect($this->analysesParents)
-                ->where('status', '!=', 'TERMINE')
-                ->count();
-
-            Log::info('Vérification alternative finalisation', [
-                'prescription_id'   => $this->prescriptionId,
-                'total_parents'     => count($this->analysesParents),
-                'parents_incomplets'=> $analysesParentsIncompletes,
-                'parents_details'   => collect($this->analysesParents)->map(function($p) {
-                    return [
-                        'id'     => $p['id'],
-                        'code'   => $p['code'],
-                        'status' => $p['status']
-                    ];
-                })->toArray()
-            ]);
-
-            if ($analysesParentsIncompletes === 0 && count($this->analysesParents) > 0) {
-                // Marquer tous les résultats comme terminés
-                $prescription->resultats()->update(['status' => 'TERMINE']);
-
-                // Marquer la prescription comme terminée
-                $prescription->update(['status' => 'TERMINE']);
-
-                Log::info('Prescription marquée comme terminée (méthode alternative)', [
-                    'prescription_id' => $this->prescriptionId,
-                    'reference'       => $prescription->reference,
-                    'total_parents'   => count($this->analysesParents),
-                    'user_id'         => Auth::id(),
-                ]);
-
-                DB::commit();
-
-                // Événement pour redirection
-                $this->dispatch('prescriptionCompleted')->to(ShowPrescription::class);
-
-                $this->flashSuccess('Prescription marquée comme terminée avec succès !');
-            } else {
-                $this->flashError('Toutes les analyses doivent être terminées avant de finaliser la prescription.');
-            }
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Erreur lors de la finalisation alternative', [
-                'prescription_id' => $this->prescriptionId,
-                'error'           => $e->getMessage(),
-            ]);
-
-            $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());
-        }
-    }
-
-
-    /**
-     * ✅ Chargement des analyses avec statuts détaillés
+     * ✅ Chargement des analyses avec logique améliorée
      */
     public function loadAnalyses(): void
     {
@@ -136,7 +60,7 @@ class AnalysesSidebar extends Component
             ->findOrFail($this->prescriptionId);
 
         $this->resultatsExistants = $prescription->resultats->pluck('analyse_id')->all();
-        $attachedIds              = $prescription->analyses->pluck('id')->all();
+        $attachedIds = $prescription->analyses->pluck('id')->all();
 
         $parents = $prescription->analyses->filter(function($analyse) use ($attachedIds) {
             return $analyse->level === 'PARENT'
@@ -155,15 +79,10 @@ class AnalysesSidebar extends Component
 
             $enfantsCompleted = count(array_intersect($enfants, $this->resultatsExistants));
 
-            // statut calculé (tu peux laisser ta logique actuelle si tu veux garder la couleur)
-            $status = $this->determineAnalyseStatus($parent->id, $enfants, $enfantsCompleted);
+            // ✅ Logique de statut améliorée
+            $analysisData = $this->getAnalysisStatus($parent->id, $enfants, $enfantsCompleted);
 
-            // ✅ éligibilité à la finalisation (tout est prêt)
-            $eligible = !empty($enfants)
-                ? $this->checkAllChildrenRecursively($enfants)    // tous les descendants ont un résultat
-                : in_array($parent->id, $this->resultatsExistants); // pas d’enfants → le parent lui-même a un résultat
-
-            // code d’affichage
+            // Code d'affichage
             $displayCode = $parent->code;
             if ($parent->parent_id && !in_array($parent->parent_id, $attachedIds)) {
                 $realParent = Analyse::find($parent->parent_id);
@@ -173,46 +92,69 @@ class AnalysesSidebar extends Component
             }
 
             $this->analysesParents[] = [
-                'id'                => $parent->id,
-                'code'              => $displayCode,
-                'designation'       => $parent->designation,
-                'enfants_count'     => count($enfants),
+                'id' => $parent->id,
+                'code' => $displayCode,
+                'designation' => $parent->designation,
+                'enfants_count' => count($enfants),
                 'enfants_completed' => $enfantsCompleted,
-                'status'            => $status,
-                'eligible'          => $eligible,      // 👈 ajouté
+                'status' => $analysisData['status'],
+                'can_complete' => $analysisData['can_complete'],
+                'is_ready' => $analysisData['is_ready'],
             ];
         }
     }
 
     /**
-     * ✅ Déterminer le statut d'une analyse (récursif)
+     * ✅ Déterminer le statut et les actions possibles pour une analyse
      */
-    private function determineAnalyseStatus(int $parentId, array $enfants, int $enfantsCompleted): string
+    private function getAnalysisStatus(int $parentId, array $enfants, int $enfantsCompleted): array
     {
         if (empty($enfants)) {
             // Analyse sans enfants → vérifier résultat direct
-            return in_array($parentId, $this->resultatsExistants) ? 'TERMINE' : 'VIDE';
+            $hasResult = in_array($parentId, $this->resultatsExistants);
+            return [
+                'status' => $hasResult ? 'TERMINE' : 'VIDE',
+                'can_complete' => $hasResult, // Peut être marquée terminée si résultat existe
+                'is_ready' => $hasResult, // Prête si résultat existe
+            ];
         }
 
-        // Vérification récursive des enfants
-        $allChildrenCompleted = $this->checkAllChildrenRecursively($enfants);
+        // Analyse avec enfants
+        $allChildrenHaveResults = $this->checkAllChildrenHaveResults($enfants);
+        $someChildrenHaveResults = $enfantsCompleted > 0 || $this->hasAnyChildResults($enfants);
 
-        if ($allChildrenCompleted) {
-            return 'TERMINE';
-        } elseif ($enfantsCompleted > 0 || $this->hasAnyChildResults($enfants)) {
-            return 'EN_COURS';
+        if ($allChildrenHaveResults) {
+            // Tous les enfants ont des résultats
+            $allResultsCompleted = $this->checkAllResultsCompleted($enfants);
+            return [
+                'status' => $allResultsCompleted ? 'TERMINE' : 'EN_COURS',
+                'can_complete' => true, // Peut être marquée terminée
+                'is_ready' => !$allResultsCompleted, // Prête à être terminée si pas déjà terminée
+            ];
+        } elseif ($someChildrenHaveResults) {
+            // Quelques enfants ont des résultats
+            return [
+                'status' => 'EN_COURS',
+                'can_complete' => false, // Ne peut pas être terminée
+                'is_ready' => false, // Pas prête
+            ];
         } else {
-            return 'VIDE';
+            // Aucun enfant n'a de résultat
+            return [
+                'status' => 'VIDE',
+                'can_complete' => false, // Ne peut pas être terminée
+                'is_ready' => false, // Pas prête
+            ];
         }
     }
 
     /**
-     * ✅ Vérifier récursivement tous les enfants
+     * ✅ Vérifier si tous les enfants ont des résultats
      */
-    private function checkAllChildrenRecursively(array $enfantIds): bool
+    private function checkAllChildrenHaveResults(array $enfantIds): bool
     {
         foreach ($enfantIds as $enfantId) {
-            if (!$this->isAnalyseCompleteRecursively($enfantId)) {
+            if (!$this->analyseHasCompleteResults($enfantId)) {
                 return false;
             }
         }
@@ -220,16 +162,32 @@ class AnalysesSidebar extends Component
     }
 
     /**
-     * ✅ Une analyse est-elle complète ? (récursif)
+     * ✅ Vérifier si tous les résultats sont marqués comme terminés
      */
-    private function isAnalyseCompleteRecursively(int $analyseId): bool
+    private function checkAllResultsCompleted(array $enfantIds): bool
+    {
+        $prescription = Prescription::findOrFail($this->prescriptionId);
+        
+        foreach ($enfantIds as $enfantId) {
+            $resultat = $prescription->resultats()->where('analyse_id', $enfantId)->first();
+            if (!$resultat || $resultat->status !== 'TERMINE') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * ✅ Une analyse a-t-elle des résultats complets ?
+     */
+    private function analyseHasCompleteResults(int $analyseId): bool
     {
         // Si résultat direct
         if (in_array($analyseId, $this->resultatsExistants)) {
             return true;
         }
 
-        // Sinon, vérifier ses enfants (hors LABEL)
+        // Vérifier ses enfants (hors LABEL)
         $enfants = Analyse::where('parent_id', $analyseId)
             ->where('status', true)
             ->whereHas('type', function($q) {
@@ -241,11 +199,11 @@ class AnalysesSidebar extends Component
             return false;
         }
 
-        return $this->checkAllChildrenRecursively($enfants);
+        return $this->checkAllChildrenHaveResults($enfants);
     }
 
     /**
-     * ✅ Au moins un enfant a des résultats ? (récursif)
+     * ✅ Au moins un enfant a des résultats ?
      */
     private function hasAnyChildResults(array $enfantIds): bool
     {
@@ -268,6 +226,27 @@ class AnalysesSidebar extends Component
         return false;
     }
 
+    /**
+     * ✅ Vérifier si la prescription peut être finalisée
+     */
+    public function canFinalizePrescription(): bool
+    {
+        // Toutes les analyses doivent être terminées
+        return collect($this->analysesParents)->every(function($analysis) {
+            return $analysis['status'] === 'TERMINE';
+        });
+    }
+
+    /**
+     * ✅ Vérifier si la prescription est prête à être finalisée
+     */
+    public function isReadyToFinalize(): bool
+    {
+        // Toutes les analyses doivent avoir tous leurs résultats (même si pas marquées terminées)
+        return collect($this->analysesParents)->every(function($analysis) {
+            return $analysis['can_complete'];
+        });
+    }
 
     #[On('refreshSidebar')]
     public function refreshSidebar(): void
@@ -294,6 +273,14 @@ class AnalysesSidebar extends Component
 
             $prescription = Prescription::findOrFail($this->prescriptionId);
 
+            // Trouver l'analyse dans notre liste
+            $analysis = collect($this->analysesParents)->firstWhere('id', $parentId);
+            
+            if (!$analysis || !$analysis['can_complete']) {
+                $this->flashError('Cette analyse ne peut pas encore être marquée comme terminée.');
+                return;
+            }
+
             // Enfants hors LABEL
             $enfants = Analyse::where('parent_id', $parentId)
                 ->where('status', true)
@@ -303,27 +290,21 @@ class AnalysesSidebar extends Component
                 ->pluck('id')->all();
 
             if (empty($enfants)) {
-                // Pas d'enfants (ou seulement LABEL) → on cible l’analyse elle-même
+                // Pas d'enfants → on cible l'analyse elle-même
                 $enfants = [$parentId];
             }
 
-            // Tous les enfants ont-ils des résultats ?
-            $resultatsCount = $prescription->resultats()
+            // Marquer ces résultats comme terminés
+            $updated = $prescription->resultats()
                 ->whereIn('analyse_id', $enfants)
-                ->count();
+                ->update(['status' => 'TERMINE']);
 
-            if ($resultatsCount === count($enfants)) {
-                // Marquer ces résultats terminés
-                $prescription->resultats()
-                    ->whereIn('analyse_id', $enfants)
-                    ->update(['status' => 'TERMINE']);
-
+            if ($updated > 0) {
                 Log::info('Analyse marquée comme terminée', [
-                    'prescription_id'      => $this->prescriptionId,
-                    'parent_id'            => $parentId,
-                    'enfants_count'        => count($enfants),
-                    'enfants_with_results' => $resultatsCount,
-                    'user_id'              => Auth::id(),
+                    'prescription_id' => $this->prescriptionId,
+                    'parent_id' => $parentId,
+                    'enfants_updated' => $updated,
+                    'user_id' => Auth::id(),
                 ]);
 
                 DB::commit();
@@ -336,7 +317,7 @@ class AnalysesSidebar extends Component
 
                 $this->flashSuccess('Analyse marquée comme terminée !');
             } else {
-                $this->flashError('Tous les résultats doivent être saisis avant de terminer cette analyse.');
+                $this->flashError('Aucun résultat trouvé pour cette analyse.');
             }
 
         } catch (\Exception $e) {
@@ -344,8 +325,8 @@ class AnalysesSidebar extends Component
 
             Log::error('Erreur lors de la finalisation de l\'analyse', [
                 'prescription_id' => $this->prescriptionId,
-                'parent_id'       => $parentId,
-                'error'           => $e->getMessage(),
+                'parent_id' => $parentId,
+                'error' => $e->getMessage(),
             ]);
 
             $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());
@@ -353,78 +334,46 @@ class AnalysesSidebar extends Component
     }
 
     /**
-     * ✅ Marquer la prescription comme terminée (comptage via pivot)
+     * ✅ Finaliser toute la prescription
      */
     public function markPrescriptionAsCompleted()
     {
         try {
             DB::beginTransaction();
 
+            if (!$this->isReadyToFinalize()) {
+                $this->flashError('Toutes les analyses doivent avoir leurs résultats avant de finaliser la prescription.');
+                return;
+            }
+
             $prescription = Prescription::findOrFail($this->prescriptionId);
 
-            // Compter via la table pivot (hors LABEL)
-            $totalAnalyses = DB::table('prescription_analyse')
-                ->join('analyses', 'prescription_analyse.analyse_id', '=', 'analyses.id')
-                ->join('types', 'analyses.type_id', '=', 'types.id')
-                ->where('prescription_analyse.prescription_id', $this->prescriptionId)
-                ->where('types.name', '!=', 'LABEL')
-                ->count();
+            // Marquer tous les résultats comme terminés
+            $prescription->resultats()->update(['status' => 'TERMINE']);
 
-            $completedAnalyses = $prescription->resultats()->count();
+            // Marquer la prescription comme terminée
+            $prescription->update(['status' => 'TERMINE']);
 
-            Log::info('Vérification finalisation prescription CORRIGÉE', [
-                'prescription_id'                     => $this->prescriptionId,
-                'total_analyses_non_label_via_pivot'  => $totalAnalyses,
-                'completed_analyses'                  => $completedAnalyses,
-                'analyses_details'                    => DB::table('prescription_analyse')
-                    ->join('analyses', 'prescription_analyse.analyse_id', '=', 'analyses.id')
-                    ->join('types', 'analyses.type_id', '=', 'types.id')
-                    ->where('prescription_analyse.prescription_id', $this->prescriptionId)
-                    ->select('analyses.id', 'analyses.code', 'types.name as type_name')
-                    ->get()
-                    ->toArray()
+            Log::info('Prescription marquée comme terminée', [
+                'prescription_id' => $this->prescriptionId,
+                'reference' => $prescription->reference,
+                'total_analyses' => count($this->analysesParents),
+                'user_id' => Auth::id(),
             ]);
 
-            if ($totalAnalyses === $completedAnalyses && $totalAnalyses > 0) {
-                // Marquer tous les résultats comme terminés
-                $prescription->resultats()->update(['status' => 'TERMINE']);
+            DB::commit();
 
-                // Marquer la prescription comme terminée
-                $prescription->update(['status' => 'TERMINE']);
+            // Événement pour redirection
+            $this->dispatch('prescriptionCompleted')->to(ShowPrescription::class);
 
-                Log::info('Prescription marquée comme terminée', [
-                    'prescription_id'   => $this->prescriptionId,
-                    'reference'         => $prescription->reference,
-                    'total_analyses'    => $totalAnalyses,
-                    'completed_analyses'=> $completedAnalyses,
-                    'user_id'           => Auth::id(),
-                ]);
-
-                DB::commit();
-
-                // Événement pour redirection
-                $this->dispatch('prescriptionCompleted')->to(ShowPrescription::class);
-
-                $this->flashSuccess('Prescription marquée comme terminée avec succès !');
-
-            } else {
-                Log::warning('Finalisation impossible - comptage incorrect', [
-                    'prescription_id'   => $this->prescriptionId,
-                    'total_analyses'    => $totalAnalyses,
-                    'completed_analyses'=> $completedAnalyses,
-                    'condition_met'     => $totalAnalyses === $completedAnalyses
-                ]);
-
-                $this->flashError("Toutes les analyses doivent être complétées avant de terminer la prescription. ({$completedAnalyses}/{$totalAnalyses})");
-            }
+            $this->flashSuccess('Prescription marquée comme terminée avec succès !');
 
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Erreur lors de la finalisation de la prescription', [
                 'prescription_id' => $this->prescriptionId,
-                'error'           => $e->getMessage(),
-                'trace'           => $e->getTraceAsString()
+                'error' => $e->getMessage(),
             ]);
 
             $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());

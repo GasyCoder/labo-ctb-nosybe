@@ -122,7 +122,7 @@
                             <select wire:model="{{ $path }}.interpretation"
                                     class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                 <option value="">Sélectionner</option>
-                                <option value="NORMAL">Normal</option>
+                                <option value="NORMAL" selected>Normal</option>
                                 <option value="PATHOLOGIQUE">Pathologique</option>
                             </select>
                         </div>
@@ -166,11 +166,19 @@
                         </div>
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Interprétation</label>
+                           @php
+                                $type = strtoupper($node->type->name ?? '');
+                                $path = "results.{$node->id}";
+                                // Modification de la fonction $get pour définir NORMAL par défaut pour interpretation
+                                $get = fn($k,$d=null)=> data_get($results, "{$node->id}.{$k}", $d) ?: ($k === 'interpretation' ? 'NORMAL' : $d);
+                            @endphp
+
+                            {{-- Ensuite, dans tous vos selects d'interprétation, utilisez : --}}
                             <select wire:model="{{ $path }}.interpretation"
                                     class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                 <option value="">Sélectionner</option>
-                                <option value="NORMAL">Normal</option>
-                                <option value="PATHOLOGIQUE">Pathologique</option>
+                                <option value="NORMAL" @selected($get('interpretation') === 'NORMAL')>Normal</option>
+                                <option value="PATHOLOGIQUE" @selected($get('interpretation') === 'PATHOLOGIQUE')>Pathologique</option>
                             </select>
                         </div>
                     </div>
@@ -231,7 +239,7 @@
                             <select wire:model="{{ $path }}.interpretation"
                                     class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                 <option value="">Sélectionner</option>
-                                <option value="NORMAL">Normal</option>
+                                <option value="NORMAL" selected>Normal</option>
                                 <option value="PATHOLOGIQUE">Pathologique</option>
                             </select>
                         </div>
@@ -268,7 +276,7 @@
                             <select wire:model="{{ $path }}.interpretation"
                                     class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                 <option value="">Sélectionner</option>
-                                <option value="NORMAL">Normal</option>
+                                <option value="NORMAL" selected>Normal</option>
                                 <option value="PATHOLOGIQUE">Pathologique</option>
                             </select>
                         </div>
@@ -298,7 +306,7 @@
                                 <select wire:model="{{ $path }}.interpretation"
                                         class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                     <option value="">Sélectionner</option>
-                                    <option value="NORMAL">Normal</option>
+                                    <option value="NORMAL" selected>Normal</option>
                                     <option value="PATHOLOGIQUE">Pathologique</option>
                                 </select>
                             </div>
@@ -351,7 +359,7 @@
                             <select wire:model="{{ $path }}.interpretation"
                                     class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                 <option value="">Sélectionner</option>
-                                <option value="NORMAL">Normal</option>
+                                <option value="NORMAL" selected>Normal</option>
                                 <option value="PATHOLOGIQUE">Pathologique</option>
                             </select>
                         </div>
@@ -380,7 +388,7 @@
                             <select wire:model="{{ $path }}.interpretation"
                                     class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
                                 <option value="">Sélectionner</option>
-                                <option value="NORMAL">Normal</option>
+                                <option value="NORMAL" selected>Normal</option>
                                 <option value="PATHOLOGIQUE">Pathologique</option>
                             </select>
                         </div>
@@ -421,7 +429,7 @@
                                 <select wire:model="{{ $path }}.interpretation"
                                         class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-pink-500 dark:focus:ring-pink-400 focus:border-pink-500 dark:focus:border-pink-400 transition-colors">
                                     <option value="">Sélectionner</option>
-                                    <option value="NORMAL">Normal</option>
+                                    <option value="NORMAL" selected>Normal</option>
                                     <option value="PATHOLOGIQUE">Pathologique</option>
                                 </select>
                             </div>

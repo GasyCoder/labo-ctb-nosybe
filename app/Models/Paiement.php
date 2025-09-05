@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\Setting;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Paiement extends Model
 {
@@ -14,14 +13,16 @@ class Paiement extends Model
     protected $fillable = [
         'prescription_id',
         'montant',
+        'commission_prescripteur',
         'payment_method_id',
         'recu_par',
-        'commission_prescripteur',
+        'status',
     ];
 
     protected $casts = [
         'montant' => 'decimal:2',
         'commission_prescripteur' => 'decimal:2',
+        'status' => 'boolean',
     ];
 
     // Relations
@@ -40,12 +41,62 @@ class Paiement extends Model
         return $this->belongsTo(User::class, 'recu_par');
     }
 
+    // ✅ Accesseurs pour le statut
+    public function getStatusLabelAttribute()
+    {
+        return $this->status ? 'Payé' : 'Non Payé';
+    }
+
+    public function getStatusColorAttribute()
+    {
+        return $this->status ? 'green' : 'red';
+    }
+
+    public function getStatusBadgeClassAttribute()
+    {
+        return $this->status 
+            ? 'bg-green-100 text-green-800 border-green-200' 
+            : 'bg-red-100 text-red-800 border-red-200';
+    }
+
+    // ✅ Méthodes utilitaires pour le statut
+    public function marquerCommePayé()
+    {
+        $this->update(['status' => true]);
+    }
+
+    public function marquerCommeNonPayé()
+    {
+        $this->update(['status' => false]);
+    }
+
+    public function estPayé()
+    {
+        return $this->status === true;
+    }
+
+    public function estNonPayé()
+    {
+        return $this->status === false;
+    }
+
+    // ✅ Scopes pour filtrer par statut
+    public function scopePayés($query)
+    {
+        return $query->where('status', true);
+    }
+
+    public function scopeNonPayés($query)
+    {
+        return $query->where('status', false);
+    }
+
     // ✅ Accesseurs pour la compatibilité
     public function getModeePaiementAttribute()
     {
         return $this->paymentMethod?->code ?? 'INCONNU';
     }
-    
+
     public function getMethodePaiementLabelAttribute()
     {
         return $this->paymentMethod?->label ?? 'Méthode inconnue';
@@ -55,11 +106,11 @@ class Paiement extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($paiement) {
             $paiement->commission_prescripteur = static::calculerCommission($paiement);
         });
-        
+
         static::updating(function ($paiement) {
             if ($paiement->isDirty('montant')) {
                 $paiement->commission_prescripteur = static::calculerCommission($paiement);
@@ -71,7 +122,7 @@ class Paiement extends Model
     {
         // Charger la prescription avec le prescripteur
         $prescription = $paiement->prescription ?? Prescription::find($paiement->prescription_id);
-        
+
         if (!$prescription || !$prescription->prescripteur) {
             return 0;
         }

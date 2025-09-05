@@ -1,5 +1,5 @@
 {{-- show-prescription --}}
-<div class="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
+<div class="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 mt-8">
     {{-- Header optimisé avec dark mode --}}
     @include('livewire.technicien.partials.header-prescription-technicien')
 

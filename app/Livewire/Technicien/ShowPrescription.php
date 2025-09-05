@@ -101,15 +101,18 @@ class ShowPrescription extends Component
 
     public function startAnalysis($prescriptionId)
     {
+        $prescription = Prescription::findOrFail($prescriptionId);
+        
+        // ✅ Mettre EN_COURS quand on clique "Traiter"
+        if ($prescription->status === 'EN_ATTENTE') {
+            $prescription->update(['status' => 'EN_COURS']);
+        }
+
         $userType = Auth::user()->type;
 
         if ($userType === 'technicien') {
             return redirect()->route('technicien.prescription.show', $prescriptionId);
-        } elseif ($userType === 'biologiste') {
-            return redirect()->route('biologiste.prescription.show', $prescriptionId);
-        }
-
-        return redirect()->route('prescription.view', $prescriptionId);
+        } 
     }
 
     public function canEdit(): bool

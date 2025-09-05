@@ -2,16 +2,16 @@
 
 namespace App\Livewire\Biologiste;
 
+use App\Models\Analyse;
 use Livewire\Component;
 use App\Models\Resultat;
 use App\Models\Prescription;
 use Livewire\WithPagination;
+use App\Services\ResultatPdfShow;
 use Illuminate\Support\Facades\DB;
-use App\Models\Analyse;
 use App\Models\AnalysePrescription;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Jantinnerezo\LivewireAlert\LivewireAlert;
 
 class AnalyseValide extends Component
 {
@@ -97,18 +97,15 @@ class AnalyseValide extends Component
     }
 
     /**
-     * ✅ NOUVEAU : Consulter les résultats du technicien avant validation
+     * ✅ Consulter les résultats du technicien avant validation
      */
     public function viewAnalyseDetails($prescriptionId)
     {
         try {
             $prescription = Prescription::findOrFail($prescriptionId);
-
-            // Redirection vers la page de consultation des résultats
-            // Redirection vers la page de traitement
             return redirect()->route('technicien.prescription.show', $prescription);
         } catch (\Exception $e) {
-            $this->alert('error', 'Impossible d\'ouvrir cette analyse');
+            flash('error', 'Impossible d\'ouvrir cette analyse');
         }
     }
 
@@ -133,29 +130,16 @@ class AnalyseValide extends Component
             DB::commit();
 
             $this->loadStatistics();
-            $this->alert('success', 'Analyse validée avec succès !');
-
-            Log::info('Analyse validée par biologiste', [
-                'prescription_id' => $prescriptionId,
-                'reference' => $prescription->reference,
-                'biologiste_id' => Auth::id(),
-            ]);
+            flash('success', 'Analyse validée avec succès !');
 
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error('Erreur lors de la validation de l\'analyse', [
-                'prescription_id' => $prescriptionId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->alert('error', 'Erreur lors de la validation : ' . $e->getMessage());
+            flash('error', 'Erreur lors de la validation : ' . $e->getMessage());
         }
     }
 
     /**
-     * ✅ AMÉLIORÉ : Remettre à refaire avec commentaire
+     * ✅ CORRIGÉ : Remettre à refaire avec commentaire
      */
     public function redoPrescription($prescriptionId, $commentaire = null)
     {
@@ -175,15 +159,14 @@ class AnalyseValide extends Component
                 'updated_by' => Auth::id()
             ]);
 
-            // Mettre à jour toutes les analyses de la prescription
+            // Mettre à jour les timestamps des analyses (sans champ status)
             foreach ($prescription->analyses as $analyse) {
                 AnalysePrescription::where([
                     'prescription_id' => $prescriptionId,
                     'analyse_id' => $analyse->id
                 ])->update([
-                            'status' => AnalysePrescription::STATUS_A_REFAIRE,
-                            'updated_at' => now()
-                        ]);
+                    'updated_at' => now()
+                ]);
             }
 
             // Réinitialiser les résultats
@@ -198,7 +181,7 @@ class AnalyseValide extends Component
             DB::commit();
 
             $this->loadStatistics();
-            $this->alert('success', 'La prescription a été marquée à refaire');
+            flash('success', 'La prescription a été marquée à refaire');
 
             Log::info('Prescription remise à refaire par biologiste', [
                 'prescription_id' => $prescriptionId,
@@ -214,15 +197,17 @@ class AnalyseValide extends Component
                 'user_id' => Auth::id()
             ]);
 
-            $this->alert('error', 'Erreur lors de la mise à refaire de la prescription');
+            flash('error', 'Erreur lors de la mise à refaire de la prescription');
         }
     }
 
-  
+    /**
+     * ✅ CORRIGÉ : Validation en lot
+     */
     public function bulkValidate()
     {
         if (empty($this->selectedPrescriptions)) {
-            $this->alert('warning', 'Veuillez sélectionner au moins une prescription');
+            flash('warning', 'Veuillez sélectionner au moins une prescription');
             return;
         }
 
@@ -244,11 +229,37 @@ class AnalyseValide extends Component
             $this->resetSelection();
             $this->loadStatistics();
 
-            $this->alert('success', "{$count} analyse(s) validée(s) avec succès");
+            flash('success', "{$count} analyse(s) validée(s) avec succès");
 
         } catch (\Exception $e) {
             DB::rollback();
-            $this->alert('error', 'Erreur lors de la validation en lot');
+            flash('error', 'Erreur lors de la validation en lot');
+        }
+    }
+
+    public function generatePrescriptionPdf($prescriptionId)
+    {
+        try {
+            $prescription = Prescription::findOrFail($prescriptionId);
+            
+            if ($prescription->status !== Prescription::STATUS_VALIDE) {
+                flash('error', 'Cette prescription n\'est pas encore validée.');
+                return;
+            }
+
+            $pdfService = new ResultatPdfShow();
+            $pdfUrl = $pdfService->generatePDF($prescription);
+
+            // ✅ Dispatch event pour ouvrir dans nouvel onglet
+            $this->dispatch('openPdfInNewTab', ['url' => $pdfUrl]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur génération PDF:', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage()
+            ]);
+
+            flash('error', 'Erreur lors de la génération du PDF : ' . $e->getMessage());
         }
     }
 
@@ -260,7 +271,7 @@ class AnalyseValide extends Component
             'patient',
             'prescripteur:id,nom,prenom,is_active',
             'analyses',
-            'resultats' // ✅ AJOUTÉ : Charger les résultats pour affichage
+            'resultats'
         ])
             ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
 
@@ -348,6 +359,9 @@ class AnalyseValide extends Component
         ];
     }
 
+    /**
+     * ✅ CORRIGÉ : Validation d'une analyse sans erreur SQL
+     */
     private function validateSingleAnalyse($prescriptionId)
     {
         try {
@@ -380,15 +394,14 @@ class AnalyseValide extends Component
                     'status' => 'VALIDE'
                 ]);
 
-            // Mettre à jour les statuts des analyses pivot
+            // ✅ CORRIGÉ : Mettre à jour seulement les timestamps (sans champ status)
             foreach ($parentAnalyses as $parentAnalyse) {
                 AnalysePrescription::where([
                     'prescription_id' => $prescriptionId,
                     'analyse_id' => $parentAnalyse->id
                 ])->update([
-                            'status' => AnalysePrescription::STATUS_VALIDE,
-                            'updated_at' => now()
-                        ]);
+                    'updated_at' => now()
+                ]);
             }
 
             // Mise à jour du statut de la prescription

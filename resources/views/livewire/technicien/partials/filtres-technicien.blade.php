@@ -1,5 +1,5 @@
 {{-- livewire.technicien.partials.filtres-technicien --}}
-<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-8">
+<div class="rounded-lg border border-gray-200 dark:border-gray-700 mb-8">
     <div class="p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filtres et recherche</h3>
         

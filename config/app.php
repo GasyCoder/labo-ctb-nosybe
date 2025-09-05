@@ -12,7 +12,7 @@ return [
     | other UI elements where an application name needs to be displayed.
     |
     */
-
+    'laboratoire_name' => env('LABORATOIRE_NAME', 'LABORATOIRE'),
     'name' => env('APP_NAME', 'DashWind'),
     'desc' => env('APP_DESC', 'Tailwind CSS Admin Dashboard Template'),
     'version' => env('APP_VERSION', '1.0.0'),

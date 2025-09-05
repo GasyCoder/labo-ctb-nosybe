@@ -18,6 +18,7 @@ return new class extends Migration
             $table->decimal('commission_prescripteur', 10, 2)->default(0);
             $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->nullOnDelete();
             $table->foreignId('recu_par')->constrained('users')->onDelete('cascade');
+            $table->boolean('status')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

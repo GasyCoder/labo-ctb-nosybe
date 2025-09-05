@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('date_naissance')->nullable();
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
-            $table->enum('sexe', ['M', 'F'])->nullable();
             $table->enum('statut', ['NOUVEAU', 'FIDELE', 'VIP'])->default('NOUVEAU');
             $table->timestamps();
             $table->softDeletes();
