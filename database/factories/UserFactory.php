@@ -25,20 +25,50 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'username' => fake()->unique()->userName(),  // ✅ Changé de email vers username
+            'type' => 'secretaire', // ✅ Ajout du type par défaut
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the model should have admin type.
      */
-    public function unverified(): static
+    public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'type' => 'admin',
+        ]);
+    }
+
+    /**
+     * Indicate that the model should have secretaire type.
+     */
+    public function secretaire(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'secretaire',
+        ]);
+    }
+
+    /**
+     * Indicate that the model should have technicien type.
+     */
+    public function technicien(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'technicien',
+        ]);
+    }
+
+    /**
+     * Indicate that the model should have biologiste type.
+     */
+    public function biologiste(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'type' => 'biologiste',
         ]);
     }
 }
