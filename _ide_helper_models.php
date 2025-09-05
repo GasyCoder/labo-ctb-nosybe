@@ -821,7 +821,7 @@ namespace App\Models{
  * @property string $username
  * @property string|null $email
  * @property string $type
- * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
