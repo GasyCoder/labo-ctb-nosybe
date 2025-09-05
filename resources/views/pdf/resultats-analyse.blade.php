@@ -11,7 +11,7 @@
         /* Styles personnalisés pour correspondre au design */
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 13px; /* Augmenté de 11px à 13px */
         }
         
         .header-section {
@@ -31,7 +31,7 @@
             position: absolute;
             left: 140px;
             top: 20px;
-            font-size: 18px;
+            font-size: 20px; /* Augmenté de 18px à 20px */
             font-weight: bold;
             color: #8B0000;
         }
@@ -50,7 +50,7 @@
             right: 20px;
             top: 15px;
             text-align: right;
-            font-size: 9px;
+            font-size: 11px; /* Augmenté de 9px à 11px */
             line-height: 1.2;
         }
         
@@ -66,7 +66,7 @@
             position: absolute;
             left: 140px;
             top: 65px;
-            font-size: 10px;
+            font-size: 12px; /* Augmenté de 10px à 12px */
             color: #333;
         }
         
@@ -76,13 +76,13 @@
         }
         
         .patient-name {
-            font-size: 14px;
+            font-size: 16px; /* Augmenté de 14px à 16px */
             font-weight: bold;
             margin-bottom: 5px;
         }
         
         .patient-info {
-            font-size: 11px;
+            font-size: 13px; /* Augmenté de 11px à 13px */
             line-height: 1.4;
         }
         
@@ -91,7 +91,7 @@
         }
         
         .examen-title {
-            font-size: 12px;
+            font-size: 14px; /* Augmenté de 12px à 14px */
             font-weight: bold;
             color: #DC143C;
             margin: 20px 0 10px 0;
@@ -102,22 +102,25 @@
         .analysis-parent {
             font-weight: bold;
             margin: 8px 0 4px 0;
+            font-size: 13px; /* Ajouté pour uniformiser */
         }
         
         .analysis-child {
             margin-left: 20px;
             margin: 4px 0;
+            font-size: 13px; /* Ajouté pour uniformiser */
         }
         
         .results-table {
             width: 100%;
             margin-top: 10px;
             border-collapse: collapse;
+            font-size: 13px; /* Ajouté pour uniformiser */
         }
         
         .results-table th,
         .results-table td {
-            padding: 3px 8px;
+            padding: 4px 8px; /* Augmenté de 3px à 4px */
             vertical-align: top;
         }
         
@@ -146,6 +149,7 @@
             text-align: center;
             padding: 8px;
             border-bottom: 1px solid #ccc;
+            font-size: 13px; /* Ajouté pour uniformiser */
         }
         
         .pathological {
@@ -348,7 +352,7 @@
 
     <!-- Signature -->
     <div class="signature-section">
-        <img src="{{ public_path('assets/images/signature.png') }}" alt="Signature" class="signature-img">
+        <img src="{{ public_path('public/assets/Untitled-1.jpg') }}" alt="Signature" class="signature-img">
     </div>
 </body>
 </html>
