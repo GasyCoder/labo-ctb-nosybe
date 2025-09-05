@@ -28840,6 +28840,7 @@ namespace  {
     class PDF extends \Barryvdh\DomPDF\Facade\Pdf {}
     class Pdf extends \Barryvdh\DomPDF\Facade\Pdf {}
     class ToastMagic extends \Devrabiul\ToastMagic\Facades\ToastMagic {}
+    class LivewireAlert extends \Jantinnerezo\LivewireAlert\LivewireAlert {}
     class Livewire extends \Livewire\Livewire {}
     class Flasher extends \Flasher\Laravel\Facade\Flasher {}
 }

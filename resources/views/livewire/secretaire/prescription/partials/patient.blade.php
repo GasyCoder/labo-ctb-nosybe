@@ -76,7 +76,22 @@
                                                 <div class="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                                     <span class="flex items-center">
                                                         <em class="ni ni-id-badge mr-1 {{ $isEditMode ? 'text-orange-500' : 'text-primary-500' }} text-xs"></em>
-                                                        {{ $patient_item->reference }}
+                                                        {{ $patient_item->numero_dossier ?? $patient_item->reference }}
+                                                    </span>
+                                                    {{-- ✅ AFFICHAGE DE LA CIVILITÉ --}}
+                                                    <span class="flex items-center">
+                                                        @if($patient_item->civilite === 'Enfant garçon')
+                                                            <span class="text-blue-500">👦</span>
+                                                        @elseif($patient_item->civilite === 'Enfant fille')
+                                                            <span class="text-pink-500">👧</span>
+                                                        @elseif($patient_item->civilite === 'Madame')
+                                                            <span class="text-purple-500">👩</span>
+                                                        @elseif($patient_item->civilite === 'Monsieur')
+                                                            <span class="text-blue-500">👨</span>
+                                                        @else
+                                                            <span class="text-green-500">👧</span>
+                                                        @endif
+                                                        <span class="ml-1">{{ $patient_item->civilite }}</span>
                                                     </span>
                                                     @if($patient_item->telephone)
                                                         <span class="flex items-center">
@@ -162,29 +177,55 @@
                         </div>
                     </div>
                     
-                    {{-- CIVILITÉ - COMPACT ET LOGIQUE --}}
+                    {{-- ✅ CIVILITÉ MISE À JOUR AVEC LES NOUVELLES OPTIONS --}}
                     <div class="space-y-1.5">
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
                             Civilité <span class="text-red-500">*</span>
                         </label>
-                        <div class="flex space-x-2">
-                            @foreach(['Madame' => '👩 Mme', 'Monsieur' => '👨 M.', 'Mademoiselle' => '👧 Mlle', 'Enfant' => '👶 Enfant'] as $value => $label)
-                                <label class="flex-1 cursor-pointer">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                            @foreach($this->civilitesDisponibles as $value => $config)
+                                <label class="cursor-pointer">
                                     <input type="radio" 
                                         wire:model="civilite" 
                                         value="{{ $value }}" 
                                         class="sr-only peer">
                                     <div @class([
-                                        'w-full p-2 text-center border rounded-lg text-sm border-gray-200 dark:border-slate-600',
-                                        'peer-checked:border-orange-500 peer-checked:bg-orange-50' => $isEditMode,
-                                        'peer-checked:border-primary-500 peer-checked:bg-primary-50' => !$isEditMode,
-                                        'dark:peer-checked:bg-slate-700'
+                                        'w-full p-2.5 text-center border rounded-lg text-sm transition-all duration-200 min-h-[3rem] flex flex-col items-center justify-center',
+                                        'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300',
+                                        'peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-700' => $isEditMode,
+                                        'peer-checked:border-primary-500 peer-checked:bg-primary-50 peer-checked:text-primary-700' => !$isEditMode,
+                                        'dark:peer-checked:bg-slate-700 dark:peer-checked:text-slate-100',
+                                        'hover:border-gray-300 dark:hover:border-slate-500',
+                                        'peer-checked:shadow-sm peer-checked:ring-1',
+                                        'peer-checked:ring-orange-200' => $isEditMode,
+                                        'peer-checked:ring-primary-200' => !$isEditMode
                                     ])>
-                                        {{ $label }}
+                                        <div class="text-lg mb-0.5">
+                                            @if($value === 'Enfant garçon')
+                                            @elseif($value === 'Enfant fille')
+                                            @elseif($value === 'Madame')
+                                            @elseif($value === 'Monsieur')
+                                            @else
+                                            @endif
+                                        </div>
+                                        <div class="text-xs font-medium leading-tight">
+                                            @if($value === 'Enfant garçon')
+                                                Garçon
+                                            @elseif($value === 'Enfant fille')
+                                                Fille
+                                            @else
+                                                {{ $config['label'] }}
+                                            @endif
+                                        </div>
                                     </div>
                                 </label>
                             @endforeach
                         </div>
+                        @error('civilite') 
+                            <p class="flex items-center text-red-600 dark:text-red-400 text-xs mt-1">
+                                <em class="ni ni-alert-circle mr-1 text-xs"></em>{{ $message }}
+                            </p> 
+                        @enderror
                     </div>
 
                     {{-- TÉLÉPHONE ET EMAIL --}}
@@ -215,6 +256,22 @@
                                           focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'primary' }}-500">
                         </div>
                     </div>
+                    
+                    {{-- ✅ ALERTE COHÉRENCE ÂGE-CIVILITÉ (si étape clinique déjà passée) --}}
+                    @if(in_array($civilite, ['Enfant garçon', 'Enfant fille']) && $age > 18 && $age > 0)
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                            <div class="flex items-start">
+                                <div class="w-6 h-6 bg-yellow-500 rounded-lg flex items-center justify-center mr-2 flex-shrink-0">
+                                    <em class="ni ni-alert-triangle text-white text-xs"></em>
+                                </div>
+                                <div class="text-sm text-yellow-800 dark:text-yellow-200">
+                                    <span class="font-medium">Attention :</span> 
+                                    La civilité "{{ $civilite }}" est sélectionnée mais l'âge est de {{ $age }} ans. 
+                                    Vérifiez la cohérence lors de l'étape clinique.
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     
                     {{-- BOUTONS D'ACTION --}}
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-100 dark:border-slate-600">
@@ -266,6 +323,11 @@
                                     <div class="flex items-center">
                                         <em class="ni ni-tag text-green-500 mr-1.5 flex-shrink-0 text-xs"></em>
                                         <span>Une référence unique {{ $isEditMode ? 'est déjà assignée' : 'sera automatiquement générée' }}</span>
+                                    </div>
+                                    {{-- ✅ NOUVELLE INFO SUR LES CIVILITÉS ENFANTS --}}
+                                    <div class="flex items-center">
+                                        <em class="ni ni-users text-blue-500 mr-1.5 flex-shrink-0 text-xs"></em>
+                                        <span>Pour les mineurs, sélectionnez "Garçon" ou "Fille" selon le genre</span>
                                     </div>
                                 </div>
                             </div>

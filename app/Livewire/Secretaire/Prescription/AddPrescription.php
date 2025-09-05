@@ -22,13 +22,16 @@ class AddPrescription extends Component
 {
     use WithPagination;
 
+    // SESSION KEY POUR LA PERSISTANCE
+    private const SESSION_KEY = 'prescription_en_cours';
+
     // 🎯 ÉTAPES WORKFLOW LABORATOIRE - INTÉGRATION URL
     #[Url(as: 'step', except: 'patient', history: true)]
     public string $etape = 'patient';
 
     public bool $isEditMode = false;
-    public bool $activer_remise = false; // ✅ AJOUT DE LA PROPRIÉTÉ PUBLIQUE
-    public bool $afficherFactureComplete = false; // ✅ NOUVELLE PROPRIÉTÉ POUR LA FACTURE
+    public bool $activer_remise = false;
+    public bool $afficherFactureComplete = false;
 
     public ?Prescription $prescription = null;
     
@@ -73,31 +76,168 @@ class AddPrescription extends Component
     // 🧪 TUBES
     public array $tubesGeneres = [];
 
+    // =====================================
+    // 💾 GESTION DE LA PERSISTANCE SESSION
+    // =====================================
+
+    protected function getPersistableProperties(): array
+    {
+        return [
+            'etape', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
+            'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
+            'analysesPanier', 'prelevementsSelectionnes', 'modePaiement', 'montantPaye', 
+            'remise', 'total', 'monnaieRendue', 'reference', 'tubesGeneres'
+        ];
+    }
+
+    protected function sauvegarderSession(): void
+    {
+        try {
+            $data = [];
+            foreach ($this->getPersistableProperties() as $property) {
+                $data[$property] = $this->$property;
+            }
+            
+            // Sauvegarder l'ID du patient si présent
+            if ($this->patient) {
+                $data['patient_id'] = $this->patient->id;
+            }
+
+            session()->put(self::SESSION_KEY, $data);
+        } catch (\Exception $e) {
+            Log::error('Erreur sauvegarde session prescription', ['error' => $e->getMessage()]);
+        }
+    }
+
+    protected function chargerSession(): void
+    {
+        try {
+            $data = session()->get(self::SESSION_KEY);
+            
+            if (!$data || !is_array($data)) {
+                return;
+            }
+
+            foreach ($this->getPersistableProperties() as $property) {
+                if (isset($data[$property])) {
+                    $this->$property = $data[$property];
+                }
+            }
+
+            // Recharger le patient si ID présent
+            if (!empty($data['patient_id'])) {
+                $this->patient = Patient::find($data['patient_id']);
+                if ($this->patient) {
+                    // Synchroniser les données du patient
+                    $this->nom = $this->patient->nom;
+                    $this->prenom = $this->patient->prenom;
+                    $this->civilite = $this->patient->civilite;
+                    $this->telephone = $this->patient->telephone;
+                    $this->email = $this->patient->email;
+                }
+            }
+
+            // Recalculer les totaux après chargement
+            $this->calculerTotaux();
+
+        } catch (\Exception $e) {
+            Log::error('Erreur chargement session prescription', ['error' => $e->getMessage()]);
+        }
+    }
+
+    protected function viderSession(): void
+    {
+        session()->forget(self::SESSION_KEY);
+    }
+
+    // =====================================
+    // 🎯 HOOKS LIVEWIRE POUR AUTO-SAVE
+    // =====================================
+
+    public function updated($property, $value): void
+    {
+        // Auto-save pour les propriétés importantes
+        $autoSaveProperties = [
+            'nom', 'prenom', 'civilite', 'telephone', 'email',
+            'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
+            'modePaiement', 'montantPaye', 'remise'
+        ];
+
+        if (in_array($property, $autoSaveProperties)) {
+            $this->sauvegarderSession();
+        }
+    }
+
+    public function updatedAnalysesPanier(): void
+    {
+        $this->calculerTotaux();
+        $this->sauvegarderSession();
+    }
+
+    public function updatedPrelevementsSelectionnes(): void
+    {
+        $this->calculerTotaux();
+        $this->sauvegarderSession();
+    }
+
+    public function updatedRemise(): void
+    {
+        $this->remise = max(0, $this->remise);
+        $this->calculerTotaux();
+        $this->sauvegarderSession();
+    }
+
+    public function updatedMontantPaye(): void
+    {
+        $this->montantPaye = max(0, $this->montantPaye);
+        $this->calculerMonnaie();
+        $this->sauvegarderSession();
+    }
+
+    // =====================================
+    // 🚀 MOUNT ET INITIALISATION
+    // =====================================
+
     public function mount()
     {
-        // S'assurer que le genre a une valeur par défaut
-        if (empty($this->civilite)) {
+        // Charger les données de session en premier
+        $this->chargerSession();
+
+        // S'assurer que la civilité a une valeur par défaut valide
+        if (empty($this->civilite) || !in_array($this->civilite, Patient::CIVILITES)) {
             $this->civilite = 'Monsieur';
         }
         
         // Valider l'étape depuis l'URL
         $this->validateEtape();
         
-        // ✅ CHARGER LE SETTING DE REMISE
+        // Charger le setting de remise
         $this->chargerSettingsRemise();
         
-        $this->calculerTotaux();
-        $this->reference = (new Prescription())->genererReferenceUnique();
-        $premiereMethode = PaymentMethod::where('is_active', true)
-                                   ->orderBy('display_order')
-                                   ->first();
+        // Générer une référence si pas déjà présente
+        if (empty($this->reference)) {
+            $this->reference = (new Prescription())->genererReferenceUnique();
+        }
+
+        // Configurer le mode de paiement par défaut si pas défini
+        if (empty($this->modePaiement)) {
+            $premiereMethode = PaymentMethod::where('is_active', true)
+                                ->orderBy('display_order')
+                                ->first();
+            $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
+        }
 
         $this->isEditMode = false;
-        $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
+        
+        // Recalculer les totaux
+        $this->calculerTotaux();
+        
+        // Sauvegarder l'état initial
+        $this->sauvegarderSession();
     }
 
     // =====================================
-    // ✅ MÉTHODES POUR LA FACTURE
+    // 📊 MÉTHODES POUR LA FACTURE (inchangées)
     // =====================================
     
     public function afficherFactureComplete()
@@ -110,35 +250,34 @@ class AddPrescription extends Component
         $this->afficherFactureComplete = false;
     }
 
-  public function facture()
-{
-    if (!$this->prescription) {
-        // Essayez de récupérer la prescription par référence si possible
-        if ($this->reference) {
-            $this->prescription = Prescription::where('reference', $this->reference)->first();
-        }
-        
+    public function facture()
+    {
         if (!$this->prescription) {
-            return redirect()->back()->with('error', 'Aucune prescription à facturer');
+            if ($this->reference) {
+                $this->prescription = Prescription::where('reference', $this->reference)->first();
+            }
+            
+            if (!$this->prescription) {
+                return redirect()->back()->with('error', 'Aucune prescription à facturer');
+            }
+        }
+        Log::info('Génération de la facture pour la prescription ID: ' . $this->prescription->id);
+        
+        return view('livewire.secretaire.prescription.facture-impression', [
+            'prescription' => $this->prescription
+        ]);
+    }
+
+    public function getTitle()
+    {
+        if ($this->prescription) {
+            return 'Référence: ' . $this->prescription->reference;
+        } elseif ($this->reference) {
+            return 'Référence: ' . $this->reference;
+        } else {
+            return 'Nouvelle prescription';
         }
     }
-    Log::info('Génération de la facture pour la prescription ID: ' . $this->prescription->id);
-    
-    return view('livewire.secretaire.prescription.facture-impression', [
-        'prescription' => $this->prescription
-    ]);
-}
-
-public function getTitle()
-{
-    if ($this->prescription) {
-        return 'Référence: ' . $this->prescription->reference;
-    } elseif ($this->reference) {
-        return 'Référence: ' . $this->reference;
-    } else {
-        return 'Nouvelle prescription';
-    }
-}
 
     // =====================================
     // 📊 PROPRIÉTÉS CALCULÉES
@@ -151,7 +290,6 @@ public function getTitle()
                         ->get();
     }
 
-    // ✅ NOUVELLE MÉTHODE POUR CHARGER LES SETTINGS
     private function chargerSettingsRemise()
     {
         $setting = Setting::first();
@@ -173,15 +311,14 @@ public function getTitle()
     
     public function allerEtape(string $etape)
     {
-        // Vérifier si l'étape est accessible
         if (!$this->etapeAccessible($etape)) {
             flash()->warning('Veuillez compléter les étapes précédentes');
             return;
         }
         
         $this->etape = $etape;
+        $this->sauvegarderSession(); // Sauvegarder le changement d'étape
         
-        // Livewire mettra automatiquement à jour l'URL grâce à #[Url]
         flash()->info('Navigation vers étape: ' . ucfirst($etape));
     }
     
@@ -197,13 +334,10 @@ public function getTitle()
             case 'prelevements':
                 return !empty($this->analysesPanier);
             case 'paiement':
-                // Prélèvement optionnel ! 
                 return !empty($this->analysesPanier);
             case 'tubes':
-                // Seulement si on a généré des tubes, ou si des prélèvements ont été faits
                 return $this->total > 0 && !empty($this->prelevementsSelectionnes);
             case 'confirmation':
-                // Si il y a des tubes générés, ou si il n'y avait pas de prélèvements du tout
                 return (!empty($this->tubesGeneres) || empty($this->prelevementsSelectionnes)) || $this->etape === 'confirmation';
             default:
                 return false;
@@ -235,34 +369,44 @@ public function getTitle()
         $this->telephone = $this->patient->telephone;
         $this->email = $this->patient->email;
         
-        // Passer en mode modification du patient
         $this->nouveauPatient = true;
+        $this->etape = 'patient';
+        
+        // Sauvegarder immédiatement la sélection
+        $this->sauvegarderSession();
         
         flash()->success("Patient « {$this->patient->nom} {$this->patient->prenom} » sélectionné - Vous pouvez modifier ses informations");
-        
-        // Rester sur l'étape patient pour permettre la modification
-        $this->etape = 'patient';
     }
     
     public function creerNouveauPatient()
     {
         $this->nouveauPatient = true;
         $this->patient = null;
-        
-        // Rester sur l'étape patient mais afficher le formulaire
         $this->etape = 'patient';
+        
+        // Vider les données du patient précédent
+        $this->nom = '';
+        $this->prenom = '';
+        $this->civilite = 'Monsieur';
+        $this->telephone = '';
+        $this->email = '';
+        
+        $this->sauvegarderSession();
         
         flash()->info('Nouveau Patient : Remplissez les informations ci-dessous');
     }
 
     public function nouveauPrescription()
     {
+        // Vider complètement la session
+        $this->viderSession();
+        
         $this->reset([
             'patient', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'age', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'tubesGeneres',
             'montantPaye', 'remise', 'total', 'monnaieRendue', 'recherchePatient', 
-            'rechercheAnalyse', 'recherchePrelevement', 'afficherFactureComplete'
+            'rechercheAnalyse', 'recherchePrelevement', 'afficherFactureComplete', 'prescription'
         ]);
         
         // Réinitialiser l'étape et l'URL
@@ -273,10 +417,16 @@ public function getTitle()
         $this->modePaiement = 'ESPECES';
         $this->civilite = 'Monsieur';
         
-        // ✅ RECHARGER LES SETTINGS
+        // Recharger les settings
         $this->chargerSettingsRemise();
         
+        // Générer nouvelle référence
+        $this->reference = (new Prescription())->genererReferenceUnique();
+        
         $this->calculerTotaux();
+
+        // Sauvegarder le nouvel état
+        $this->sauvegarderSession();
 
         flash()->info('Nouvelle prescription initialisée');
     }
@@ -286,12 +436,14 @@ public function getTitle()
         $this->validate([
             'nom' => 'required|min:2|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']+$/',
             'prenom' => 'nullable|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']*$/',
-            'civilite' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
+            'civilite' => 'required|in:' . implode(',', Patient::CIVILITES), 
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
             'email' => 'nullable|email|max:255',
         ], [
             'nom.required' => 'Le nom est obligatoire',
             'nom.regex' => 'Le nom ne doit contenir que des lettres',
+            'civilite.required' => 'La civilité est obligatoire',
+            'civilite.in' => 'Civilité non valide',
             'telephone.regex' => 'Format de téléphone invalide',
             'email.email' => 'Format email invalide'
         ]);
@@ -322,11 +474,43 @@ public function getTitle()
             }
             
             $this->nouveauPatient = false;
+            $this->sauvegarderSession(); // Sauvegarder après création/modification
             $this->allerEtape('clinique');
             
         } catch (\Exception $e) {
             flash()->error('Erreur lors de ' . ($this->patient ? 'la modification' : 'la création') . ' du patient: ' . $e->getMessage());
         }
+    }
+
+    public function getCivilitesDisponiblesProperty()
+    {
+        return [
+            'Madame' => [
+                'label' => '👩 Mme',
+                'genre' => 'F',
+                'type' => 'adulte'
+            ],
+            'Monsieur' => [
+                'label' => '👨 M.',
+                'genre' => 'M', 
+                'type' => 'adulte'
+            ],
+            'Mademoiselle' => [
+                'label' => '👧 Mlle',
+                'genre' => 'F',
+                'type' => 'adulte'
+            ],
+            'Enfant garçon' => [
+                'label' => '👦 Garçon',
+                'genre' => 'M',
+                'type' => 'enfant'
+            ],
+            'Enfant fille' => [
+                'label' => '👧 Fille', 
+                'genre' => 'F',
+                'type' => 'enfant'
+            ]
+        ];
     }
 
     // =====================================
@@ -377,16 +561,14 @@ public function getTitle()
                 return;
             }
 
-            // LOGIQUE DIFFÉRENTE SELON LE NIVEAU
             if ($analyse->level === 'PARENT') {
-                // CAS 1: ANALYSE PARENT (Panel complet)
                 $this->ajouterAnalyseParent($analyse);
             } else {
-                // CAS 2: ANALYSE INDIVIDUELLE (Normal/Child)
                 $this->ajouterAnalyseIndividuelle($analyse);
             }
 
             $this->calculerTotaux();
+            $this->sauvegarderSession(); // Auto-save après ajout
             
         } catch (\Exception $e) {
             flash()->error('Erreur lors de l\'ajout de l\'analyse');
@@ -414,7 +596,6 @@ public function getTitle()
             return;
         }
 
-        // Ajouter le parent comme une analyse complète
         $this->analysesPanier[$analyse->id] = [
             'id' => $analyse->id,
             'designation' => $analyse->designation,
@@ -424,8 +605,8 @@ public function getTitle()
             'prix' => $analyse->prix,
             'parent_nom' => 'Panel complet',
             'code' => $analyse->code,
-            'parent_id' => null, // Le parent n'a pas de parent
-            'is_parent' => true, // Marqueur pour identifier les parents
+            'parent_id' => null,
+            'is_parent' => true,
             'enfants_inclus' => $analyse->enfants->pluck('designation')->toArray(),
         ];
 
@@ -454,14 +635,11 @@ public function getTitle()
             }
         }
 
-        // Calculer le prix selon la logique parent/enfant
         $prixEffectif = $analyse->prix;
         $parentNom = 'Analyse individuelle';
 
         if ($analyse->parent && $analyse->parent->prix > 0) {
-            // Si le parent a un prix, cette analyse peut être gratuite ou payante selon la logique métier
             $parentNom = $analyse->parent->designation . ' (partie)';
-            // Garder le prix de l'analyse individuelle
         } elseif ($analyse->parent) {
             $parentNom = $analyse->parent->designation;
         }
@@ -488,6 +666,7 @@ public function getTitle()
             $nom = $this->analysesPanier[$analyseId]['designation'];
             unset($this->analysesPanier[$analyseId]);
             $this->calculerTotaux();
+            $this->sauvegarderSession(); // Auto-save après suppression
             flash()->info("Analyse « {$nom} » retirée du panier");
         }
     }
@@ -499,7 +678,6 @@ public function getTitle()
             return;
         }
 
-        // Validation des conflits parent/enfant
         $conflits = $this->detecterConflitsParentEnfant();
         if (!empty($conflits)) {
             flash()->error('Conflits détectés: ' . implode(', ', $conflits));
@@ -526,7 +704,6 @@ public function getTitle()
             }
         }
 
-        // Vérifier les conflits
         foreach ($parentsPresents as $parentId) {
             if (isset($enfantsPresents[$parentId])) {
                 $parent = Analyse::find($parentId);
@@ -567,6 +744,7 @@ public function getTitle()
             ];
 
             $this->calculerTotaux();
+            $this->sauvegarderSession(); // Auto-save
             flash()->success("Prélèvement « {$prelevement->nom} » ajouté");
             
         } catch (\Exception $e) {
@@ -581,6 +759,7 @@ public function getTitle()
             $nom = $this->prelevementsSelectionnes[$prelevementId]['nom'];
             unset($this->prelevementsSelectionnes[$prelevementId]);
             $this->calculerTotaux();
+            $this->sauvegarderSession(); // Auto-save
             flash()->info("Prélèvement « {$nom} » retiré");
         }
     }
@@ -590,13 +769,13 @@ public function getTitle()
         if (isset($this->prelevementsSelectionnes[$prelevementId]) && $quantite > 0 && $quantite <= 10) {
             $this->prelevementsSelectionnes[$prelevementId]['quantite'] = $quantite;
             $this->calculerTotaux();
+            $this->sauvegarderSession(); // Auto-save
             flash()->info('Quantité mise à jour');
         }
     }
     
     public function validerPrelevements()
     {
-        // Prélèvements optionnels - pas de validation obligatoire
         if (empty($this->prelevementsSelectionnes)) {
             flash()->info('Aucun prélèvement sélectionné - Passage direct au paiement');
         } else {
@@ -608,7 +787,7 @@ public function getTitle()
 
     // =====================================
     // 💰 ÉTAPE 5: PAIEMENT
-    // ====================================
+    // =====================================
     
     private function calculerTotaux()
     {
@@ -618,15 +797,11 @@ public function getTitle()
 
             foreach ($this->analysesPanier as $analyse) {
                 if (isset($analyse['is_parent']) && $analyse['is_parent']) {
-                    // CAS 1: Analyse PARENT (panel complet)
                     $sousTotal += $analyse['prix_effectif'];
                 } else {
-                    // CAS 2: Analyse individuelle
                     if ($analyse['parent_id'] && !in_array($analyse['parent_id'], $parentsTraites)) {
-                        // Vérifier si le parent a un prix et n'est pas déjà compté
                         $parent = Analyse::find($analyse['parent_id']);
                         if ($parent && $parent->prix > 0) {
-                            // ICI: Option C - Si on prend les enfants individuellement, on ne compte pas le parent
                             $sousTotal += $analyse['prix_effectif'];
                         } else {
                             $sousTotal += $analyse['prix_effectif'];
@@ -637,7 +812,6 @@ public function getTitle()
                 }
             }
 
-            // Total des prélèvements
             $totalPrelevements = 0;
             foreach ($this->prelevementsSelectionnes as $prelevement) {
                 $totalPrelevements += ($prelevement['prix'] ?? 0) * ($prelevement['quantite'] ?? 1);
@@ -658,18 +832,6 @@ public function getTitle()
         }
     }
     
-    public function updatedRemise()
-    {
-        $this->remise = max(0, $this->remise);
-        $this->calculerTotaux();
-    }
-    
-    public function updatedMontantPaye()
-    {
-        $this->montantPaye = max(0, $this->montantPaye);
-        $this->calculerMonnaie();
-    }
-    
     private function calculerMonnaie()
     {
         $this->monnaieRendue = max(0, $this->montantPaye - $this->total);
@@ -677,16 +839,14 @@ public function getTitle()
     
     public function validerPaiement()
     {
-        // ✅ Récupérer les codes des méthodes actives pour validation dynamique
         $codesMethodesActives = PaymentMethod::where('is_active', true)
                                             ->pluck('code')
                                             ->toArray();
         
         $codesValidation = !empty($codesMethodesActives) 
             ? 'in:' . implode(',', $codesMethodesActives)
-            : 'in:ESPECES,CARTE,CHEQUE,MOBILEMONEY'; // Fallback
+            : 'in:ESPECES,CARTE,CHEQUE,MOBILEMONEY';
         
-        // Validation des données de paiement
         $this->validate([
             'modePaiement' => "required|{$codesValidation}",
             'montantPaye' => 'required|numeric|min:0',
@@ -720,7 +880,6 @@ public function getTitle()
         try {
             DB::beginTransaction();
             
-            // Vérifications préalables
             if (!$this->patient) {
                 throw new \Exception('Patient non défini');
             }
@@ -729,11 +888,11 @@ public function getTitle()
                 throw new \Exception('Prescripteur invalide');
             }
             
-            // 1. Créer la prescription - ✅ CORRECTION: Auth::user()->id
+            // 1. Créer la prescription
             $prescription = Prescription::create([
                 'patient_id' => $this->patient->id,
                 'prescripteur_id' => $this->prescripteurId,
-                'secretaire_id' => Auth::user()->id, // ✅ CORRECTION ICI
+                'secretaire_id' => Auth::user()->id,
                 'patient_type' => $this->patientType,
                 'age' => $this->age,
                 'unite_age' => $this->uniteAge,
@@ -744,10 +903,9 @@ public function getTitle()
             ]);
             $this->prescription = $prescription;
             
-            // Mise à jour avec la référence définitive
             $this->reference = $prescription->reference;
             
-            // 2. Associer les analyses (vérification des IDs)
+            // 2. Associer les analyses
             $analyseIds = array_keys($this->analysesPanier);
             $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
             
@@ -757,7 +915,7 @@ public function getTitle()
             
             $prescription->analyses()->sync($analysesExistantes);
             
-            // 3. Associer les prélèvements avec vérification (si présents)
+            // 3. Associer les prélèvements
             if (!empty($this->prelevementsSelectionnes)) {
                 foreach ($this->prelevementsSelectionnes as $prelevement) {
                     if (!Prelevement::find($prelevement['id'])) {
@@ -774,7 +932,7 @@ public function getTitle()
                 }
             }
             
-            // 4. Enregistrer le paiement avec payment_method_id
+            // 4. Enregistrer le paiement
             $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
             
             if (!$paymentMethod) {
@@ -785,10 +943,10 @@ public function getTitle()
                 'prescription_id' => $prescription->id,
                 'montant' => $this->total,
                 'payment_method_id' => $paymentMethod->id,
-                'recu_par' => Auth::user()->id // ✅ CORRECTION ICI AUSSI
+                'recu_par' => Auth::user()->id
             ]);
             
-            // 5. Générer les tubes (seulement si prélèvements présents)
+            // 5. Générer les tubes
             if (!empty($this->prelevementsSelectionnes)) {
                 $this->tubesGeneres = $this->genererTubesPourPrescription($prescription);
                 $this->allerEtape('tubes');
@@ -796,11 +954,13 @@ public function getTitle()
                 $this->allerEtape('confirmation');
             }
             
-            // Mise à jour avec la référence définitive
             $this->reference = $prescription->reference;
             $this->prescription = $prescription;
             
             DB::commit();
+            
+            // Vider la session après succès
+            $this->viderSession();
             
             flash()->success('Prescription enregistrée avec succès!');
             
@@ -825,7 +985,6 @@ public function getTitle()
                 $quantite = $prelevement->pivot->quantite ?? 1;
                 
                 for ($i = 0; $i < $quantite; $i++) {
-                    // Créer le tube avec un nouveau pattern plus sûr
                     $tube = new Tube([
                         'prescription_id' => $prescription->id,
                         'patient_id' => $prescription->patient_id,
@@ -836,10 +995,8 @@ public function getTitle()
                         'genere_at' => now(),
                     ]);
                     
-                    // Sauvegarder d'abord pour obtenir l'ID
                     $tube->save();
 
-                    // Maintenant générer le code-barre avec l'ID
                     $tube->code_barre = 'T' . date('Y') . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
                     $tube->numero_tube = 'T-' . date('Y') . '-' . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
                     $tube->save();
@@ -855,7 +1012,6 @@ public function getTitle()
                 }
             }
 
-            // Marquer la prescription comme ayant des tubes générés
             $prescription->update(['status' => 'EN_ATTENTE']);
             
             flash()->success(count($tubes) . ' tube(s) généré(s) avec succès');
@@ -882,11 +1038,53 @@ public function getTitle()
             $message .= ' - ' . count($this->tubesGeneres) . ' tube(s) généré(s)';
         }
         
+        // Vider la session car prescription terminée
+        $this->viderSession();
+        
         session()->flash('success', $message);
     }
 
     // =====================================
-    // 📊 COMPUTED PROPERTIES
+    // 📄 MÉTHODES POUR LA FACTURE
+    // =====================================
+    
+    public function ouvrirFacture()
+    {
+        if (!$this->prescription) {
+            flash()->error('Aucune prescription disponible');
+            return;
+        }
+        
+        // Redirection vers une nouvelle fenêtre avec la facture
+        $url = route('secretaire.prescription.facture', $this->prescription->id);
+        $this->dispatch('open-window', ['url' => $url]);
+    }
+    
+    public function imprimerFacture()
+    {
+        if (!$this->prescription) {
+            flash()->error('Aucune prescription disponible');
+            return;
+        }
+        
+        // Redirection vers la page d'impression
+        $url = route('secretaire.prescription.facture', $this->prescription->id) . '?print=1';
+        $this->dispatch('open-window', ['url' => $url]);
+    }
+    
+    public function telechargerFacturePDF()
+    {
+        if (!$this->prescription) {
+            flash()->error('Aucune prescription disponible');
+            return;
+        }
+        
+        // Pour l'instant, redirection vers la facture (PDF à implémenter plus tard)
+        $this->ouvrirFacture();
+    }
+
+    // =====================================
+    // 📊 COMPUTED PROPERTIES (inchangées)
     // =====================================
     
     public function getPatientsResultatsProperty()
@@ -930,12 +1128,11 @@ public function getTitle()
         }
 
         $terme = trim(strtoupper($this->rechercheAnalyse));
-        $results = collect();
-
-        // 1. RECHERCHE DIRECTE DES PARENTS (panels complets)
-        $parents = Analyse::where('status', true)
+        
+        // 1. RECHERCHE DES PARENTS AVEC PRIX (ex: NFS avec prix)
+        $parentsPayants = Analyse::where('status', true)
                         ->where('level', 'PARENT')
-                        ->where('prix', '>', 0) // Seulement les parents avec prix
+                        ->where('prix', '>', 0) // Parents PAYANTS
                         ->where(function($query) use ($terme) {
                             $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
                                 ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
@@ -951,7 +1148,50 @@ public function getTitle()
                         ->limit(10)
                         ->get();
 
-        // 2. RECHERCHE DES ANALYSES INDIVIDUELLES (normal/child)
+        // 2. SI DES PARENTS PAYANTS TROUVÉS → LES RETOURNER UNIQUEMENT
+        if ($parentsPayants->count() > 0) {
+            $this->parentRecherche = null;
+            return $parentsPayants;
+        }
+
+        // 3. RECHERCHE DES PARENTS GRATUITS (prix = 0)
+        $parentsGratuits = Analyse::where('status', true)
+                        ->where('level', 'PARENT')
+                        ->where(function($query) {
+                            $query->where('prix', 0)->orWhereNull('prix');
+                        })
+                        ->where(function($query) use ($terme) {
+                            $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
+                                ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
+                        })
+                        ->with(['enfants' => function($query) {
+                            $query->where('status', true)
+                                  ->where('prix', '>', 0); // Enfants PAYANTS seulement
+                        }])
+                        ->get();
+
+        // 4. SI PARENT GRATUIT TROUVÉ AVEC ENFANTS PAYANTS → RETOURNER LES ENFANTS
+        $enfantsPayants = collect();
+        foreach ($parentsGratuits as $parentGratuit) {
+            if ($parentGratuit->enfants->count() > 0) {
+                // Marquer le parent de recherche pour l'affichage
+                $this->parentRecherche = $parentGratuit;
+                $enfantsPayants = $enfantsPayants->concat($parentGratuit->enfants);
+            }
+        }
+
+        if ($enfantsPayants->count() > 0) {
+            return $enfantsPayants->sortBy(function($analyse) use ($terme) {
+                // Même logique de tri que pour les parents
+                if (strtoupper($analyse->code) === $terme) return 1;
+                if (str_starts_with(strtoupper($analyse->code), $terme)) return 2;
+                if (str_contains(strtoupper($analyse->designation), $terme)) return 3;
+                return 4;
+            })->take(15);
+        }
+
+        // 5. RECHERCHE DES ANALYSES INDIVIDUELLES 
+        // (sans parent OU avec parent gratuit SANS enfants payants)
         $individuelles = Analyse::where('status', true)
                             ->whereIn('level', ['NORMAL', 'CHILD'])
                             ->where(function($query) use ($terme) {
@@ -959,22 +1199,25 @@ public function getTitle()
                                         ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
                             })
                             ->with('parent')
-                            ->orderByRaw("
-                                CASE 
-                                    WHEN UPPER(code) = ? THEN 1
-                                    WHEN UPPER(code) LIKE ? THEN 2
-                                    WHEN UPPER(designation) LIKE ? THEN 3
-                                    ELSE 4
-                                END
-                            ", [$terme, "{$terme}%", "%{$terme}%"])
-                            ->limit(15)
-                            ->get();
-
-        // 3. COMBINER LES RÉSULTATS (Parents en premier)
-        $results = $parents->concat($individuelles)->take(20);
+                            ->get()
+                            ->filter(function($analyse) {
+                                // Inclure si :
+                                // - Pas de parent du tout
+                                // - Parent gratuit ET l'analyse a un prix
+                                // - Parent payant mais l'analyse n'est pas dans un "panel complet"
+                                return !$analyse->parent || 
+                                       ($analyse->parent && $analyse->parent->prix <= 0 && $analyse->prix > 0);
+                            })
+                            ->sortBy(function($analyse) use ($terme) {
+                                if (strtoupper($analyse->code) === $terme) return 1;
+                                if (str_starts_with(strtoupper($analyse->code), $terme)) return 2;
+                                if (str_contains(strtoupper($analyse->designation), $terme)) return 3;
+                                return 4;
+                            })
+                            ->take(15);
 
         $this->parentRecherche = null;
-        return $results;
+        return $individuelles;
     }
 
     public function getPrescripteursProperty()

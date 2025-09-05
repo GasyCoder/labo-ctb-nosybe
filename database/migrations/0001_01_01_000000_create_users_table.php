@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('username')->unique();
+            $table->string('email')->nullable()->unique(); // ✅ AJOUT DE EMAIL (nullable car optionnel)
             $table->enum('type', ['secretaire', 'technicien', 'biologiste', 'admin']);
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
@@ -20,7 +21,7 @@ return new class extends Migration
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('username')->primary();
+            $table->string('username')->primary(); // ✅ Gardez username comme clé
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
@@ -34,7 +35,6 @@ return new class extends Migration
             $table->integer('last_activity')->index();
         });
 
-        // ✅ NOUVELLE TABLE AJOUTÉE
         Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->id();
             $table->morphs('tokenable');
@@ -52,6 +52,6 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
-        Schema::dropIfExists('personal_access_tokens'); // ✅ AJOUTÉ AUSSI
+        Schema::dropIfExists('personal_access_tokens');
     }
 };

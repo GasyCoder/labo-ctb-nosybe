@@ -55,8 +55,8 @@
                     <span class="font-medium text-slate-700 dark:text-slate-300">Patient:</span>
                     <span class="text-slate-900 dark:text-slate-100">
                         {{ $patient->nom ?? '' }} {{ $patient->prenom ?? '' }}
-                        @if ($patient->latest_age ?? '')
-                            ({{ $patient->latest_age ?? '' }} ans)
+                        @if ($age ?? '')
+                            ({{ $age ?? '' }} {{ $uniteAge ?? 'ans' }})
                         @endif
                     </span>
                 </div>
@@ -95,59 +95,60 @@
             <div class="space-y-3 mt-4">
                 {{-- BOUTON PRINCIPAL FACTURATION --}}
                 @if($prescription)
-                    <button
-                        wire:click="afficherFactureComplete"
+                    <a
+                        href="{{ route('secretaire.prescription.facture', $prescription->id) }}"
+                        target="_blank"
                         class="w-full flex items-center justify-center px-4 py-3 {{ $isEditMode ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600' }} text-white rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-md">
                         <em class="ni ni-file-docs mr-2 text-base"></em>
                         {{ $isEditMode ? 'Voir Facture Modifiée' : 'Voir Facture' }}
-                    </button>
+                    </a>
                 @else
-                    <button
+                    <div
                         class="w-full flex items-center justify-center px-4 py-3 bg-gray-400 text-white rounded-lg text-sm font-medium transition-all duration-200 cursor-not-allowed opacity-70">
                         <em class="ni ni-file-docs mr-2 text-base"></em>
                         Facture non disponible
-                    </button>
+                    </div>
                 @endif
 
                {{-- ACTIONS SECONDAIRES --}}
-<div class="grid grid-cols-3 gap-2">
-    <button wire:click="nouveauPrescription"
-        class="flex items-center justify-center px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm transition-colors">
-        <em class="ni ni-plus mr-1 text-xs"></em> Nouvelle
-    </button>
+                <div class="grid grid-cols-3 gap-2">
+                    <button 
+                        wire:click="nouveauPrescription"
+                        class="flex items-center justify-center px-3 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm transition-colors">
+                        <em class="ni ni-plus mr-1 text-xs"></em> Nouvelle
+                    </button>
 
-    @if($prescription)
-        <button onclick="imprimerFacture()"
-            class="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm transition-colors">
-            <em class="ni ni-printer mr-1 text-xs"></em> Imprimer
-        </button>
-    @else
-        <button
-            class="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm transition-colors opacity-50 cursor-not-allowed">
-            <em class="ni ni-printer mr-1 text-xs"></em> Imprimer
-        </button>
-    @endif
-    
-    <a href="{{ route('secretaire.prescription.index') }}" wire:navigate
-        class="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm transition-colors">
-        <em class="ni ni-list mr-1 text-xs"></em> Liste
-    </a>
-</div>
+                    @if($prescription)
+                        <a 
+                            href="{{ route('secretaire.prescription.facture', $prescription->id) }}?print=1"
+                            target="_blank"
+                            class="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm transition-colors">
+                            <em class="ni ni-printer mr-1 text-xs"></em> Imprimer
+                        </a>
+                    @else
+                        <div
+                            class="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm transition-colors opacity-50 cursor-not-allowed">
+                            <em class="ni ni-printer mr-1 text-xs"></em> Imprimer
+                        </div>
+                    @endif
+                    
+                    <a href="{{ route('secretaire.prescription.index') }}" wire:navigate
+                        class="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg text-sm transition-colors">
+                        <em class="ni ni-list mr-1 text-xs"></em> Liste
+                    </a>
+                </div>
 
                 {{-- ACTIONS RAPIDES SUPPLÉMENTAIRES --}}
                 <div class="pt-2 border-t border-gray-100 dark:border-slate-600">
                     <div class="flex justify-center space-x-4 text-xs">
                         @if($prescription)
-                            <button wire:click="facture"
+                            <a 
+                                href="{{ route('secretaire.prescription.facture', $prescription->id) }}"
+                                target="_blank"
                                 class="flex items-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors">
-                                <em class="ni ni-send mr-1 text-xs"></em>
-                                <span>Envoyer par email</span>
-                            </button>
-                            <button
-                                class="flex items-center text-slate-500 hover:text-green-600 dark:text-slate-400 dark:hover:text-green-400 transition-colors">
-                                <em class="ni ni-whatsapp mr-1 text-xs"></em>
-                                <span>WhatsApp</span>
-                            </button>
+                                <em class="ni ni-external-link mr-1 text-xs"></em>
+                                <span>Nouvelle fenêtre</span>
+                            </a>
                         @endif
                     </div>
                 </div>
@@ -181,59 +182,4 @@
             </div>
         </div>
     </div>
-
-    {{-- MODAL POUR LA FACTURE COMPLÈTE --}}
-    @if($afficherFactureComplete && $prescription)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h3 class="text-lg font-semibold">Facture - {{ $prescription->reference }}</h3>
-                    <button wire:click="fermerFacture" class="text-gray-500 hover:text-gray-700">
-                        <em class="ni ni-cross text-xl"></em>
-                    </button>
-                </div>
-                <div class="p-6">
-                    <!-- Intégration de la facture complète -->
-                    @include('livewire.secretaire.prescription.facture-impression', ['prescription' => $prescription])
-                </div>
-                <div class="flex justify-end p-4 border-t">
-                    <button onclick="generatePDF()" class="btn-download mr-2">
-                        📥 Télécharger PDF
-                    </button>
-                    <button onclick="printInvoice()" class="btn-print mr-2">
-                        🖨️ Imprimer
-                    </button>
-                    <button wire:click="fermerFacture" class="btn btn-back">
-                        Fermer
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
-
-   @push('scripts')
-    <script>
-        function imprimerFacture() {
-            @if($prescription)
-                // ✅ CORRECTION : Utiliser le bon nom de route
-                const url = "{{ route('secretaire.prescription.facture', ['prescription' => $prescription->id]) }}";
-                const fenetreImpression = window.open(url, '_blank');
-                
-                // Vérifier si la fenêtre a été bloquée par le navigateur
-                if (!fenetreImpression || fenetreImpression.closed || typeof fenetreImpression.closed == 'undefined') {
-                    alert('Veuvez autoriser les pop-ups pour imprimer la facture.');
-                    // Alternative: redirection vers la page de facture
-                    window.location.href = url;
-                } else {
-                    // Attendre que la fenêtre soit chargée puis imprimer
-                    fenetreImpression.onload = function() {
-                        fenetreImpression.print();
-                    };
-                }
-            @else
-                alert('Aucune prescription disponible pour l\'impression.');
-            @endif
-        }
-    </script>
-@endpush
 @endif

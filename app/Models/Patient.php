@@ -21,6 +21,15 @@ class Patient extends Model
         'statut'
     ];
 
+    // ✅ CONSTANTES POUR LES CIVILITÉS
+    const CIVILITES = [
+        'Madame',
+        'Monsieur', 
+        'Mademoiselle',
+        'Enfant_garçon',
+        'Enfant_fille'
+    ];
+
     // Relations
     public function prescriptions()
     {
@@ -53,6 +62,40 @@ class Patient extends Model
     public function scopeNouveaux($query)
     {
         return $query->where('statut', 'NOUVEAU');
+    }
+
+    // ✅ SCOPE POUR FILTRER LES ENFANTS
+    public function scopeEnfants($query)
+    {
+        return $query->whereIn('civilite', ['Enfant garçon', 'Enfant fille']);
+    }
+
+    // ✅ SCOPE POUR FILTRER LES ADULTES
+    public function scopeAdultes($query)
+    {
+        return $query->whereIn('civilite', ['Madame', 'Monsieur', 'Mademoiselle']);
+    }
+
+    // ✅ ACCESSEUR POUR DÉTERMINER SI C'EST UN ENFANT
+    public function getIsEnfantAttribute()
+    {
+        return in_array($this->civilite, ['Enfant garçon', 'Enfant fille']);
+    }
+
+    // ✅ ACCESSEUR POUR LE GENRE (utile pour les analyses spécifiques au genre)
+    public function getGenreAttribute()
+    {
+        switch ($this->civilite) {
+            case 'Madame':
+            case 'Mademoiselle':
+            case 'Enfant fille':
+                return 'F';
+            case 'Monsieur':
+            case 'Enfant garçon':
+                return 'M';
+            default:
+                return null;
+        }
     }
 
     // ✅ ACCESSEUR POUR L'ÂGE LE PLUS RÉCENT

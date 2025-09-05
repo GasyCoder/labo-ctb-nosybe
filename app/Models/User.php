@@ -27,15 +27,10 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'username',
+        'email', // ✅ AJOUT
         'password',
         'type',
     ];
-
-
-    public function getAuthIdentifierName()
-    {
-        return 'username';
-    }
 
     protected $hidden = [
         'password',
@@ -49,14 +44,56 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    
+
+    // ✅ MÉTHODES D'AUTHENTIFICATION IMPORTANTES
+    /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'id'; 
+    }
+    /**
+     * Get the unique identifier for the user.
+     */
+    public function getAuthIdentifier()
+    {
+        return $this->getAttribute($this->getAuthIdentifierName());
+    }
+
+    /**
+     * Get the password for the user.
+     */
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * Get the "remember me" token value.
+     */
+    public function getRememberToken()
+    {
+        return $this->remember_token;
+    }
+
+    /**
+     * Set the "remember me" token value.
+     */
+    public function setRememberToken($value)
+    {
+        $this->remember_token = $value;
+    }
+
+    /**
+     * Get the column name for the "remember me" token.
+     */
+    public function getRememberTokenName()
+    {
+        return 'remember_token';
+    }
 
     // ========== ACCESSEURS ==========
-    /**
-     * Obtenir le nom du type d'utilisateur
-     */
-    // Dans app/Models/User.php
-
     public function getTypeNameAttribute()
     {
         return [
@@ -67,9 +104,6 @@ class User extends Authenticatable
         ][$this->type] ?? 'Inconnu';
     }
 
-    /**
-     * Obtenir les initiales de l'utilisateur
-     */
     public function getInitialsAttribute(): string
     {
         $words = explode(' ', $this->name);
@@ -81,41 +115,26 @@ class User extends Authenticatable
     }
 
     // ========== MÉTHODES DE VÉRIFICATION DES RÔLES ==========
-    /**
-     * Vérifier si l'utilisateur est admin
-     */
     public function isAdmin(): bool
     {
         return $this->type === self::TYPE_ADMIN;
     }
 
-    /**
-     * Vérifier si l'utilisateur est secrétaire
-     */
     public function isSecretaire(): bool
     {
         return $this->type === self::TYPE_SECRETAIRE;
     }
 
-    /**
-     * Vérifier si l'utilisateur est technicien
-     */
     public function isTechnicien(): bool
     {
         return $this->type === self::TYPE_TECHNICIEN;
     }
 
-    /**
-     * Vérifier si l'utilisateur est biologiste
-     */
     public function isBiologiste(): bool
     {
         return $this->type === self::TYPE_BIOLOGISTE;
     }
 
-    /**
-     * Vérifier si l'utilisateur a un des rôles spécifiés
-     */
     public function hasRole(string|array $roles): bool
     {
         if (is_string($roles)) {
@@ -125,42 +144,27 @@ class User extends Authenticatable
         return in_array($this->type, $roles);
     }
 
-    /**
-     * Vérifier si l'utilisateur peut accéder à l'administration
-     */
     public function canAccessAdmin(): bool
     {
         return $this->isAdmin();
     }
 
-    /**
-     * Vérifier si l'utilisateur peut gérer les prescriptions
-     */
     public function canManagePrescriptions(): bool
     {
         return $this->hasRole([self::TYPE_ADMIN, self::TYPE_SECRETAIRE]);
     }
 
-    /**
-     * Vérifier si l'utilisateur peut effectuer des analyses
-     */
     public function canPerformAnalyses(): bool
     {
         return $this->hasRole([self::TYPE_ADMIN, self::TYPE_TECHNICIEN, self::TYPE_BIOLOGISTE]);
     }
 
-    /**
-     * Vérifier si l'utilisateur peut valider les résultats
-     */
     public function canValidateResults(): bool
     {
         return $this->hasRole([self::TYPE_ADMIN, self::TYPE_BIOLOGISTE]);
     }
 
     // ========== SCOPES ==========
-    /**
-     * Filtrer par type d'utilisateur
-     */
     public function scopeOfType($query, string $type)
     {
         return $query->where('type', $type);
@@ -186,9 +190,6 @@ class User extends Authenticatable
         return $query->where('type', self::TYPE_ADMIN);
     }
 
-    /**
-     * Recherche par nom ou username
-     */
     public function scopeSearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
@@ -198,50 +199,32 @@ class User extends Authenticatable
     }
 
     // ========== RELATIONS ==========
-    /**
-     * Prescriptions créées par ce secrétaire
-     */
     public function prescriptions()
     {
         return $this->hasMany(Prescription::class, 'secretaire_id');
     }
 
-    /**
-     * Analyses effectuées par ce technicien
-     */
     public function analyses()
     {
         return $this->hasMany(Analyse::class, 'technicien_id');
     }
 
-    /**
-     * Résultats validés par ce biologiste
-     */
     public function validatedResults()
     {
         return $this->hasMany(Resultat::class, 'biologiste_id');
     }
 
     // ========== MÉTHODES UTILITAIRES ==========
-    /**
-     * Obtenir la liste des types disponibles
-     */
     public static function getAvailableTypes(): array
     {
         return self::TYPES;
     }
 
-    /**
-     * Vérifier si un type est valide
-     */
     public static function isValidType(string $type): bool
     {
         return array_key_exists($type, self::TYPES);
     }
 
-    /**
-     * Obtenir le nombre d'utilisateurs par type
-     */
     public static function getCountByType(): array
     {
         $counts = [];
@@ -251,17 +234,11 @@ class User extends Authenticatable
         return $counts;
     }
 
-    /**
-     * Formater le nom complet
-     */
     public function getFullNameAttribute(): string
     {
         return $this->name;
     }
 
-    /**
-     * Obtenir l'avatar par défaut basé sur les initiales
-     */
     public function getAvatarAttribute(): string
     {
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';

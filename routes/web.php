@@ -2,6 +2,7 @@
 
 use App\Livewire\Archives;
 use App\Livewire\Dashboard;
+use App\Models\Prescription;
 use App\Livewire\Admin\Types;
 use App\Livewire\Admin\Examens;
 use App\Livewire\Admin\Analyses;
@@ -24,10 +25,10 @@ use App\Livewire\Technicien\IndexTechnicien;
 use App\Livewire\Technicien\ShowPrescription;
 use App\Livewire\Biologiste\BiologisteAnalysisForm;
 use App\Livewire\Secretaire\Prescription\AddPrescription;
+use App\Http\Controllers\BiologistePrescriptionController;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
 use App\Livewire\Secretaire\Prescription\PrescriptionIndex;
-use App\Http\Controllers\BiologistePrescriptionController;
-use App\Http\Controllers\FactureController;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 
 
@@ -56,6 +57,7 @@ Route::get('/', function () {
     }
     return redirect('/login');
 })->name('root');
+
 // ============================================
 // ROUTES COMMUNES (TOUS LES UTILISATEURS CONNECTÉS)
 // ============================================
@@ -73,6 +75,7 @@ Route::middleware(['auth', 'verified', 'role.redirect'])->group(function () {
     // Archives
     Route::get('/archives', Archives::class)->name('archives');
 });
+
 // ============================================
 // ROUTES SPÉCIFIQUES AUX SECRÉTAIRES
 // ============================================
@@ -80,6 +83,17 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
     Route::get('prescription/listes', PrescriptionIndex::class)->name('prescription.index');
     Route::get('nouvel-prescription', AddPrescription::class)->name('prescription.create');
     Route::get('/prescription/edit/{prescriptionId}', EditPrescription::class)->name('prescription.edit');
+    
+    Route::get('/prescription/{prescription}/facture', function(Prescription $prescription) {
+        $prescription->load(['patient', 'prescripteur', 'analyses', 'prelevements', 'paiements.paymentMethod', 'secretaire']);
+        
+        $pdf = PDF::loadView('factures.pdf-template', compact('prescription'))
+                ->setPaper('a4', 'portrait')
+                ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+        
+        return $pdf->stream("facture-{$prescription->reference}.pdf");
+    })->name('prescription.facture');
+        
     Route::get('patients', Patients::class)->name('patients');
     Route::get('patients/{patient}', PatientDetail::class)->name('patient.detail');
     Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
@@ -93,7 +107,6 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')->name('technicien.')->group(function () {
     Route::get('traitement', IndexTechnicien::class)->name('index');
     Route::get('/technicien/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
-    // Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
 });
 
 // ============================================
@@ -105,7 +118,7 @@ Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')
     Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
     Route::post('/prescription/{prescription}/validate', [BiologistePrescriptionController::class, 'validate'])->name('prescription.validate');
 
-    // ✅ NOUVELLES ROUTES POUR LES RÉSULTATS PDF
+    // ✅ ROUTES POUR LES RÉSULTATS PDF (BIOLOGISTE)
     Route::get('/prescription/{prescription}/pdf', [ResultatController::class, 'generatePdf'])->name('prescription.pdf');
     Route::get('/prescription/{prescription}/preview', [ResultatController::class, 'preview'])->name('prescription.preview');
     Route::get('/prescription/{prescription}/stats', [ResultatController::class, 'statistics'])->name('prescription.statistics');
@@ -140,12 +153,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('trace-patients', TracePatient::class)->name('trace-patients');
     
 });
-
-// // Route temporaire pour debug - à supprimer ensuite
-// Route::get('/logout', function () {
-//     Auth::logout();
-//     return redirect('/');
-// })->name('logout.get');
 
 
 require __DIR__ . '/auth.php';

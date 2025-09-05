@@ -308,6 +308,8 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \App\Models\Prescription|null $dernierePrescription
  * @property-read mixed $derniere_visite
+ * @property-read mixed $genre
+ * @property-read mixed $is_enfant
  * @property-read mixed $latest_age
  * @property-read mixed $latest_unite_age
  * @property-read mixed $montant_total_paye
@@ -319,6 +321,8 @@ namespace App\Models{
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prescription> $prescriptions
  * @property-read int|null $prescriptions_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient actifs($jours = 30)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient adultes()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient enfants()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient fideles()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Patient newQuery()
@@ -815,6 +819,7 @@ namespace App\Models{
  * @property int $id
  * @property string $name
  * @property string $username
+ * @property string|null $email
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
@@ -844,6 +849,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User secretaires()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User techniciens()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereEmailVerifiedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereName($value)
