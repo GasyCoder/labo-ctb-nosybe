@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('prescription_id')->constrained('prescriptions')->onDelete('cascade');
             $table->foreignId('analyse_id')->constrained('analyses')->onDelete('cascade');
+            $table->string('valeur_min')->nullable();
+            $table->string('valeur_max')->nullable();
+            $table->string('valeur_normal')->nullable();
             $table->timestamps();
 
             $table->unique(['prescription_id', 'analyse_id']);
