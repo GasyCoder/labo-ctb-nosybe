@@ -141,13 +141,12 @@ class ResultatController extends Controller
     private function organiserAnalyses(Collection $analyses): Collection
     {
         $analysesOrganisees = collect();
-        
+        $patient = optional($analyses->first()?->prescription?->patient);
+
         foreach ($analyses as $analyse) {
             // Vérifier si l'analyse a des résultats
             $hasResults = $analyse->resultats->isNotEmpty() || 
-                         ($analyse->enfants->isNotEmpty() && $analyse->enfants->some(function($enfant) { // CORRECTION: 'enfants'
-                             return $enfant->resultats->isNotEmpty();
-                         }));
+                         ($analyse->enfants->isNotEmpty() && $analyse->enfants->some(fn($enfant) => $enfant->resultats->isNotEmpty()));
             
             if ($hasResults) {
                 $analysesOrganisees->push((object)[
@@ -155,15 +154,14 @@ class ResultatController extends Controller
                     'name' => $analyse->designation,
                     'code' => $analyse->code,
                     'unite' => $analyse->unite,
+                    'age' => $patient->age ?? null,
                     'valeur_min' => $this->extraireValeurMin($analyse->valeur_ref),
                     'valeur_max' => $this->extraireValeurMax($analyse->valeur_ref),
                     'valeur_normal' => $analyse->valeur_ref,
                     'level_value' => $analyse->level,
                     'parent_code' => $analyse->parent_id,
                     'resultats' => $analyse->resultats,
-                    'enfants' => $analyse->enfants->filter(function($enfant) { // CORRECTION: 'enfants'
-                        return $enfant->resultats->isNotEmpty();
-                    })
+                    'enfants' => $analyse->enfants->filter(fn($enfant) => $enfant->resultats->isNotEmpty())
                 ]);
             }
         }

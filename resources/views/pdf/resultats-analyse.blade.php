@@ -206,7 +206,7 @@
         <!-- Nom du laboratoire -->
         <div class="lab-name">
             LABORATOIRE<br>
-            <span style="color: #DC143C;">La RÉFÉRENCE</span>
+            <span style="color: #DC143C;">CTB Nosy Be</span>
         </div>
         
         <!-- Barre rouge -->
@@ -214,16 +214,16 @@
         
         <!-- Détails du laboratoire -->
         <div class="lab-details">
-            NIF:4003190741 du 30/10/18 - STAT:86903412017G.00010<br>
-            RCS 2018A00156
+            NIF: - STAT: <br>
+            RCS :
         </div>
         
         <!-- Informations de contact -->
         <div class="contact-info">
-            <strong>Tél Bureau : 261 34 53 211 41</strong><br>
-            <strong>Tél Urgences : 261 34 76 637 92</strong><br>
-            Mangarivotra<br>
-            <strong>MAHAJANGA 401</strong>
+            <strong>Tél Bureau : 261 xx xxx xx</strong><br>
+            <strong>Tél Urgences : 261 xx xxx xx</strong><br>
+            DJAMANJARY<br>
+            <strong>Nosy Be</strong>
         </div>
         
         <!-- Code QR -->
