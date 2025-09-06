@@ -478,14 +478,14 @@
                     <span class="info-label">Tubes:</span>
                     {{ $prescription->tubes->count() }} tube(s)
                 </div>
-                <div class="info-line">
+                {{-- <div class="info-line">
                     <span class="info-label">Commission:</span>
                     {{ number_format($paiement->commission_prescripteur ?? 0, 0) }} Ar
-                </div>
-                <div class="info-line">
+                </div> --}}
+                {{-- <div class="info-line">
                     <span class="info-label">Délai:</span>
                     24-48h ouvrables
-                </div>
+                </div> --}}
             </div>
         </div>
 
