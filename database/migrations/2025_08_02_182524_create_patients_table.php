@@ -25,6 +25,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index('numero_dossier');
+            $table->index(['nom', 'prenom', 'date_naissance']);
         });
     }
 

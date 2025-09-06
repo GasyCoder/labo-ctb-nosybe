@@ -39,10 +39,6 @@ return new class extends Migration
             $table->index('examen_id');
             $table->index('type_id');
 
-           
-           
-            
-
             // TOUTES LES CONTRAINTES FOREIGN KEY
             $table->foreign('parent_id')->references('id')->on('analyses')->onDelete('cascade');
             $table->foreign('examen_id')->references('id')->on('examens')->onDelete('set null');

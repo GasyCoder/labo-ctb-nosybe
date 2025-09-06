@@ -114,13 +114,18 @@ Route::middleware(['auth', 'verified', 'role:technicien'])->prefix('technicien')
 // ROUTES SPÉCIFIQUES AUX BIOLOGISTES
 // ============================================
 Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')->name('biologiste.')->group(function () {
-    Route::get('/analyse-valide', AnalyseValide::class)->name('analyse.index'); // Nom de route unifié
+    // Routes principales
+    Route::get('/analyse-valide', AnalyseValide::class)->name('analyse.index');
     Route::get('/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
     Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
-    Route::post('/prescription/{prescription}/validate', [BiologistePrescriptionController::class, 'validate'])->name('prescription.validate');
-
-   Route::get('/prescription/{prescription}/pdf', [PrescriptionPdfController::class, 'show'])
-            ->name('prescription.pdf');
+    
+    // ✅ CORRECTION : Routes PDF avec deux options
+    Route::get('/prescription/{prescription}/pdf', [PrescriptionPdfController::class, 'show'])
+        ->name('prescription.pdf');
+    
+    // ✅ NOUVEAU : Route pour téléchargement direct (optionnel)
+    Route::get('/prescription/{prescription}/download-pdf', [PrescriptionPdfController::class, 'downloadPdf'])
+        ->name('prescription.download-pdf');
 });
 
 // ============================================

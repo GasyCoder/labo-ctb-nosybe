@@ -6,8 +6,6 @@ use App\Models\Examen;
 use App\Models\Analyse;
 use App\Models\Resultat;
 use App\Models\Prescription;
-use App\Models\Antibiogramme;
-use App\Models\ResultatAntibiotique;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -15,170 +13,139 @@ use Illuminate\Support\Facades\Storage;
 class ResultatPdfShow
 {
     /**
-     * ✅ CORRECTION : Récupérer les antibiogrammes selon la vraie structure
-     */
-    private function getAntibiogrammes($prescriptionId, $analyseId)
-    {
-        return Antibiogramme::where('prescription_id', $prescriptionId)
-            ->where('analyse_id', $analyseId)
-            ->with([
-                'bacterie' => function($query) {
-                    $query->with('famille');
-                }
-            ])
-            ->get()
-            ->map(function($antibiogramme) {
-                // ✅ CORRECTION : Récupérer les résultats d'antibiotiques selon la vraie table
-                $resultatsAntibiotiques = ResultatAntibiotique::where('antibiogramme_id', $antibiogramme->id)
-                    ->with('antibiotique')
-                    ->get();
-                
-                // ✅ CORRECTION : Grouper par interpretation (S, I, R)
-                $antibiogramme->antibiotiques_sensibles = $resultatsAntibiotiques
-                    ->where('interpretation', 'S');
-                    
-                $antibiogramme->antibiotiques_resistants = $resultatsAntibiotiques
-                    ->where('interpretation', 'R');
-                    
-                $antibiogramme->antibiotiques_intermediaires = $resultatsAntibiotiques
-                    ->where('interpretation', 'I');
-                
-                return $antibiogramme;
-            });
-    }
-
-    /**
-     * Récupérer les examens avec leurs analyses et résultats validés
+     * Récupérer les examens avec leurs analyses et résultats validés (pour PDF final)
      */
     private function getValidatedExamens(Prescription $prescription)
     {
-        try {
-            // 1. Récupérer les résultats validés avec leurs analyses
-            $validatedResultats = Resultat::where('prescription_id', $prescription->id)
-                ->whereNotNull('validated_by')
-                ->where('status', 'VALIDE')
-                ->with(['analyse' => function($query) {
-                    $query->with(['type', 'examen'])
-                          ->orderBy('ordre', 'asc');
-                }])
-                ->get();
+        $validatedResultats = Resultat::where('prescription_id', $prescription->id)
+            ->whereNotNull('validated_by')
+            ->where('status', 'VALIDE')
+            ->with(['analyse' => function($query) {
+                $query->with(['type', 'examen'])
+                      ->orderBy('ordre', 'asc');
+            }])
+            ->get();
 
-            if ($validatedResultats->isEmpty()) {
-                Log::warning('Aucun résultat validé trouvé pour la prescription', [
-                    'prescription_id' => $prescription->id
-                ]);
-                return collect();
-            }
+        if ($validatedResultats->isEmpty()) {
+            return collect();
+        }
 
-            // 2. Récupérer les IDs d'analyses validées
-            $analysesIds = $validatedResultats->pluck('analyse_id')->unique();
+        return $this->buildExamensStructure($validatedResultats);
+    }
 
-            // 3. Récupérer les analyses avec hiérarchie complète
-            $analyses = Analyse::where(function($query) use ($analysesIds) {
-                    $query->whereIn('id', $analysesIds)
-                          ->orWhereHas('enfants', function($q) use ($analysesIds) {
-                              $q->whereIn('id', $analysesIds);
-                          })
-                          ->orWhereHas('enfantsRecursive', function($q) use ($analysesIds) {
-                              $q->whereIn('id', $analysesIds);
-                          });
-                })
-                ->with([
-                    'type',
-                    'examen', 
-                    'enfantsRecursive' => function($query) use ($analysesIds) {
-                        $query->whereIn('id', $analysesIds)
-                              ->orderBy('ordre', 'asc')
-                              ->with('type');
-                    }
-                ])
-                ->orderBy('ordre', 'asc')
-                ->get();
+    /**
+     * Récupérer les examens avec tous les résultats saisis (pour aperçu PDF)
+     */
+    private function getAllResultsExamens(Prescription $prescription)
+    {
+        $allResultats = Resultat::where('prescription_id', $prescription->id)
+            ->where(function($query) {
+                $query->whereNotNull('valeur')
+                      ->where('valeur', '!=', '')
+                      ->orWhereNotNull('resultats');
+            })
+            ->with(['analyse' => function($query) {
+                $query->with(['type', 'examen'])
+                      ->orderBy('ordre', 'asc');
+            }])
+            ->get();
 
-            // 4. Associer les résultats aux analyses avec antibiogrammes
-            $analyses = $analyses->map(function($analyse) use ($validatedResultats, $prescription) {
-                $resultatsAnalyse = $validatedResultats->where('analyse_id', $analyse->id);
-                $analyse->resultats = $resultatsAnalyse;
+        if ($allResultats->isEmpty()) {
+            return collect();
+        }
 
-                // ✅ CORRECTION : Ajouter les antibiogrammes pour les analyses GERME/CULTURE
-                if ($analyse->type && in_array(strtoupper($analyse->type->name), ['GERME', 'CULTURE'])) {
-                    $analyse->antibiogrammes = $this->getAntibiogrammes($prescription->id, $analyse->id);
-                }
+        return $this->buildExamensStructure($allResultats);
+    }
 
-                // Traiter récursivement les enfants
-                if ($analyse->enfantsRecursive && $analyse->enfantsRecursive->isNotEmpty()) {
-                    $analyse->children = $analyse->enfantsRecursive->map(function($child) use ($validatedResultats, $prescription) {
-                        $resultatsEnfant = $validatedResultats->where('analyse_id', $child->id);
-                        $child->resultats = $resultatsEnfant;
-                        
-                        // ✅ CORRECTION : Ajouter les antibiogrammes pour les enfants GERME/CULTURE
-                        if ($child->type && in_array(strtoupper($child->type->name), ['GERME', 'CULTURE'])) {
-                            $child->antibiogrammes = $this->getAntibiogrammes($prescription->id, $child->id);
-                        }
-                        
-                        return $child;
-                    });
-                } else {
-                    $analyse->children = collect();
-                }
+    /**
+     * Construire la structure des examens avec leurs résultats
+     */
+    private function buildExamensStructure($resultats)
+    {
+        $analysesIds = $resultats->pluck('analyse_id')->unique();
 
-                return $analyse;
-            });
-
-            // 5. Regrouper par examens
-            $examensWithResults = Examen::whereHas('analyses', function($query) use ($analysesIds) {
-                    $query->whereIn('id', $analysesIds);
-                })
-                ->with(['analyses' => function($query) use ($analysesIds) {
+        // Récupérer toutes les analyses liées
+        $allAnalyses = Analyse::where(function($query) use ($analysesIds) {
+                $query->whereIn('id', $analysesIds)
+                      ->orWhereHas('enfants', function($q) use ($analysesIds) {
+                          $q->whereIn('id', $analysesIds);
+                      })
+                      ->orWhereHas('enfantsRecursive', function($q) use ($analysesIds) {
+                          $q->whereIn('id', $analysesIds);
+                      });
+            })
+            ->with([
+                'type',
+                'examen',
+                'parent',
+                'enfantsRecursive' => function($query) use ($analysesIds) {
                     $query->whereIn('id', $analysesIds)
                           ->orderBy('ordre', 'asc')
-                          ->with(['type', 'enfantsRecursive' => function($q) use ($analysesIds) {
-                              $q->whereIn('id', $analysesIds)
-                                ->orderBy('ordre', 'asc')
-                                ->with('type');
-                          }]);
-                }])
-                ->get()
-                ->map(function($examen) use ($analyses, $validatedResultats) {
-                    $analysesEnrichies = collect();
+                          ->with(['type']);
+                }
+            ])
+            ->orderBy('ordre', 'asc')
+            ->get();
 
-                    foreach ($examen->analyses as $analyse) {
-                        $analyseEnrichie = $analyses->firstWhere('id', $analyse->id);
-                        if ($analyseEnrichie) {
-                            $analysesEnrichies->push($analyseEnrichie);
-                        }
-                    }
+        // Associer les résultats et structurer
+        $analysesAvecResultats = $allAnalyses->map(function($analyse) use ($resultats) {
+            $resultatsAnalyse = $resultats->where('analyse_id', $analyse->id);
+            
+            $analyse->resultats = $resultatsAnalyse;
+            $analyse->has_results = $resultatsAnalyse->isNotEmpty();
+            $analyse->is_parent = is_null($analyse->parent_id) || $analyse->level === 'PARENT';
+            $analyse->pdf_level = $analyse->is_parent ? 0 : 1;
 
-                    $examen->analyses = $analysesEnrichies->sortBy('ordre');
-                    $examen->conclusions = $this->getExamenConclusions($examen, $validatedResultats);
+            // Traiter les enfants
+            if ($analyse->enfantsRecursive && $analyse->enfantsRecursive->isNotEmpty()) {
+                $analyse->children = $analyse->enfantsRecursive->map(function($child) use ($resultats) {
+                    $resultatsEnfant = $resultats->where('analyse_id', $child->id);
                     
-                    return $examen;
-                })
-                ->filter(function($examen) {
-                    return $examen->analyses->isNotEmpty();
+                    $child->resultats = $resultatsEnfant;
+                    $child->has_results = $resultatsEnfant->isNotEmpty();
+                    $child->is_parent = false;
+                    $child->pdf_level = 1;
+                    
+                    return $child;
+                });
+            } else {
+                $analyse->children = collect();
+            }
+
+            return $analyse;
+        });
+
+        // Grouper par examens et filtrer
+        return $analysesAvecResultats->groupBy('examen_id')
+            ->map(function($analyses, $examenId) use ($resultats) {
+                $examen = $analyses->first()->examen;
+                
+                $analysesFiltered = $analyses->filter(function($analyse) {
+                    return $analyse->has_results || $analyse->children->where('has_results', true)->isNotEmpty();
                 });
 
-            return $examensWithResults;
+                if ($analysesFiltered->isEmpty()) {
+                    return null;
+                }
 
-        } catch (\Exception $e) {
-            Log::error('Erreur dans getValidatedExamens:', [
-                'prescription_id' => $prescription->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+                $examen->analyses = $analysesFiltered->sortBy('ordre');
+                $examen->conclusions = $this->getExamenConclusions($examen, $resultats);
+                
+                return $examen;
+            })
+            ->filter()
+            ->values();
     }
 
     /**
      * Récupérer les conclusions pour un examen
      */
-    private function getExamenConclusions($examen, $validatedResultats)
+    private function getExamenConclusions($examen, $resultats)
     {
         $conclusions = collect();
 
         foreach ($examen->analyses as $analyse) {
-            $resultatsAnalyse = $validatedResultats->where('analyse_id', $analyse->id);
+            $resultatsAnalyse = $resultats->where('analyse_id', $analyse->id);
             
             foreach ($resultatsAnalyse as $resultat) {
                 if (!empty($resultat->conclusion)) {
@@ -196,109 +163,159 @@ class ResultatPdfShow
     }
 
     /**
-     * Générer le PDF des résultats avec antibiogrammes
+     * Générer le PDF FINAL des résultats validés uniquement
      */
-    public function generatePDF(Prescription $prescription)
+    public function generateFinalPDF(Prescription $prescription)
     {
-        try {
-            // Vérifications préalables
-            if ($prescription->status !== Prescription::STATUS_VALIDE) {
-                throw new \Exception('La prescription doit être validée pour générer le PDF');
-            }
+        if ($prescription->status !== Prescription::STATUS_VALIDE) {
+            throw new \Exception('La prescription doit être validée pour générer le PDF final');
+        }
 
-            $hasValidResults = Resultat::where('prescription_id', $prescription->id)
-                ->where('status', 'VALIDE')
-                ->whereNotNull('validated_by')
-                ->exists();
+        $hasValidResults = Resultat::where('prescription_id', $prescription->id)
+            ->where('status', 'VALIDE')
+            ->whereNotNull('validated_by')
+            ->exists();
 
-            if (!$hasValidResults) {
-                throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
-            }
+        if (!$hasValidResults) {
+            throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
+        }
 
-            // Récupérer les examens avec résultats et antibiogrammes
-            $examens = $this->getValidatedExamens($prescription);
+        $examens = $this->getValidatedExamens($prescription);
 
-            if ($examens->isEmpty()) {
-                throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
-            }
+        if ($examens->isEmpty()) {
+            throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
+        }
 
-            // Charger les relations nécessaires
-            $prescription->load([
-                'patient', 
-                'prescripteur',
-                'resultats' => function($query) {
+        return $this->generatePDF($prescription, $examens, 'final');
+    }
+
+    /**
+     * Générer l'APERÇU PDF de tous les résultats saisis
+     */
+    public function generatePreviewPDF(Prescription $prescription)
+    {
+        $hasAnyResults = Resultat::where('prescription_id', $prescription->id)
+            ->where(function($query) {
+                $query->whereNotNull('valeur')
+                      ->where('valeur', '!=', '')
+                      ->orWhereNotNull('resultats');
+            })
+            ->exists();
+
+        if (!$hasAnyResults) {
+            throw new \Exception('Aucun résultat saisi trouvé pour cette prescription');
+        }
+
+        $examens = $this->getAllResultsExamens($prescription);
+
+        if ($examens->isEmpty()) {
+            throw new \Exception('Aucun résultat saisi trouvé pour cette prescription');
+        }
+
+        return $this->generatePDF($prescription, $examens, 'preview');
+    }
+
+    /**
+     * Méthode commune pour générer les PDFs
+     */
+    private function generatePDF(Prescription $prescription, $examens, $type = 'final')
+    {
+        // Charger les relations nécessaires
+        $prescription->load([
+            'patient', 
+            'prescripteur',
+            'resultats' => function($query) use ($type) {
+                if ($type === 'final') {
                     $query->where('status', 'VALIDE')
                           ->with(['analyse', 'validatedBy']);
+                } else {
+                    $query->where(function($q) {
+                              $q->whereNotNull('valeur')
+                                ->where('valeur', '!=', '')
+                                ->orWhereNotNull('resultats');
+                          })
+                          ->with(['analyse']);
                 }
-            ]);
+            }
+        ]);
 
-            // Récupérer la conclusion générale
-            $conclusionGenerale = $this->getConclusionGenerale($prescription);
+        $conclusionGenerale = $this->getConclusionGenerale($prescription, $type);
 
-            // Créer le nom de fichier
-            $timestamp = time();
-            $filename = 'resultats-' . $prescription->reference . '-' . $timestamp . '.pdf';
+        // Créer le nom de fichier
+        $timestamp = time();
+        $prefix = $type === 'final' ? 'resultats-final' : 'apercu-resultats';
+        $filename = $prefix . '-' . $prescription->reference . '-' . $timestamp . '.pdf';
 
-            // Préparer les données pour la vue
-            $data = [
-                'prescription' => $prescription,
-                'examens' => $examens,
-                'conclusion_generale' => $conclusionGenerale,
-                'laboratoire_name' => config('app.laboratoire_name', 'LABORATOIRE'),
-                'date_generation' => now()->format('d/m/Y H:i'),
-                'validated_by' => $prescription->resultats->first()->validatedBy->name ?? 'Non spécifié'
-            ];
+        // Préparer les données pour la vue
+        $data = [
+            'prescription' => $prescription,
+            'examens' => $examens,
+            'conclusion_generale' => $conclusionGenerale,
+            'type_pdf' => $type,
+            'laboratoire_name' => config('app.laboratoire_name', 'LABORATOIRE'),
+            'date_generation' => now()->format('d/m/Y H:i'),
+            'validated_by' => $type === 'final' 
+                ? ($prescription->resultats->first()?->validatedBy?->name ?? 'Non spécifié')
+                : null
+        ];
 
-            // Générer le PDF
-            $pdf = PDF::loadView('pdf.analyses.resultats-analyses', $data);
-            
-            $pdf->setPaper('A4', 'portrait');
-            $pdf->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultFont' => 'Helvetica'
-            ]);
+        // Générer le PDF
+        $pdf = PDF::loadView('pdf.analyses.resultats-analyses', $data);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'Helvetica'
+        ]);
 
-            // Sauvegarder le fichier
-            $path = 'pdfs/' . $filename;
-            Storage::disk('public')->put($path, $pdf->output());
+        // Sauvegarder le fichier
+        $path = 'pdfs/' . $filename;
+        Storage::disk('public')->put($path, $pdf->output());
 
-            return Storage::disk('public')->url($path);
-
-        } catch (\Exception $e) {
-            Log::error('Erreur génération PDF ResultatPdfShow:', [
-                'prescription_id' => $prescription->id,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+        return Storage::disk('public')->url($path);
     }
 
     /**
      * Récupérer la conclusion générale de la prescription
      */
-    private function getConclusionGenerale(Prescription $prescription)
+    private function getConclusionGenerale(Prescription $prescription, $type = 'final')
     {
-        $resultat = Resultat::where('prescription_id', $prescription->id)
-            ->where('status', 'VALIDE')
+        $query = Resultat::where('prescription_id', $prescription->id)
             ->whereNotNull('conclusion')
             ->where('conclusion', '!=', '')
-            ->with('analyse')
-            ->first();
+            ->with('analyse');
 
+        if ($type === 'final') {
+            $query->where('status', 'VALIDE');
+        }
+
+        $resultat = $query->first();
         return $resultat ? $resultat->conclusion : null;
     }
 
     /**
-     * Vérifier si une prescription peut générer un PDF
+     * Vérifier si une prescription peut générer un PDF final
      */
-    public function canGeneratePdf(Prescription $prescription): bool
+    public function canGenerateFinalPdf(Prescription $prescription): bool
     {
         return $prescription->status === Prescription::STATUS_VALIDE && 
                Resultat::where('prescription_id', $prescription->id)
                    ->where('status', 'VALIDE')
                    ->whereNotNull('validated_by')
+                   ->exists();
+    }
+
+    /**
+     * Vérifier si une prescription peut générer un aperçu PDF
+     */
+    public function canGeneratePreviewPdf(Prescription $prescription): bool
+    {
+        return Resultat::where('prescription_id', $prescription->id)
+                   ->where(function($query) {
+                       $query->whereNotNull('valeur')
+                             ->where('valeur', '!=', '')
+                             ->orWhereNotNull('resultats');
+                   })
                    ->exists();
     }
 
@@ -309,6 +326,13 @@ class ResultatPdfShow
     {
         return [
             'total' => Resultat::where('prescription_id', $prescription->id)->count(),
+            'saisis' => Resultat::where('prescription_id', $prescription->id)
+                ->where(function($query) {
+                    $query->whereNotNull('valeur')
+                          ->where('valeur', '!=', '')
+                          ->orWhereNotNull('resultats');
+                })
+                ->count(),
             'valides' => Resultat::where('prescription_id', $prescription->id)
                 ->where('status', 'VALIDE')
                 ->count(),

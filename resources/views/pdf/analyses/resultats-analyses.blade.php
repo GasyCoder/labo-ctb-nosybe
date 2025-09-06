@@ -34,7 +34,7 @@
 
         .header-logo {
             width: 100%;
-            max-height: 80px;
+            max-height: 120px;
             object-fit: contain;
             object-position: left top;
             margin: 0;
@@ -70,7 +70,7 @@
 
         /* Ligne rouge */
         .red-line {
-            border-top: 0.5px solid #FF0000;
+            border-top: 0.5px solid #002ba0ff;
             margin: 1px 0;
             width: 100%;
         }
@@ -106,7 +106,7 @@
 
         /* Styles des titres */
         .section-title {
-            color: #FF0000;
+            color: #042379ff;
             font-weight: bold;
             text-transform: uppercase;
         }
@@ -243,7 +243,7 @@
         }
 
         .antibiotique-resistant {
-            color: #dc3545;
+            color: #002ba0ff;
             font-weight: bold;
         }
 
@@ -271,7 +271,7 @@
 <body>
     {{-- En-tête avec logo --}}
     <div class="header-section">
-        <img src="{{ public_path('assets/images/logo.png') }}" alt="LABORATOIRE LA REFERENCE" class="header-logo">
+        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/images/logo.png'))) }}" alt="LABORATOIRE LA LNB" class="header-logo">
     </div>
     
     <div class="red-line"></div>

@@ -58,6 +58,7 @@ class EditPrescription extends Component
     public float $remise = 0;
     public float $total = 0;
     public float $monnaieRendue = 0;
+    public bool $paiementStatut = true; 
 
     public array $tubesGeneres = [];
     public ?Prescription $prescription = null;
@@ -154,12 +155,14 @@ class EditPrescription extends Component
         $lastPaiement = $this->prescription->paiements()->latest()->first();
         if ($lastPaiement && $lastPaiement->paymentMethod) {
             $this->modePaiement = $lastPaiement->paymentMethod->code;
+            $this->paiementStatut = $lastPaiement->status ?? true; 
         } else {
             // Fallback vers la première méthode active
             $premiereMethode = PaymentMethod::where('is_active', true)
                                            ->orderBy('display_order')
                                            ->first();
             $this->modePaiement = $premiereMethode?->code ?? 'ESPECES';
+            $this->paiementStatut = true;
         }
         
         $this->montantPaye = $lastPaiement ? $lastPaiement->montant : 0;
@@ -250,7 +253,7 @@ class EditPrescription extends Component
         $this->validate([
             'nom' => 'required|min:2|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']+$/',
             'prenom' => 'nullable|max:50|regex:/^[a-zA-ZÀ-ÿ\s\-\']*$/',
-            'civilite' => 'required|in:Madame,Monsieur,Mademoiselle,Enfant', 
+            'civilite' => 'required|in:' . implode(',', Patient::CIVILITES),
             'telephone' => 'nullable|regex:/^[0-9+\-\s()]{8,15}$/',
             'email' => 'nullable|email|max:255',
         ], [
@@ -820,7 +823,8 @@ class EditPrescription extends Component
                 'prescription_id' => $this->prescription->id,
                 'montant' => $this->total,
                 'payment_method_id' => $paymentMethod->id, // ✅ Utilise payment_method_id
-                'recu_par' => Auth::id()
+                'recu_par' => Auth::id(),
+                'status' => $this->paiementStatut
             ]);
 
             // 5. Régénérer les tubes (seulement si prélèvements présents)
@@ -865,9 +869,10 @@ class EditPrescription extends Component
         $terme = trim($this->recherchePatient);
         
         return Patient::where(function($query) use ($terme) {
-                    $query->where('nom', 'like', "%{$terme}%")
-                          ->orWhere('prenom', 'like', "%{$terme}%")
-                          ->orWhere('telephone', 'like', "%{$terme}%");
+                    $query->whereRaw('UPPER(nom) LIKE ?', ['%' . strtoupper($terme) . '%'])
+                        ->orWhereRaw('UPPER(prenom) LIKE ?', ['%' . strtoupper($terme) . '%'])
+                        ->orWhere('telephone', 'like', "%{$terme}%")
+                        ->orWhere('numero_dossier', 'like', "%{$terme}%");
                 })
                 ->orderBy('nom')
                 ->limit(10)
@@ -1003,6 +1008,42 @@ class EditPrescription extends Component
         $this->calculerTotaux();
 
         flash()->info('Nouvelle prescription initialisée');
+    }
+
+    public function getCivilitesDisponiblesProperty()
+    {
+        return [
+            'Madame' => [
+                'label' => 'Mme',
+                'emoji' => '👩',
+                'genre' => 'F',
+                'type' => 'adulte'
+            ],
+            'Monsieur' => [
+                'label' => 'M.',
+                'emoji' => '👨',
+                'genre' => 'M', 
+                'type' => 'adulte'
+            ],
+            'Mademoiselle' => [
+                'label' => 'Mlle',
+                'emoji' => '👧',
+                'genre' => 'F',
+                'type' => 'adulte'
+            ],
+            'Enfant garçon' => [
+                'label' => 'Garçon',
+                'emoji' => '👦',
+                'genre' => 'M',
+                'type' => 'enfant'
+            ],
+            'Enfant fille' => [
+                'label' => 'Fille',
+                'emoji' => '👧',
+                'genre' => 'F',
+                'type' => 'enfant'
+            ]
+        ];
     }
 
     public function render()
