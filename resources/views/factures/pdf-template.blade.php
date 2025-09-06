@@ -5,7 +5,7 @@
     <title>Facture - {{ $prescription->reference }}</title>
     <style>
         @page {
-            margin: 15mm;
+            margin: 20mm 18mm 20mm 18mm;
             size: A4;
         }
         
@@ -20,6 +20,7 @@
             font-size: 12px;
             line-height: 1.4;
             color: #000;
+            padding: 10px 15px;
         }
         
         .container {
@@ -37,6 +38,7 @@
             display: table-cell;
             width: 60%;
             vertical-align: top;
+            padding-right: 15px;
         }
         
         .header-right {
@@ -87,7 +89,7 @@
             display: table-cell;
             width: 50%;
             vertical-align: top;
-            padding-right: 10px;
+            padding-right: 15px;
         }
         
         .section-title {
@@ -185,7 +187,7 @@
             display: table-cell;
             width: 50%;
             vertical-align: top;
-            padding-right: 10px;
+            padding-right: 15px;
         }
         
         .signatures {
@@ -200,6 +202,7 @@
             text-align: center;
             vertical-align: bottom;
             height: 60px;
+            padding: 0 10px;
         }
         
         .signature-line {
@@ -475,14 +478,14 @@
                     <span class="info-label">Tubes:</span>
                     {{ $prescription->tubes->count() }} tube(s)
                 </div>
-                <div class="info-line">
+                {{-- <div class="info-line">
                     <span class="info-label">Commission:</span>
                     {{ number_format($paiement->commission_prescripteur ?? 0, 0) }} Ar
-                </div>
-                <div class="info-line">
+                </div> --}}
+                {{-- <div class="info-line">
                     <span class="info-label">Délai:</span>
                     24-48h ouvrables
-                </div>
+                </div> --}}
             </div>
         </div>
 
