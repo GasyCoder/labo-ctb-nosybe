@@ -1,20 +1,20 @@
-{{-- Vue principale optimisée --}}
+{{-- Vue principale avec onglets par statut --}}
 <div>
     <div class="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {{-- Header simplifié --}}
+        {{-- Header --}}
         <div class="mb-8">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                        Traitement des analyses
+                        Gestion des Analyses
                     </h1>
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                         Saisie et validation des résultats d'analyses
                     </p>
                 </div>
                 
-                {{-- Indicateur système simplifié --}}
+                {{-- Indicateur système --}}
                 <div class="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 rounded-full border border-green-200 dark:border-green-800">
                     <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span class="text-sm font-medium text-green-700 dark:text-green-400">Système en ligne</span>
@@ -22,206 +22,323 @@
             </div>
         </div>
 
-        {{-- Stats Cards optimisées --}}
-        @include('livewire.technicien.partials.statistique-technicien')
-
-        {{-- Filtres optimisés --}}
-        @include('livewire.technicien.partials.filtres-technicien')
-
-        {{-- Table optimisée --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th wire:click="sortBy('reference')" 
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                                <div class="flex items-center gap-1">
-                                    <span>Référence</span>
-                                    @if($sortField === 'reference')
-                                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="{{ $sortDirection === 'asc' ? 'M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' : 'M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z' }}" clip-rule="evenodd"></path>
-                                        </svg>
-                                    @else
-                                        <svg class="w-4 h-4 text-gray-300 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    @endif
-                                </div>
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Patient
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Prescripteur
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Analyses
-                            </th>
-                            <th wire:click="sortBy('created_at')" 
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
-                                <div class="flex items-center gap-1">
-                                    <span>Date</span>
-                                    @if($sortField === 'created_at')
-                                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="{{ $sortDirection === 'asc' ? 'M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' : 'M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z' }}" clip-rule="evenodd"></path>
-                                        </svg>
-                                    @else
-                                        <svg class="w-4 h-4 text-gray-300 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                        </svg>
-                                    @endif
-                                </div>
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Statut
-                            </th>
-                            <th class="px-6 py-4">Paiement</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        @forelse($prescriptions as $prescription)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {{ $prescription->reference }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-300 font-medium text-sm mr-3">
-                                            {{ substr($prescription->patient->prenom, 0, 1) }}{{ substr($prescription->patient->nom, 0, 1) }}
-                                        </div>
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                                {{ Str::limit(($prescription->patient->nom ?? 'N/A') . ' ' . ($prescription->patient->prenom ?? ''), 18) }}
-                                            </div>
-                                            @if($prescription->patient->age && $prescription->unite_age)
-                                                <div class="text-sm text-gray-500 dark:text-gray-400">
-                                                    {{ $prescription->age }} {{ $prescription->unite_age }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">
-                                        {{ Str::limit(($prescription->prescripteur->nom ?? 'N/A') . ' ' . ($prescription->prescripteur->prenom ?? 'N/A'), 18) }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                        {{ $prescription->analyses->count() }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">
-                                        {{ $prescription->created_at->format('d/m/Y') }}
-                                    </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $prescription->created_at->format('H:i') }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <x-prescription-status :status="$prescription->status" />
-                                </td>
-                                {{-- Statut Paiement --}}
-                                <td class="px-6 py-4">
-                                    @php
-                                        $paiement = $prescription->paiements->first();
-                                        $estPaye = $paiement ? $paiement->status : false;
-                                    @endphp
-                                    
-                                    @if($paiement)
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                                            {{ $estPaye ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                                            <span class="w-1.5 h-1.5 rounded-full mr-1.5 {{ $estPaye ? 'bg-green-400' : 'bg-red-400' }}"></span>
-                                            {{ $estPaye ? 'Payé' : 'Non Payé' }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-                                            <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>
-                                            Aucun paiement
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <button wire:click="startAnalysis({{ $prescription->id }})" 
-                                            wire:loading.attr="disabled"
-                                            wire:target="startAnalysis({{ $prescription->id }})"
-                                            class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                        
-                                        <span wire:loading.remove wire:target="startAnalysis({{ $prescription->id }})">
-                                            Traiter
-                                        </span>
-
-                                        <span wire:loading wire:target="startAnalysis({{ $prescription->id }})" class="flex items-center">
-                                            <svg class="animate-spin w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Chargement...
-                                        </span>
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-6 py-12 text-center">
-                                    <div class="text-gray-500 dark:text-gray-400">
-                                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Aucune prescription à traiter</h3>
-                                        <p class="text-gray-600 dark:text-gray-400">Il n'y a actuellement aucune prescription correspondant aux critères sélectionnés.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Pagination simplifiée --}}
-            @if($prescriptions->hasPages())
-                <div class="bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                            Affichage de {{ $prescriptions->firstItem() }} à {{ $prescriptions->lastItem() }} 
-                            sur {{ $prescriptions->total() }} résultats
-                        </div>
-                        <div>
-                            {{ $prescriptions->links() }}
-                        </div>
+        {{-- Stats Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {{-- En attente --}}
+            <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-100 text-sm font-medium">EN ATTENTE</p>
+                        <p class="text-3xl font-bold">{{ $stats['en_attente'] ?? 0 }}</p>
+                    </div>
+                    <div class="p-3 bg-white/20 rounded-lg">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                        </svg>
                     </div>
                 </div>
-            @endif
+            </div>
+
+            {{-- Terminé --}}
+            <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-teal-100 text-sm font-medium">TERMINÉ</p>
+                        <p class="text-3xl font-bold">{{ $stats['termine'] ?? 0 }}</p>
+                    </div>
+                    <div class="p-3 bg-white/20 rounded-lg">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- À refaire --}}
+            <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white shadow-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-100 text-sm font-medium">À REFAIRE</p>
+                        <p class="text-3xl font-bold">{{ $stats['a_refaire'] ?? 0 }}</p>
+                    </div>
+                    <div class="p-3 bg-white/20 rounded-lg">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Filtres --}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-8">
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {{-- Recherche globale --}}
+                    <div class="md:col-span-2">
+                        <div class="relative">
+                            <input type="text"
+                                wire:model.live.debounce.300ms="search"
+                                placeholder="Rechercher par patient, prescripteur..."
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white dark:bg-gray-700">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Filtres --}}
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
+                            Filtres
+                        </button>
+                        <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Onglets pour les statuts --}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            {{-- Navigation des onglets --}}
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <nav class="-mb-px flex">
+                    <button wire:click="$set('activeTab', 'en_attente')" 
+                            class="py-4 px-6 text-sm font-medium border-b-2 {{ $activeTab === 'en_attente' ? 'border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            En attente
+                            <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">{{ $stats['en_attente'] ?? 0 }}</span>
+                        </div>
+                    </button>
+                    
+                    <button wire:click="$set('activeTab', 'termine')" 
+                            class="py-4 px-6 text-sm font-medium border-b-2 {{ $activeTab === 'termine' ? 'border-teal-500 text-teal-600 bg-teal-50 dark:bg-teal-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-teal-500 rounded-full"></div>
+                            Terminé
+                            <span class="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded-full">{{ $stats['termine'] ?? 0 }}</span>
+                        </div>
+                    </button>
+                    
+                    <button wire:click="$set('activeTab', 'a_refaire')" 
+                            class="py-4 px-6 text-sm font-medium border-b-2 {{ $activeTab === 'a_refaire' ? 'border-red-500 text-red-600 bg-red-50 dark:bg-red-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                            À refaire
+                            <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">{{ $stats['a_refaire'] ?? 0 }}</span>
+                        </div>
+                    </button>
+                </nav>
+            </div>
+
+            {{-- Contenu des onglets --}}
+            <div class="overflow-x-auto">
+                @if($activeTab === 'en_attente')
+                    {{-- Tableau En attente --}}
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-orange-50 dark:bg-orange-900/20">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Référence</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Patient</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Prescripteur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Analyses</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @forelse($prescriptionsEnAttente as $prescription)
+                                <tr class="hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {{ $prescription->reference }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-300 font-medium text-sm mr-3">
+                                                {{ substr($prescription->patient->prenom, 0, 1) }}{{ substr($prescription->patient->nom, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {{ Str::limit(($prescription->patient->nom ?? 'N/A') . ' ' . ($prescription->patient->prenom ?? ''), 18) }}
+                                                </div>
+                                                @if($prescription->patient->age && $prescription->unite_age)
+                                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                        {{ $prescription->age }} {{ $prescription->unite_age }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">
+                                            {{ Str::limit(($prescription->prescripteur->nom ?? 'N/A') . ' ' . ($prescription->prescripteur->prenom ?? 'N/A'), 18) }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ $prescription->analyses->count() }} analyses
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">
+                                            {{ $prescription->created_at->format('d/m/Y H:i') }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button wire:click="startAnalysis({{ $prescription->id }})" 
+                                                class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                            Commencer
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        Aucune analyse en attente
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                @elseif($activeTab === 'termine')
+                    {{-- Tableau Terminé --}}
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-teal-50 dark:bg-teal-900/20">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-teal-700 dark:text-teal-300 uppercase tracking-wider">Référence</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-teal-700 dark:text-teal-300 uppercase tracking-wider">Patient</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-teal-700 dark:text-teal-300 uppercase tracking-wider">Prescripteur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-teal-700 dark:text-teal-300 uppercase tracking-wider">Analyses</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-teal-700 dark:text-teal-300 uppercase tracking-wider">Date fin</th>
+                                {{-- <th class="px-6 py-3 text-left text-xs font-medium text-teal-700 dark:text-teal-300 uppercase tracking-wider">Actions</th> --}}
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @forelse($prescriptionsTerminees as $prescription)
+                                <tr class="hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {{ $prescription->reference }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-300 font-medium text-sm mr-3">
+                                                {{ substr($prescription->patient->prenom, 0, 1) }}{{ substr($prescription->patient->nom, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {{ Str::limit(($prescription->patient->nom ?? 'N/A') . ' ' . ($prescription->patient->prenom ?? ''), 18) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">
+                                            {{ Str::limit(($prescription->prescripteur->nom ?? 'N/A') . ' ' . ($prescription->prescripteur->prenom ?? 'N/A'), 18) }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ $prescription->analyses->count() }} analyses
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">
+                                            {{ $prescription->updated_at->format('d/m/Y H:i') }}
+                                        </div>
+                                    </td>
+                                    {{-- <td class="px-6 py-4 whitespace-nowrap">
+                                        <button wire:click="viewResults({{ $prescription->id }})" 
+                                                class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                            Voir résultats
+                                        </button>
+                                    </td> --}}
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        Aucune analyse terminée
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                @else
+                    {{-- Tableau À refaire --}}
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-red-50 dark:bg-red-900/20">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wider">Référence</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wider">Patient</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wider">Prescripteur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wider">Analyses</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wider">Raison</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @forelse($prescriptionsARefaire as $prescription)
+                                <tr class="hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                            {{ $prescription->reference }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center text-red-600 dark:text-red-300 font-medium text-sm mr-3">
+                                                {{ substr($prescription->patient->prenom, 0, 1) }}{{ substr($prescription->patient->nom, 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {{ Str::limit(($prescription->patient->nom ?? 'N/A') . ' ' . ($prescription->patient->prenom ?? ''), 18) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900 dark:text-white">
+                                            {{ Str::limit(($prescription->prescripteur->nom ?? 'N/A') . ' ' . ($prescription->prescripteur->prenom ?? 'N/A'), 18) }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                            {{ $prescription->analyses->count() }} analyses
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-sm text-red-600 dark:text-red-400">
+                                            {{ $prescription->commentaire_biologiste ?? 'Résultats à vérifier' }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <button wire:click="redoAnalysis({{ $prescription->id }})" 
+                                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                            Refaire
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                        Aucune analyse à refaire
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                @endif
+            </div>
         </div>
     </div>
-
-    {{-- Notifications simplifiées --}}
-    @if (session()->has('message'))
-        <div class="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('message') }}
-            </div>
-        </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="fixed top-4 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-50">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                {{ session('error') }}
-            </div>
-        </div>
-    @endif
 </div>
