@@ -15,12 +15,26 @@ return new class extends Migration
             $table->id();
             $table->foreignId('prescription_id')->constrained('prescriptions')->onDelete('cascade');
             $table->foreignId('analyse_id')->constrained('analyses')->onDelete('cascade');
+            
+            // ✅ Valeurs de référence (optionnelles)
             $table->string('valeur_min')->nullable();
             $table->string('valeur_max')->nullable();
             $table->string('valeur_normal')->nullable();
+            $table->enum('status', [
+                'EN_ATTENTE',    // Analyse attachée mais pas encore traitée
+                'EN_COURS',      // Traitement en cours
+                'TERMINE',       // Analyse terminée
+                'VALIDE',        // Validée par le biologiste
+                'A_REFAIRE',     // À refaire
+                'ARCHIVE'        // Archivée
+            ])->default('EN_ATTENTE');
             $table->timestamps();
-
-            $table->unique(['prescription_id', 'analyse_id']);
+            // ✅ Contrainte d'unicité
+            $table->unique(['prescription_id', 'analyse_id'], 'unique_prescription_analyse');
+            
+            // ✅ Index pour les requêtes fréquentes
+            $table->index(['prescription_id', 'status'], 'idx_prescription_status');
+            $table->index(['analyse_id', 'status'], 'idx_analyse_status');
         });
     }
 
@@ -29,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('antibiotiques');
+        Schema::dropIfExists('prescription_analyse'); // ✅ CORRECTION : était 'antibiotiques'
     }
 };

@@ -69,8 +69,7 @@
                     class="px-3 py-1.5 rounded-full text-xs font-medium border transition
                            {{ $active
                                 ? 'bg-yellow-600 text-white border-yellow-700'
-                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700' }}"
-                >
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700' }}">
                     {{ $opt === 'Autre' ? 'Autre (préciser)' : Str::headline(str_replace('-', ' ', $opt)) }}
                 </button>
             @endforeach
@@ -83,14 +82,11 @@
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Précisez la bactérie non listée
             </label>
-
-            {{-- On lie directement à l'état Livewire results.[analyseId].autreValeur --}}
             <input
                 type="text"
-                wire:model.defer="results.{{ $node->id }}.autreValeur"
+                wire:model.live="results.{{ $node->id }}.autreValeur"
                 class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 focus:border-yellow-500 dark:focus:border-yellow-400 transition-colors"
-                placeholder="Ex: Enterococcus faecalis, Candida albicans..."
-            >
+                placeholder="Ex: Enterococcus faecalis, Candida albicans...">
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 💡 Saisissez le nom scientifique complet de la bactérie ou du micro-organisme.
             </p>

@@ -15,11 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('prescription_id')->constrained('prescriptions')->onDelete('cascade');
             $table->foreignId('analyse_id')->constrained('analyses')->onDelete('cascade');
-            $table->text('resultats')->nullable();
-            $table->foreignId('tube_id')->nullable()->constrained('tubes')->onDelete('set null');
-            $table->text('valeur')->nullable();
+            
+            // Données de résultat
+            $table->text('resultats')->nullable()->comment('Résultats sous forme de texte ou JSON');
+            $table->text('valeur')->nullable()->comment('Valeur numérique ou texte simple');
             $table->enum('interpretation', ['NORMAL', 'PATHOLOGIQUE'])->nullable();
             $table->text('conclusion')->nullable();
+            
+            // Statut du résultat
             $table->enum('status', [
                 'EN_ATTENTE',    // Résultat non saisi
                 'EN_COURS',      // Saisie/validation en cours
@@ -28,19 +31,26 @@ return new class extends Migration
                 'A_REFAIRE',     // Résultat à refaire
                 'ARCHIVE',       // Résultat archivé
             ])->default('EN_ATTENTE');
-            $table->foreignId('famille_id')
-                      ->nullable()
-                      ->constrained('bacterie_familles')
-                      ->nullOnDelete();
-            $table->foreignId('bacterie_id')
-                      ->nullable()
-                      ->constrained('bacteries')
-                      ->nullOnDelete();
+            
+            // Relations optionnelles
+            $table->foreignId('tube_id')->nullable()->constrained('tubes')->onDelete('set null');
+            $table->foreignId('famille_id')->nullable()->constrained('bacterie_familles')->onDelete('set null');
+            $table->foreignId('bacterie_id')->nullable()->constrained('bacteries')->onDelete('set null');
+            
+            // Validation
             $table->foreignId('validated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('validated_at')->nullable();
 
             $table->softDeletes();
             $table->timestamps();
+            
+            // CONTRAINTE D'INTÉGRITÉ - Un seul résultat par analyse par prescription
+            $table->unique(['prescription_id', 'analyse_id'], 'unique_prescription_analyse_resultat');
+            
+            // Index pour performances
+            $table->index(['prescription_id', 'status'], 'idx_prescription_resultat_status');
+            $table->index(['analyse_id', 'status'], 'idx_analyse_resultat_status');
+            $table->index('status', 'idx_resultat_status');
         });
     }
 

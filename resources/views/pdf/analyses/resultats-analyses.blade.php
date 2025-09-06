@@ -129,6 +129,39 @@
             padding-left: 40px;
         }
 
+        /* ✅ NOUVEAUX STYLES : Antibiogrammes */
+        .antibiogramme-header td {
+            background-color: #f8f9fa;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: bold;
+            font-size: 10pt;
+            color: #333;
+            padding: 6px 0 4px 0;
+        }
+
+        .antibiogramme-row td {
+            padding: 2px 0;
+            font-size: 9pt;
+            line-height: 1.3;
+        }
+
+        .antibiogramme-row td:first-child {
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Styles spéciaux pour les germes */
+        .germe-result {
+            font-style: italic;
+            font-weight: normal;
+        }
+
+        .germe-option {
+            font-style: normal;
+            text-transform: capitalize;
+        }
+
         /* Styles spéciaux */
         .indent-1 {
             padding-left: 20px !important;
@@ -156,7 +189,7 @@
             color: #000;
         }
 
-        /* ✅ NOUVEAU: Styles pour conclusions */
+        /* Styles pour conclusions */
         .conclusion-section {
             margin-top: 15px;
             margin-bottom: 10px;
@@ -195,6 +228,43 @@
             line-height: 1.3;
             text-align: justify;
             margin-left: 10px;
+        }
+
+        .conclusion-row td {
+            padding: 3px 0;
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* ✅ STYLES RESPONSIVES pour les antibiotiques */
+        .antibiotique-sensible {
+            color: #28a745;
+        }
+
+        .antibiotique-resistant {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .antibiotique-intermediaire {
+            color: #ffc107;
+            font-style: italic;
+        }
+
+        /* Séparateurs visuels */
+        .section-separator {
+            border-top: 1px solid #e9ecef;
+            margin: 5px 0;
+        }
+
+        /* Amélioration de la lisibilité */
+        .analyse-principale {
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .sous-analyse {
+            background-color: #fafbfc;
         }
     </style>
 </head>
@@ -256,7 +326,7 @@
                     @endforeach
                 </table>
 
-                {{-- ✅ CORRECTION: Conclusions pour cet examen --}}
+                {{-- Conclusions pour cet examen --}}
                 @if(isset($examen->conclusions) && $examen->conclusions->isNotEmpty())
                     <div class="conclusion-examen">
                         <div class="conclusion-examen-title">Conclusion :</div>
@@ -272,7 +342,7 @@
             @endif
         @endforeach
 
-        {{-- ✅ NOUVEAU: Conclusion générale de la prescription --}}
+        {{-- Conclusion générale de la prescription --}}
         @if(isset($conclusion_generale) && !empty($conclusion_generale))
             <div class="conclusion-section">
                 <div class="conclusion-title">Conclusion générale :</div>

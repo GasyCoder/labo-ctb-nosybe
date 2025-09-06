@@ -86,6 +86,7 @@ namespace App\Models{
  * @property string|null $valeur_min
  * @property string|null $valeur_max
  * @property string|null $valeur_normal
+ * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Analyse $analyse
@@ -109,6 +110,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription wherePrescriptionId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereValeurMax($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AnalysePrescription whereValeurMin($value)
@@ -581,12 +583,12 @@ namespace App\Models{
  * @property int $id
  * @property int $prescription_id
  * @property int $analyse_id
- * @property string|null $resultats
- * @property int|null $tube_id
- * @property string|null $valeur
+ * @property string|null $resultats Résultats sous forme de texte ou JSON
+ * @property string|null $valeur Valeur numérique ou texte simple
  * @property string|null $interpretation
  * @property string|null $conclusion
  * @property string $status
+ * @property int|null $tube_id
  * @property int|null $famille_id
  * @property int|null $bacterie_id
  * @property int|null $validated_by

@@ -2,8 +2,9 @@
 @php
     $resultat = $analyse->resultats->first();
     $hasResult = $resultat && ($resultat->valeur || $resultat->resultats);
-    $isPathologique = $resultat && $resultat->est_pathologique; // ✅ Utiliser l'accessor du modèle
+    $isPathologique = $resultat && $resultat->est_pathologique;
     $isInfoLine = !$analyse->result_disponible && $analyse->designation && ($analyse->prix == 0 || $analyse->level === 'PARENT');
+    $hasAntibiogrammes = isset($analyse->antibiogrammes) && $analyse->antibiogrammes->isNotEmpty();
 @endphp
 
 {{-- Afficher seulement si on a un résultat ou si c'est une ligne informative --}}
@@ -15,33 +16,37 @@
         </td>
         <td class="col-resultat">
             @if($hasResult)
-                @php
-                    $displayValue = '';
+                @if($resultat->isGermeType() || $resultat->isCultureType())
+                    {{-- ✅ GERMES : Affichage spécial pour GERME/CULTURE --}}
+                    @php 
+                        $selectedOptions = $resultat->resultats_pdf;
+                        $autreValeur = $resultat->valeur;
+                    @endphp
                     
-                    // ✅ Utiliser les méthodes du modèle Resultat
-                    if ($resultat->isGermeType()) {
-                        $germeData = $resultat->germe_data;
-                        if ($germeData && isset($germeData['options_speciales'])) {
-                            $displayValue = implode(', ', array_map('ucfirst', $germeData['options_speciales']));
-                        }
-                        // Afficher les bactéries
-                        if ($germeData && isset($germeData['bacteries'])) {
-                            foreach ($germeData['bacteries'] as $bacteriaName => $bacteriaData) {
-                                $displayValue = '<i>' . $bacteriaName . '</i>';
-                                break; // Premier seulement
-                            }
-                        }
-                    } elseif ($resultat->isLeucocytesType()) {
-                        // ✅ Utiliser l'accessor du modèle
-                        $leucoData = $resultat->leucocytes_data;
-                        if ($leucoData && isset($leucoData['valeur'])) {
-                            $displayValue = $leucoData['valeur'] . ' /mm³';
-                        }
-                    } else {
-                        // ✅ Utiliser l'accessor valeur_pdf du modèle
-                        $displayValue = $resultat->valeur_pdf ?: $resultat->resultats_pdf;
+                    @if(is_array($selectedOptions))
+                        @foreach($selectedOptions as $option)
+                            @if($option === 'Autre' && $autreValeur)
+                                <i>{{ $autreValeur }}</i>
+                            @else
+                                {{ ucfirst(str_replace('-', ' ', $option)) }}
+                            @endif
+                            @if(!$loop->last), @endif
+                        @endforeach
+                    @else
+                        {{ $selectedOptions }}
+                    @endif
+                    
+                @elseif($resultat->isLeucocytesType())
+                    {{-- LEUCOCYTES : Utiliser l'accessor du modèle --}}
+                    @php $leucoData = $resultat->leucocytes_data; @endphp
+                    @if($leucoData && isset($leucoData['valeur']))
+                        {{ $leucoData['valeur'] }} /mm³
+                    @endif
+                @else
+                    {{-- AUTRES TYPES --}}
+                    @php
+                        $displayValue = '';
                         
-                        // Cas spéciaux
                         if ($analyse->type && $analyse->type->name === 'SELECT_MULTIPLE') {
                             $resultatsArray = $resultat->resultats_pdf;
                             if (is_array($resultatsArray)) {
@@ -68,23 +73,92 @@
                                     $displayValue .= ' (Score de Nugent: ' . $resultat->valeur . ')';
                                 }
                             }
+                        } else {
+                            $displayValue = $resultat->valeur_pdf ?: $resultat->resultats_pdf;
                         }
-                    }
+                        
+                        if ($resultat->est_pathologique && $displayValue) {
+                            $displayValue = '<strong>' . $displayValue . '</strong>';
+                        }
+                    @endphp
                     
-                    // ✅ Utiliser l'accessor du modèle pour déterminer si pathologique
-                    if ($resultat->est_pathologique && $displayValue) {
-                        $displayValue = '<strong>' . $displayValue . '</strong>';
-                    }
-                @endphp
-                
-                {!! $displayValue !!}
+                    {!! $displayValue !!}
+                @endif
             @endif
         </td>
         <td class="col-valref">
             {{ $analyse->valeur_ref ?? '' }}
         </td>
         <td class="col-anteriorite">
-            {{-- Vous pouvez ajouter un champ antecedent dans le modèle si nécessaire --}}
+            {{-- Antécédent si disponible --}}
         </td>
     </tr>
+
+    {{-- ✅ ANTIBIOGRAMMES : Afficher les antibiogrammes s'il y en a --}}
+    @if($hasAntibiogrammes)
+        @foreach($analyse->antibiogrammes as $antibiogramme)
+            <tr class="antibiogramme-header">
+                <td colspan="4" style="padding: 8px 0 4px {{ ($level + 1) * 20 }}px; font-weight: bold; font-size: 10pt; color: #333; border-top: 1px solid #ccc;">
+                    Antibiogramme - <i>{{ $antibiogramme->bacterie->designation ?? 'Bactérie inconnue' }}</i>
+                    @if($antibiogramme->bacterie && $antibiogramme->bacterie->famille)
+                        ({{ $antibiogramme->bacterie->famille->designation }})
+                    @endif
+                </td>
+            </tr>
+
+            {{-- Antibiotiques sensibles --}}
+            @if($antibiogramme->antibiotiques_sensibles->isNotEmpty())
+                <tr class="antibiogramme-row">
+                    <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
+                        Sensible :
+                    </td>
+                    <td colspan="3" style="font-size: 9pt;">
+                        @foreach($antibiogramme->antibiotiques_sensibles as $resultatAb)
+                            {{ $resultatAb->antibiotique->designation ?? 'N/A' }}@if(!$loop->last), @endif
+                        @endforeach
+                    </td>
+                </tr>
+            @endif
+
+            {{-- Antibiotiques résistants --}}
+            @if($antibiogramme->antibiotiques_resistants->isNotEmpty())
+                <tr class="antibiogramme-row">
+                    <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
+                        Résistant :
+                    </td>
+                    <td colspan="3" style="font-size: 9pt; font-weight: bold;">
+                        @foreach($antibiogramme->antibiotiques_resistants as $resultatAb)
+                            {{ $resultatAb->antibiotique->designation ?? 'N/A' }}@if(!$loop->last), @endif
+                        @endforeach
+                    </td>
+                </tr>
+            @endif
+
+            {{-- Antibiotiques intermédiaires --}}
+            @if($antibiogramme->antibiotiques_intermediaires->isNotEmpty())
+                <tr class="antibiogramme-row">
+                    <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
+                        Intermédiaire :
+                    </td>
+                    <td colspan="3" style="font-size: 9pt; font-style: italic;">
+                        @foreach($antibiogramme->antibiotiques_intermediaires as $resultatAb)
+                            {{ $resultatAb->antibiotique->designation ?? 'N/A' }}@if(!$loop->last), @endif
+                        @endforeach
+                    </td>
+                </tr>
+            @endif
+        @endforeach
+    @endif
+
+    {{-- Conclusion spécifique à cette analyse --}}
+    @if($resultat && !empty($resultat->conclusion))
+        <tr class="conclusion-row">
+            <td style="padding-left: {{ $level * 20 }}px; font-style: italic; font-size: 9pt; color: #666;">
+                Conclusion :
+            </td>
+            <td colspan="3" style="font-size: 9pt; line-height: 1.3;">
+                {!! nl2br(e($resultat->conclusion)) !!}
+            </td>
+        </tr>
+    @endif
 @endif

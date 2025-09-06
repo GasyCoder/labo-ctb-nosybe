@@ -112,40 +112,55 @@ class AnalysesSidebar extends Component
         if (empty($enfants)) {
             // Analyse sans enfants → vérifier résultat direct
             $hasResult = in_array($parentId, $this->resultatsExistants);
+            $isCompleted = $this->checkResultStatus($parentId) === 'TERMINE';
+            
             return [
-                'status' => $hasResult ? 'TERMINE' : 'VIDE',
-                'can_complete' => $hasResult, // Peut être marquée terminée si résultat existe
-                'is_ready' => $hasResult, // Prête si résultat existe
+                'status' => $isCompleted ? 'TERMINE' : ($hasResult ? 'EN_COURS' : 'VIDE'),
+                'can_complete' => $hasResult && !$isCompleted,
+                'is_ready' => $hasResult && !$isCompleted,
             ];
         }
 
         // Analyse avec enfants
         $allChildrenHaveResults = $this->checkAllChildrenHaveResults($enfants);
+        $allResultsCompleted = $this->checkAllResultsCompleted($enfants);
         $someChildrenHaveResults = $enfantsCompleted > 0 || $this->hasAnyChildResults($enfants);
 
-        if ($allChildrenHaveResults) {
-            // Tous les enfants ont des résultats
-            $allResultsCompleted = $this->checkAllResultsCompleted($enfants);
+        if ($allChildrenHaveResults && $allResultsCompleted) {
             return [
-                'status' => $allResultsCompleted ? 'TERMINE' : 'EN_COURS',
-                'can_complete' => true, // Peut être marquée terminée
-                'is_ready' => !$allResultsCompleted, // Prête à être terminée si pas déjà terminée
+                'status' => 'TERMINE',
+                'can_complete' => false,
+                'is_ready' => false,
             ];
-        } elseif ($someChildrenHaveResults) {
-            // Quelques enfants ont des résultats
+        } elseif ($allChildrenHaveResults) {
             return [
                 'status' => 'EN_COURS',
-                'can_complete' => false, // Ne peut pas être terminée
-                'is_ready' => false, // Pas prête
+                'can_complete' => true,
+                'is_ready' => true,
+            ];
+        } elseif ($someChildrenHaveResults) {
+            return [
+                'status' => 'EN_COURS',
+                'can_complete' => false,
+                'is_ready' => false,
             ];
         } else {
-            // Aucun enfant n'a de résultat
             return [
                 'status' => 'VIDE',
-                'can_complete' => false, // Ne peut pas être terminée
-                'is_ready' => false, // Pas prête
+                'can_complete' => false,
+                'is_ready' => false,
             ];
         }
+    }
+
+    /**
+     * ✅ Vérifier le statut d'un résultat spécifique
+     */
+    private function checkResultStatus(int $analyseId): ?string
+    {
+        $prescription = Prescription::findOrFail($this->prescriptionId);
+        $resultat = $prescription->resultats()->where('analyse_id', $analyseId)->first();
+        return $resultat?->status;
     }
 
     /**
@@ -231,7 +246,6 @@ class AnalysesSidebar extends Component
      */
     public function canFinalizePrescription(): bool
     {
-        // Toutes les analyses doivent être terminées
         return collect($this->analysesParents)->every(function($analysis) {
             return $analysis['status'] === 'TERMINE';
         });
@@ -242,9 +256,43 @@ class AnalysesSidebar extends Component
      */
     public function isReadyToFinalize(): bool
     {
-        // Toutes les analyses doivent avoir tous leurs résultats (même si pas marquées terminées)
         return collect($this->analysesParents)->every(function($analysis) {
-            return $analysis['can_complete'];
+            return $analysis['can_complete'] || $analysis['status'] === 'TERMINE';
+        });
+    }
+
+    /**
+     * ✅ NOUVELLE MÉTHODE : Vérifier et mettre à jour le statut de la prescription
+     */
+    private function updatePrescriptionStatusIfNeeded(): void
+    {
+        $prescription = Prescription::findOrFail($this->prescriptionId);
+        
+        // Si toutes les analyses sont terminées, marquer la prescription comme terminée
+        if ($this->canFinalizePrescription()) {
+            $prescription->update(['status' => 'TERMINE']);
+            Log::info('Prescription automatiquement marquée comme terminée', [
+                'prescription_id' => $this->prescriptionId,
+                'user_id' => Auth::id(),
+            ]);
+        }
+        // Si au moins une analyse est en cours, marquer la prescription comme en cours
+        elseif ($prescription->status === 'EN_ATTENTE' && $this->hasAnalysesInProgress()) {
+            $prescription->update(['status' => 'EN_COURS']);
+            Log::info('Prescription marquée comme en cours', [
+                'prescription_id' => $this->prescriptionId,
+                'user_id' => Auth::id(),
+            ]);
+        }
+    }
+
+    /**
+     * ✅ NOUVELLE MÉTHODE : Vérifier si des analyses sont en cours
+     */
+    private function hasAnalysesInProgress(): bool
+    {
+        return collect($this->analysesParents)->some(function($analysis) {
+            return in_array($analysis['status'], ['EN_COURS', 'TERMINE']);
         });
     }
 
@@ -264,7 +312,7 @@ class AnalysesSidebar extends Component
     }
 
     /**
-     * ✅ Marquer une analyse individuelle comme terminée
+     * ✅ Marquer une analyse individuelle comme terminée - CORRIGÉ
      */
     public function markAnalyseAsCompleted(int $parentId)
     {
@@ -307,6 +355,9 @@ class AnalysesSidebar extends Component
                     'user_id' => Auth::id(),
                 ]);
 
+                // ✅ NOUVEAU : Vérifier et mettre à jour le statut de la prescription
+                $this->updatePrescriptionStatusIfNeeded();
+
                 DB::commit();
 
                 // Rafraîchir la sidebar
@@ -334,7 +385,7 @@ class AnalysesSidebar extends Component
     }
 
     /**
-     * ✅ Finaliser toute la prescription
+     * ✅ Finaliser toute la prescription - CORRIGÉ
      */
     public function markPrescriptionAsCompleted()
     {
@@ -362,6 +413,9 @@ class AnalysesSidebar extends Component
             ]);
 
             DB::commit();
+
+            // Rafraîchir la sidebar
+            $this->loadAnalyses();
 
             // Événement pour redirection
             $this->dispatch('prescriptionCompleted')->to(ShowPrescription::class);

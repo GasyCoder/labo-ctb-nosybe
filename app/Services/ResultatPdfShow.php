@@ -6,6 +6,8 @@ use App\Models\Examen;
 use App\Models\Analyse;
 use App\Models\Resultat;
 use App\Models\Prescription;
+use App\Models\Antibiogramme;
+use App\Models\ResultatAntibiotique;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -13,8 +15,40 @@ use Illuminate\Support\Facades\Storage;
 class ResultatPdfShow
 {
     /**
+     * ✅ CORRECTION : Récupérer les antibiogrammes selon la vraie structure
+     */
+    private function getAntibiogrammes($prescriptionId, $analyseId)
+    {
+        return Antibiogramme::where('prescription_id', $prescriptionId)
+            ->where('analyse_id', $analyseId)
+            ->with([
+                'bacterie' => function($query) {
+                    $query->with('famille');
+                }
+            ])
+            ->get()
+            ->map(function($antibiogramme) {
+                // ✅ CORRECTION : Récupérer les résultats d'antibiotiques selon la vraie table
+                $resultatsAntibiotiques = ResultatAntibiotique::where('antibiogramme_id', $antibiogramme->id)
+                    ->with('antibiotique')
+                    ->get();
+                
+                // ✅ CORRECTION : Grouper par interpretation (S, I, R)
+                $antibiogramme->antibiotiques_sensibles = $resultatsAntibiotiques
+                    ->where('interpretation', 'S');
+                    
+                $antibiogramme->antibiotiques_resistants = $resultatsAntibiotiques
+                    ->where('interpretation', 'R');
+                    
+                $antibiogramme->antibiotiques_intermediaires = $resultatsAntibiotiques
+                    ->where('interpretation', 'I');
+                
+                return $antibiogramme;
+            });
+    }
+
+    /**
      * Récupérer les examens avec leurs analyses et résultats validés
-     * CORRECTION: Mieux gérer la relation entre analyses et résultats
      */
     private function getValidatedExamens(Prescription $prescription)
     {
@@ -61,21 +95,26 @@ class ResultatPdfShow
                 ->orderBy('ordre', 'asc')
                 ->get();
 
-            // 4. Associer les résultats aux analyses
-            $analyses = $analyses->map(function($analyse) use ($validatedResultats) {
-                // CORRECTION: Utiliser directement la collection des résultats validés
+            // 4. Associer les résultats aux analyses avec antibiogrammes
+            $analyses = $analyses->map(function($analyse) use ($validatedResultats, $prescription) {
                 $resultatsAnalyse = $validatedResultats->where('analyse_id', $analyse->id);
-                
-                // ✅ CORRECTION: Stocker les résultats directement sur l'analyse
                 $analyse->resultats = $resultatsAnalyse;
+
+                // ✅ CORRECTION : Ajouter les antibiogrammes pour les analyses GERME/CULTURE
+                if ($analyse->type && in_array(strtoupper($analyse->type->name), ['GERME', 'CULTURE'])) {
+                    $analyse->antibiogrammes = $this->getAntibiogrammes($prescription->id, $analyse->id);
+                }
 
                 // Traiter récursivement les enfants
                 if ($analyse->enfantsRecursive && $analyse->enfantsRecursive->isNotEmpty()) {
-                    $analyse->children = $analyse->enfantsRecursive->map(function($child) use ($validatedResultats) {
+                    $analyse->children = $analyse->enfantsRecursive->map(function($child) use ($validatedResultats, $prescription) {
                         $resultatsEnfant = $validatedResultats->where('analyse_id', $child->id);
-                        
-                        // ✅ CORRECTION: Stocker les résultats directement sur l'enfant
                         $child->resultats = $resultatsEnfant;
+                        
+                        // ✅ CORRECTION : Ajouter les antibiogrammes pour les enfants GERME/CULTURE
+                        if ($child->type && in_array(strtoupper($child->type->name), ['GERME', 'CULTURE'])) {
+                            $child->antibiogrammes = $this->getAntibiogrammes($prescription->id, $child->id);
+                        }
                         
                         return $child;
                     });
@@ -101,7 +140,6 @@ class ResultatPdfShow
                 }])
                 ->get()
                 ->map(function($examen) use ($analyses, $validatedResultats) {
-                    // Associer les analyses enrichies avec leurs résultats
                     $analysesEnrichies = collect();
 
                     foreach ($examen->analyses as $analyse) {
@@ -112,8 +150,6 @@ class ResultatPdfShow
                     }
 
                     $examen->analyses = $analysesEnrichies->sortBy('ordre');
-                    
-                    // ✅ CORRECTION: Ajouter les conclusions directement à l'examen
                     $examen->conclusions = $this->getExamenConclusions($examen, $validatedResultats);
                     
                     return $examen;
@@ -135,13 +171,12 @@ class ResultatPdfShow
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE: Récupérer les conclusions pour un examen
+     * Récupérer les conclusions pour un examen
      */
     private function getExamenConclusions($examen, $validatedResultats)
     {
         $conclusions = collect();
 
-        // Récupérer tous les résultats de cet examen qui ont une conclusion
         foreach ($examen->analyses as $analyse) {
             $resultatsAnalyse = $validatedResultats->where('analyse_id', $analyse->id);
             
@@ -161,17 +196,16 @@ class ResultatPdfShow
     }
 
     /**
-     * Générer le PDF des résultats avec la structure de votre modèle
+     * Générer le PDF des résultats avec antibiogrammes
      */
     public function generatePDF(Prescription $prescription)
     {
         try {
-            // Vérifier que la prescription est validée
+            // Vérifications préalables
             if ($prescription->status !== Prescription::STATUS_VALIDE) {
                 throw new \Exception('La prescription doit être validée pour générer le PDF');
             }
 
-            // Vérifier qu'il y a des résultats validés en utilisant votre modèle
             $hasValidResults = Resultat::where('prescription_id', $prescription->id)
                 ->where('status', 'VALIDE')
                 ->whereNotNull('validated_by')
@@ -181,14 +215,14 @@ class ResultatPdfShow
                 throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
             }
 
-            // Récupérer les examens avec résultats validés
+            // Récupérer les examens avec résultats et antibiogrammes
             $examens = $this->getValidatedExamens($prescription);
 
             if ($examens->isEmpty()) {
                 throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
             }
 
-            // Charger les relations nécessaires selon votre modèle
+            // Charger les relations nécessaires
             $prescription->load([
                 'patient', 
                 'prescripteur',
@@ -198,10 +232,10 @@ class ResultatPdfShow
                 }
             ]);
 
-            // ✅ CORRECTION: Récupérer la conclusion générale de la prescription
+            // Récupérer la conclusion générale
             $conclusionGenerale = $this->getConclusionGenerale($prescription);
 
-            // Créer le nom de fichier avec timestamp
+            // Créer le nom de fichier
             $timestamp = time();
             $filename = 'resultats-' . $prescription->reference . '-' . $timestamp . '.pdf';
 
@@ -209,7 +243,7 @@ class ResultatPdfShow
             $data = [
                 'prescription' => $prescription,
                 'examens' => $examens,
-                'conclusion_generale' => $conclusionGenerale, // ✅ AJOUT
+                'conclusion_generale' => $conclusionGenerale,
                 'laboratoire_name' => config('app.laboratoire_name', 'LABORATOIRE'),
                 'date_generation' => now()->format('d/m/Y H:i'),
                 'validated_by' => $prescription->resultats->first()->validatedBy->name ?? 'Non spécifié'
@@ -218,7 +252,6 @@ class ResultatPdfShow
             // Générer le PDF
             $pdf = PDF::loadView('pdf.analyses.resultats-analyses', $data);
             
-            // Définir les options du PDF
             $pdf->setPaper('A4', 'portrait');
             $pdf->setOptions([
                 'isHtml5ParserEnabled' => true,
@@ -230,7 +263,6 @@ class ResultatPdfShow
             $path = 'pdfs/' . $filename;
             Storage::disk('public')->put($path, $pdf->output());
 
-            // Retourner l'URL publique
             return Storage::disk('public')->url($path);
 
         } catch (\Exception $e) {
@@ -244,11 +276,10 @@ class ResultatPdfShow
     }
 
     /**
-     * ✅ NOUVELLE MÉTHODE: Récupérer la conclusion générale de la prescription
+     * Récupérer la conclusion générale de la prescription
      */
     private function getConclusionGenerale(Prescription $prescription)
     {
-        // Récupérer la première conclusion non vide trouvée
         $resultat = Resultat::where('prescription_id', $prescription->id)
             ->where('status', 'VALIDE')
             ->whereNotNull('conclusion')

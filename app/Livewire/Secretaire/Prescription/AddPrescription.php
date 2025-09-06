@@ -902,11 +902,11 @@ class AddPrescription extends Component
                 'remise' => $this->remise,
                 'status' => 'EN_ATTENTE'
             ]);
-            $this->prescription = $prescription;
             
+            $this->prescription = $prescription;
             $this->reference = $prescription->reference;
             
-            // 2. Associer les analyses
+            // 2. Associer les analyses (SIMPLIFIÉ - sans is_payer et prix)
             $analyseIds = array_keys($this->analysesPanier);
             $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
             
@@ -914,9 +914,10 @@ class AddPrescription extends Component
                 throw new \Exception('Certaines analyses sélectionnées n\'existent plus');
             }
             
+            // Utiliser sync() pour associer uniquement les IDs
             $prescription->analyses()->sync($analysesExistantes);
             
-            // 3. Associer les prélèvements
+            // 3. Associer les prélèvements (SIMPLIFIÉ - sans is_payer)
             if (!empty($this->prelevementsSelectionnes)) {
                 foreach ($this->prelevementsSelectionnes as $prelevement) {
                     if (!Prelevement::find($prelevement['id'])) {
@@ -928,12 +929,13 @@ class AddPrescription extends Component
                         'quantite' => max(1, $prelevement['quantite'] ?? 1),
                         'type_tube_requis' => $prelevement['type_tube_requis'] ?? 'SEC',
                         'volume_requis_ml' => $prelevement['volume_requis_ml'] ?? 5.0,
-                        'is_payer' => 'PAYE'
+                        'created_at' => now(),
+                        'updated_at' => now()
                     ]);
                 }
             }
             
-            // 4. Enregistrer le paiement
+            // 4. Enregistrer le paiement (SOURCE DE VÉRITÉ UNIQUE)
             $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
             
             if (!$paymentMethod) {
@@ -945,19 +947,16 @@ class AddPrescription extends Component
                 'montant' => $this->total,
                 'payment_method_id' => $paymentMethod->id,
                 'recu_par' => Auth::user()->id,
-                'status' => $this->paiementStatut 
+                'status' => $this->paiementStatut // true = payé, false = non payé
             ]);
             
-            // 5. Générer les tubes
+            // 5. Générer les tubes si prélèvements présents
             if (!empty($this->prelevementsSelectionnes)) {
                 $this->tubesGeneres = $this->genererTubesPourPrescription($prescription);
                 $this->allerEtape('tubes');
             } else {
                 $this->allerEtape('confirmation');
             }
-            
-            $this->reference = $prescription->reference;
-            $this->prescription = $prescription;
             
             DB::commit();
             
@@ -966,17 +965,32 @@ class AddPrescription extends Component
             
             flash()->success('Prescription enregistrée avec succès!');
             
+            Log::info('Prescription créée avec succès', [
+                'prescription_id' => $prescription->id,
+                'reference' => $prescription->reference,
+                'patient_id' => $this->patient->id,
+                'montant_total' => $this->total,
+                'paiement_status' => $this->paiementStatut,
+                'analyses_count' => count($analyseIds),
+                'prelevements_count' => count($this->prelevementsSelectionnes)
+            ]);
+            
         } catch (\Exception $e) {
             DB::rollBack();
+            
             Log::error('Erreur enregistrement prescription', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'patient_id' => $this->patient?->id,
-                'prescripteur_id' => $this->prescripteurId
+                'prescripteur_id' => $this->prescripteurId,
+                'analyses_panier' => array_keys($this->analysesPanier ?? []),
+                'total' => $this->total
             ]);
+            
             flash()->error('Erreur lors de l\'enregistrement: ' . $e->getMessage());
         }
     }
+
 
     private function genererTubesPourPrescription($prescription)
     {
@@ -999,6 +1013,7 @@ class AddPrescription extends Component
                     
                     $tube->save();
 
+                    // Générer codes après sauvegarde pour avoir l'ID
                     $tube->code_barre = 'T' . date('Y') . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
                     $tube->numero_tube = 'T-' . date('Y') . '-' . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
                     $tube->save();
@@ -1010,21 +1025,33 @@ class AddPrescription extends Component
                         'statut' => $tube->statut,
                         'type_tube' => $tube->type_tube,
                         'volume_ml' => $tube->volume_ml,
+                        'prelevement_nom' => $prelevement->nom
                     ];
                 }
             }
 
+            // Mettre à jour le statut de la prescription
             $prescription->update(['status' => 'EN_ATTENTE']);
             
             flash()->success(count($tubes) . ' tube(s) généré(s) avec succès');
             
+            Log::info('Tubes générés', [
+                'prescription_id' => $prescription->id,
+                'tubes_count' => count($tubes)
+            ]);
+            
         } catch (\Exception $e) {
-            Log::error('Erreur génération tubes', ['error' => $e->getMessage()]);
+            Log::error('Erreur génération tubes', [
+                'prescription_id' => $prescription->id,
+                'error' => $e->getMessage()
+            ]);
             throw new \Exception('Erreur lors de la génération des tubes: ' . $e->getMessage());
         }
 
         return $tubes;
     }
+
+
 
     // =====================================
     // 🧪 ÉTAPE 6: TUBES ET ÉTIQUETTES

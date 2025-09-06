@@ -213,29 +213,26 @@ class RecursiveResultForm extends Component
                 $selectedOptions = [];
                 $autreValeur     = null;
 
-                if (is_string($r->resultats) && $this->looksLikeJson($r->resultats)) {
-                    $std = json_decode($r->resultats, true);
-                    if (is_array($std)) {
-                        $selectedOptions = array_values($std);
-                    }
+                // ✅ FIX: $r->resultats est déjà décodé par l'accessor du modèle
+                if (!empty($r->resultats) && is_array($r->resultats)) {
+                    $selectedOptions = $r->resultats;
                 }
 
-                if ($r->valeur && !$this->looksLikeJson($r->valeur)) {
-                    $autreValeur = $r->valeur;
-                    if (!in_array('Autre', $selectedOptions, true)) {
-                        $selectedOptions[] = 'Autre';
-                    }
-                }
-
+                // Ajouter les bactéries depuis antibiogrammes
                 $antibiogrammes = Antibiogramme::where([
                     'prescription_id' => $this->prescription->id,
                     'analyse_id'      => $analyseId,
                 ])->get();
 
                 foreach ($antibiogrammes as $abg) {
-                    $opt = 'bacterie-' . $abg->bacterie_id;
-                    if (!in_array($opt, $selectedOptions, true)) {
-                        $selectedOptions[] = $opt;
+                    $selectedOptions[] = 'bacterie-' . $abg->bacterie_id;
+                }
+
+                // Traiter "Autre"
+                if (!empty($r->valeur)) {
+                    $autreValeur = $r->valeur;
+                    if (!in_array('Autre', $selectedOptions, true)) {
+                        $selectedOptions[] = 'Autre';
                     }
                 }
 
@@ -243,14 +240,7 @@ class RecursiveResultForm extends Component
                 $payload['autreValeur']     = $autreValeur;
             }
 
-            if (is_string($payload['resultats']) && $this->looksLikeJson($payload['resultats'])) {
-                $payload['resultats'] = json_decode($payload['resultats'], true);
-            }
-            if (is_string($payload['valeur']) && $this->looksLikeJson($payload['valeur'])) {
-                $payload['valeur'] = json_decode($payload['valeur'], true);
-            }
-
-            $this->results[$analyseId] = array_filter($payload, static fn($v) => !is_null($v));
+            $this->results[$analyseId] = $payload;
         }
 
         Log::info('Hydratation terminée', [
@@ -526,11 +516,15 @@ class RecursiveResultForm extends Component
         $autreValeur = null;
 
         if (in_array($type, ['GERME', 'CULTURE'], true)) {
+            // ✅ CORRECTION : Récupérer les options standards depuis 'resultats'
             if ($r->resultats && $this->looksLikeJson($r->resultats)) {
-                $std = json_decode($r->resultats, true);
-                if (is_array($std)) $selectedOptions = array_values($std);
+                $optionsStandards = json_decode($r->resultats, true);
+                if (is_array($optionsStandards)) {
+                    $selectedOptions = array_merge($selectedOptions, array_values($optionsStandards));
+                }
             }
 
+            // Récupérer les bactéries depuis les antibiogrammes
             $abg = Antibiogramme::where([
                 'prescription_id' => $this->prescription->id,
                 'analyse_id'      => $analyseId,
@@ -538,12 +532,17 @@ class RecursiveResultForm extends Component
 
             foreach ($abg as $row) {
                 $opt = 'bacterie-' . $row->bacterie_id;
-                if (!in_array($opt, $selectedOptions, true)) $selectedOptions[] = $opt;
+                if (!in_array($opt, $selectedOptions, true)) {
+                    $selectedOptions[] = $opt;
+                }
             }
 
+            // Gérer la valeur "Autre"
             if ($r->valeur && !$this->looksLikeJson($r->valeur)) {
                 $autreValeur = $r->valeur;
-                if (!in_array('Autre', $selectedOptions, true)) $selectedOptions[] = 'Autre';
+                if (!in_array('Autre', $selectedOptions, true)) {
+                    $selectedOptions[] = 'Autre';
+                }
             }
         }
 
