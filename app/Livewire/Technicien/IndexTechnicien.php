@@ -271,6 +271,7 @@ class IndexTechnicien extends Component
             'en_attente' => Prescription::where('status', 'EN_ATTENTE')->count(),
             'en_cours' => Prescription::where('status', 'EN_COURS')->count(),
             'termine' => Prescription::where('status', 'TERMINE')->count(),
+            'a_refaire'=> Prescription::where('status', 'A_REFAIRE')->count(),
         ];
         
         $stats['total'] = array_sum($stats);
@@ -296,9 +297,8 @@ class IndexTechnicien extends Component
         // Ajouter les prescriptions selon l'onglet actif
         switch ($this->activeTab) {
             case 'en_attente':
-                $data['prescriptionsEnAttente'] = $this->prescriptionsEnAttente;
-                break;
             case 'en_cours':
+                $data['prescriptionsEnAttente'] = $this->prescriptionsEnAttente;
                 $data['prescriptionsEnCours'] = $this->prescriptionsEnCours;
                 break;
             case 'termine':
