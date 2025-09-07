@@ -153,7 +153,8 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="w-8 h-8 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-300 font-medium text-sm mr-3">
-                                                {{ substr($prescription->patient->prenom, 0, 1) }}{{ substr($prescription->patient->nom, 0, 1) }}
+                                                {{ substr($prescription->patient->prenom, 0, 1) }}
+                                                {{ substr($prescription->patient->nom, 0, 1) }}
                                             </div>
                                             <div>
                                                 <div class="text-sm font-medium text-gray-900 dark:text-white">
@@ -182,7 +183,7 @@
                                             {{ $prescription->created_at->format('d/m/Y H:i') }}
                                         </div>
                                     </td>
-                                   <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4 whitespace-nowrap">
                                         <button wire:click="startAnalysis({{ $prescription->id }})" 
                                             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                                             🔬 <span>Traiter</span>
