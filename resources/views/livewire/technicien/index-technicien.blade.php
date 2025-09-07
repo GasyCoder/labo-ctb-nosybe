@@ -22,53 +22,53 @@
             </div>
         </div>
 
-{{-- Stats Cards --}}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <!-- EN ATTENTE -->
-    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white shadow-lg flex flex-col justify-between h-20">
-        <div class="flex items-center justify-between h-full">
-            <div class="flex flex-col justify-between h-full">
-                <p class="text-orange-100 text-sm font-medium">EN ATTENTE</p>
-                <p class="text-3xl font-bold">{{ $stats['en_attente'] ?? 0 }}</p>
-            </div>
-            <div class="p-3 bg-white/20 rounded-lg self-start">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                </svg>
+    {{-- Stats Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- EN ATTENTE -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white shadow-lg flex flex-col justify-between h-20">
+            <div class="flex items-center justify-between h-full">
+                <div class="flex flex-col justify-between h-full">
+                    <p class="text-blue-100 text-sm font-medium">EN ATTENTE</p>
+                    <p class="text-3xl font-bold">{{ $stats['en_attente'] ?? 0 }}</p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg self-start">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- TERMINÉ -->
-    <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-6 text-white shadow-lg flex flex-col justify-between h-20">
-        <div class="flex items-center justify-between h-full">
-            <div class="flex flex-col justify-between h-full">
-                <p class="text-teal-100 text-sm font-medium">TERMINÉ</p>
-                <p class="text-3xl font-bold">{{ $stats['termine'] ?? 0 }}</p>
-            </div>
-            <div class="p-3 bg-white/20 rounded-lg self-start">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
+        <!-- TERMINÉ -->
+        <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg p-6 text-white shadow-lg flex flex-col justify-between h-20">
+            <div class="flex items-center justify-between h-full">
+                <div class="flex flex-col justify-between h-full">
+                    <p class="text-teal-100 text-sm font-medium">TERMINÉ</p>
+                    <p class="text-3xl font-bold">{{ $stats['termine'] ?? 0 }}</p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg self-start">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- À REFAIRE -->
-    <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white shadow-lg flex flex-col justify-between h-20">
-        <div class="flex items-center justify-between h-full">
-            <div class="flex flex-col justify-between h-full">
-                <p class="text-red-100 text-sm font-medium">À REFAIRE</p>
-                <p class="text-3xl font-bold">{{ $stats['a_refaire'] ?? 0 }}</p>
-            </div>
-            <div class="p-3 bg-white/20 rounded-lg self-start">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
+        <!-- À REFAIRE -->
+        <div class="bg-gradient-to-r from-red-500 to-red-600 rounded-lg p-6 text-white shadow-lg flex flex-col justify-between h-20">
+            <div class="flex items-center justify-between h-full">
+                <div class="flex flex-col justify-between h-full">
+                    <p class="text-red-100 text-sm font-medium">À REFAIRE</p>
+                    <p class="text-3xl font-bold">{{ $stats['a_refaire'] ?? 0 }}</p>
+                </div>
+                <div class="p-3 bg-white/20 rounded-lg self-start">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
         {{-- Filtres --}}
@@ -89,16 +89,6 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- Filtres --}}
-                    {{-- <div class="flex gap-2">
-                        <button class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200 transition-colors">
-                            Filtres
-                        </button>
-                        <button class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors">
-                            Export
-                        </button>
-                    </div> --}}
                 </div>
             </div>
         </div>
@@ -109,11 +99,11 @@
             <div class="border-b border-gray-200 dark:border-gray-700">
                 <nav class="-mb-px flex">
                     <button wire:click="$set('activeTab', 'en_attente' , 'en-cours')" 
-                            class="py-4 px-6 text-sm font-medium border-b-2 {{ $activeTab === 'en_attente' ? 'border-orange-500 text-orange-600 bg-orange-50 dark:bg-orange-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
+                            class="py-4 px-6 text-sm font-medium border-b-2 {{ $activeTab === 'en_attente' ? 'border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
                         <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
                             En attente
-                            <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">{{ $stats['en_attente'] ?? 0 }}</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{{ $stats['en_attente'] ?? 0 }}</span>
                         </div>
                     </button>
                     
@@ -142,19 +132,19 @@
                 @if($activeTab === 'en_attente')
                     {{-- Tableau En attente --}}
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-orange-50 dark:bg-orange-900/20">
+                        <thead class="bg-blue-50 dark:bg-blue-900/20">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Référence</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Patient</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Prescripteur</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Analyses</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wider">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">Référence</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">Patient</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">Prescripteur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">Analyses</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($prescriptionsEnAttente as $prescription)
-                                <tr class="hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors">
+                                <tr class="hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-semibold text-gray-900 dark:text-white">
                                             {{ $prescription->reference }}
@@ -192,10 +182,10 @@
                                             {{ $prescription->created_at->format('d/m/Y H:i') }}
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                   <td class="px-6 py-4 whitespace-nowrap">
                                         <button wire:click="startAnalysis({{ $prescription->id }})" 
-                                                class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                            Commencer
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                                            🔬 <span>Traiter</span>
                                         </button>
                                     </td>
                                 </tr>
