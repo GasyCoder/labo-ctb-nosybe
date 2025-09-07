@@ -150,28 +150,57 @@ class IndexTechnicien extends Component
         return redirect()->route('technicien.voir-resultats', $prescriptionId);
     }
 
-    public function redoAnalysis($prescriptionId)
-    {
-        try {
-            $prescription = Prescription::findOrFail($prescriptionId);
-            
-            // Remettre en cours de traitement
-            $prescription->update([
-                'status' => 'EN_ATTENTE',
-                'technicien_id' => auth()->id(),
-                'commentaire_biologiste' => null,
-                'date_reprise_traitement' => now()
-            ]);
-            
-            session()->flash('message', 'Reprise du traitement pour la prescription ' . $prescription->reference);
-            
-            // Rediriger vers la page de saisie des résultats
-            return redirect()->route('technicien.saisie-resultats', $prescription->id);
-            
-        } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la reprise du traitement: ' . $e->getMessage());
+  public function redoAnalysis($prescriptionId)
+{
+    try {
+        DB::beginTransaction();
+
+        $prescription = Prescription::findOrFail($prescriptionId);
+
+        // Vérifier que la prescription existe
+        if (!$prescription) {
+            session()->flash('error', 'Prescription introuvable.');
+            DB::rollBack();
+            return;
         }
+
+        // On remet les champs nécessaires puis on relance directement en EN_COURS
+        $prescription->update([
+            'status' => 'EN_COURS',
+            'technicien_id' => auth()->id(),
+            'commentaire_biologiste' => null,
+            'date_debut_traitement' => now(),
+            'date_reprise_traitement' => now()
+        ]);
+
+        // Logger l'action
+        Log::info('Prescription relancée pour un nouveau traitement', [
+            'prescription_id' => $prescriptionId,
+            'reference' => $prescription->reference,
+            'user_id' => Auth::id(),
+        ]);
+
+        DB::commit();
+
+        // Message de succès
+        session()->flash('message', 'La prescription ' . $prescription->reference . ' a été relancée pour un nouveau traitement.');
+
+        // Redirection directe vers la page de traitement
+        return redirect()->route('technicien.prescription.show', $prescription);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Erreur lors du recommencement de l\'analyse', [
+            'prescription_id' => $prescriptionId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        session()->flash('error', 'Erreur lors du recommencement : ' . $e->getMessage());
     }
+}
+
 
     public function exportData()
     {

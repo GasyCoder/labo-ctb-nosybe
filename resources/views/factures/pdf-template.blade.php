@@ -48,11 +48,29 @@
             text-align: right;
         }
         
+        .logo-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+            object-fit: contain;
+        }
+        
+        .lab-title-section {
+            flex: 1;
+        }
+        
         .lab-title {
             font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
             margin-bottom: 8px;
+            line-height: 1.2;
         }
         
         .lab-details {
@@ -257,7 +275,12 @@
         {{-- HEADER --}}
         <div class="header">
             <div class="header-left">
-                <div class="lab-title">LABORATOIRE D'ANALYSES MEDICALES</div>
+                <div class="logo-section">
+                    <img src="{{ public_path('logo1.png') }}" alt="Logo Laboratoire" class="logo">
+                    <div class="lab-title-section">
+                        <div class="lab-title">LABORATOIRE D'ANALYSES MEDICALES</div>
+                    </div>
+                </div>
                 <div class="lab-details">
                     <p><strong>Directeur Technique:</strong> Dr. {{ $prescription->prescripteur->nom ?? 'RESPONSABLE' }}</p>
                     <p><strong>Adresse:</strong> Centre ville, Antananarivo, Madagascar</p>
@@ -478,14 +501,7 @@
                     <span class="info-label">Tubes:</span>
                     {{ $prescription->tubes->count() }} tube(s)
                 </div>
-                {{-- <div class="info-line">
-                    <span class="info-label">Commission:</span>
-                    {{ number_format($paiement->commission_prescripteur ?? 0, 0) }} Ar
-                </div> --}}
-                {{-- <div class="info-line">
-                    <span class="info-label">Délai:</span>
-                    24-48h ouvrables
-                </div> --}}
+               
             </div>
         </div>
 
