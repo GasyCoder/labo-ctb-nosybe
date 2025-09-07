@@ -313,9 +313,9 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <button wire:click="redoAnalysis({{ $prescription->id }})" 
-                                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                            Refaire
+                                       <button wire:click="redoAnalysis({{ $prescription->id }})" 
+                                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                            Recommencer
                                         </button>
                                     </td>
                                 </tr>
