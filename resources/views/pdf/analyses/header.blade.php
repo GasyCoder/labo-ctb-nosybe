@@ -1,0 +1,54 @@
+{{-- resources/views/pdf/analyses/header.blade.php --}}
+@php
+    $patientFullName = trim(($prescription->patient->civilite ?? '') . ' ' . 
+                            ($prescription->patient->nom ?? 'N/A') . ' ' . 
+                            ($prescription->patient->prenom ?? ''));
+@endphp
+
+{{-- Informations patient --}}
+<div class="patient-info">
+    <div class="patient-info-row">
+        <div class="patient-info-left">
+            <div class="info-value">
+                <span class="info-label">Résultats de :</span><br>
+                <span class="text-fine patient-name">{{ $patientFullName }}</span>
+            </div>
+            
+            <div class="info-value">
+                <span class="info-label">Âge :</span>
+                <span class="text-fine">{{ $prescription->age ?? 'N/A' }} {{ $prescription->unite_age ?? '' }}</span>
+            </div>
+            
+            @if($prescription->patient->telephone)
+            <div class="info-value">
+                <span class="info-label">Tél :</span>
+                <span class="text-fine">{{ $prescription->patient->telephone }}</span>
+            </div>
+            @endif
+        </div>
+        
+        <div class="patient-info-right">
+            <div class="info-value">
+                <span class="text-fine medecin-name">
+                    {{ 
+                        trim(($prescription->prescripteur->grade ?? '') . ' ' . 
+                             ($prescription->prescripteur->prenom ?? '') . ' ' . 
+                             ($prescription->prescripteur->nom ?? 'Non assigné'))
+                    }}
+                </span>
+            </div>
+            
+            <div class="info-value">
+                <span class="info-label">Dossier n° :</span>
+                <span class="text-fine">{{ $prescription->patient->numero_dossier ?? $prescription->reference }} du {{ $prescription->created_at->format('d/m/Y') }}</span>
+            </div>
+            
+            @if(!empty($prescription->renseignement_clinique))
+            <div class="info-value">
+                {{-- <span class="info-label">Renseignement clinique :</span><br> --}}
+                <span class="text-fine">{{ $prescription->renseignement_clinique }}</span>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>

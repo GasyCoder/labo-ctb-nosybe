@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Biologiste;
 use App\Http\Controllers\Controller;
 use App\Models\Prescription;
 use App\Services\ResultatPdfShow;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -18,70 +19,86 @@ class PrescriptionPdfController extends Controller
     }
 
     /**
-     * Générer l'APERÇU PDF (résultats saisis, pas forcément validés)
+     * Générer le PDF selon le type demandé (route principale)
      */
-    public function show(Prescription $prescription)
+    public function show(Prescription $prescription, Request $request)
     {
         try {
-            $hasAnyResults = $prescription->resultats()
-                ->where(function($query) {
-                    $query->whereNotNull('valeur')
-                          ->where('valeur', '!=', '')
-                          ->orWhereNotNull('resultats');
-                })
-                ->exists();
+            $type = $request->get('type', 'auto'); // auto, final ou preview
+            
+            // Si type auto, essayer final d'abord, puis preview
+            if ($type === 'auto') {
+                $hasValidatedResults = $prescription->resultats()
+                    ->where('status', 'VALIDE')
+                    ->whereNotNull('validated_by')
+                    ->exists();
 
-            if (!$hasAnyResults) {
-                return redirect()->back()->with('error', 'Aucun résultat saisi trouvé pour cette prescription.');
+                $hasAntibiogrammes = \App\Models\Antibiogramme::where('prescription_id', $prescription->id)->exists();
+
+                if ($hasValidatedResults || $hasAntibiogrammes) {
+                    return $this->generateFinalPdf($prescription);
+                } else {
+                    // Fallback vers preview si pas de résultats validés
+                    return $this->generatePreviewPdf($prescription);
+                }
+            }
+            
+            if ($type === 'preview') {
+                return $this->generatePreviewPdf($prescription);
+            } else {
+                return $this->generateFinalPdf($prescription);
             }
 
-            $pdfUrl = $this->pdfService->generatePreviewPDF($prescription);
-
-            return redirect($pdfUrl);
-
         } catch (\Exception $e) {
-            Log::error('Erreur génération aperçu PDF:', [
+            Log::error('Erreur génération PDF biologiste:', [
                 'prescription_id' => $prescription->id,
                 'error' => $e->getMessage(),
                 'user_id' => Auth::id()
             ]);
 
-            return redirect()->back()->with('error', 'Erreur lors de la génération de l\'aperçu PDF: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Erreur lors de la génération du PDF: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Générer l'APERÇU PDF (résultats saisis, pas forcément validés)
+     */
+    private function generatePreviewPdf(Prescription $prescription)
+    {
+        $hasAnyResults = $prescription->resultats()
+            ->where(function($query) {
+                $query->whereNotNull('valeur')
+                      ->where('valeur', '!=', '')
+                      ->orWhereNotNull('resultats');
+            })
+            ->exists();
+
+        if (!$hasAnyResults) {
+            return redirect()->back()->with('error', 'Aucun résultat saisi trouvé pour cette prescription.');
+        }
+
+        $pdfUrl = $this->pdfService->generatePreviewPDF($prescription);
+        return redirect($pdfUrl);
     }
 
     /**
      * Générer le PDF FINAL (uniquement résultats validés)
      */
-    public function finalPdf(Prescription $prescription)
+    private function generateFinalPdf(Prescription $prescription)
     {
-        try {
-            if ($prescription->status !== Prescription::STATUS_VALIDE) {
-                return redirect()->back()->with('error', 'Cette prescription n\'est pas encore validée.');
-            }
+        $hasValidatedResults = $prescription->resultats()
+            ->where('status', 'VALIDE')
+            ->whereNotNull('validated_by')
+            ->exists();
 
-            $hasValidatedResults = $prescription->resultats()
-                ->where('status', 'VALIDE')
-                ->whereNotNull('validated_by')
-                ->exists();
+        $hasAntibiogrammes = \App\Models\Antibiogramme::where('prescription_id', $prescription->id)->exists();
 
-            if (!$hasValidatedResults) {
-                return redirect()->back()->with('error', 'Aucun résultat validé trouvé pour cette prescription.');
-            }
-
-            $pdfUrl = $this->pdfService->generateFinalPDF($prescription);
-
-            return redirect($pdfUrl);
-
-        } catch (\Exception $e) {
-            Log::error('Erreur génération PDF final:', [
-                'prescription_id' => $prescription->id,
-                'error' => $e->getMessage(),
-                'user_id' => Auth::id()
-            ]);
-
-            return redirect()->back()->with('error', 'Erreur lors de la génération du PDF final: ' . $e->getMessage());
+        if (!$hasValidatedResults && !$hasAntibiogrammes) {
+            return redirect()->back()->with('error', 'Aucun résultat validé ou antibiogramme trouvé pour cette prescription.');
         }
+
+        $pdfUrl = $this->pdfService->generateFinalPDF($prescription);
+        return redirect($pdfUrl);
     }
 
     /**

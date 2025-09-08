@@ -540,6 +540,8 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Analyse> $analyses
  * @property-read int|null $analyses_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Antibiogramme> $antibiogrammes
+ * @property-read int|null $antibiogrammes_count
  * @property-read mixed $commission_prescripteur
  * @property-read mixed $est_payee
  * @property-read mixed $est_payee_completement

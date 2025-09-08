@@ -188,15 +188,19 @@
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Sélection multiple</label>
                         @if($node->formatted_results && is_array($node->formatted_results) && count($node->formatted_results))
-                            <div class="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg p-4 max-h-48 overflow-y-auto space-y-2">
-                                @foreach($node->formatted_results as $opt)
-                                    <label class="flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-600 p-2 rounded-md cursor-pointer transition-colors">
-                                        <input type="checkbox" value="{{ $opt }}" wire:model.live="{{ $path }}.resultats"
-                                               class="w-4 h-4 text-primary-600 bg-white dark:bg-slate-600 border-slate-300 dark:border-slate-500 rounded focus:ring-primary-500 dark:focus:ring-primary-400">
-                                        <span class="text-sm">{{ $opt }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
+                        <div class="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg p-4 max-h-48 overflow-y-auto space-y-2">
+                            @foreach($node->formatted_results as $index => $opt)
+                                <label class="flex items-center gap-3 text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-600 p-2 rounded-md cursor-pointer transition-colors">
+                                    <input 
+                                        type="checkbox" 
+                                        value="{{ $opt }}" 
+                                        wire:model.live="{{ $path }}.resultats.{{ $index }}"
+                                        class="w-4 h-4 text-primary-600 bg-white dark:bg-slate-600 border-slate-300 dark:border-slate-500 rounded focus:ring-primary-500 dark:focus:ring-primary-400"
+                                    >
+                                    <span class="text-sm">{{ $opt }}</span>
+                                </label>
+                            @endforeach
+                        </div>
                             
                             {{-- Champ Autre pour SELECT_MULTIPLE --}}
                             @if(is_array($get('resultats')) && in_array('Autre', $get('resultats')))

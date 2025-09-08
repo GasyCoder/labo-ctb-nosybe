@@ -122,10 +122,7 @@ Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')
     // ✅ CORRECTION : Routes PDF avec deux options
     Route::get('/prescription/{prescription}/pdf', [PrescriptionPdfController::class, 'show'])
         ->name('prescription.pdf');
-    
-    // ✅ NOUVEAU : Route pour téléchargement direct (optionnel)
-    Route::get('/prescription/{prescription}/download-pdf', [PrescriptionPdfController::class, 'downloadPdf'])
-        ->name('prescription.download-pdf');
+
 });
 
 // ============================================

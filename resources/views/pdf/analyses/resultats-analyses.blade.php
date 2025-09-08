@@ -1,422 +1,78 @@
-{{-- resources/views/pdf/analyses/resultats-analyses.blade.php --}}
+{{-- resources/views/pdf/analyses/resultats-analyses.blade.php - VERSION SIMPLIFIÉE --}}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Résultats d'analyses - {{ $prescription->reference }}</title>
-    <style>
-        /* Reset et styles de base */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 11pt;
-            color: black;
-            line-height: 1.1;
-        }
-
-        .bold {
-            font-weight: bold;
-        }
-
-        /* En-tête */
-        .header-section {
-            width: 100%;
-            display: block;
-            margin: 0;
-            padding: 0;
-            line-height: 0;
-        }
-
-        .header-logo {
-            width: 100%;
-            max-height: 120px;
-            object-fit: contain;
-            object-position: left top;
-            margin: 0;
-            padding: 0;
-            display: block;
-        }
-
-        /* Section contenu */
-        .content-wrapper {
-            padding: 0 40px;
-        }
-
-        /* Information patient - AMÉLIORATION EN DEUX COLONNES */
-        .patient-info {
-            margin: 15px 0;
-            width: 100%;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 15px;
-            display: table;
-            table-layout: fixed;
-        }
-
-        .patient-info-row {
-            display: table-row;
-        }
-
-        .patient-info-left {
-            display: table-cell;
-            width: 50%;
-            padding-right: 20px;
-            vertical-align: top;
-            line-height: 1.5;
-        }
-
-        .patient-info-right {
-            display: table-cell;
-            width: 50%;
-            padding-left: 20px;
-            vertical-align: top;
-            line-height: 1.5;
-        }
-
-        .info-label {
-            color: #374151;
-            font-size: 9pt;
-        }
-
-        .info-value {
-            color: #111827;
-            font-size: 9pt;
-            margin-bottom: 2px;
-        }
-
-        .text-fine {
-            font-weight: normal;
-            font-size: 9pt;
-        }
-
-        /* Tables principales */
-        .main-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0;
-            padding: 0;
-        }
-
-        .main-table td {
-            padding: 1px 0;
-            line-height: 1.2;
-            vertical-align: middle;
-        }
-        .patient-name {
-            font-weight: bold;
-        }
-        .medecin-name {
-            font-weight: bold;
-        }
-        /* Ligne rouge */
-        .red-line {
-            border-top: 0.5px solid #0b48eeff;
-            margin: 1px 0;
-            width: 100%;
-        }
-
-        /* Colonnes */
-        .col-designation {
-            width: 40%;
-            text-align: left;
-            padding-right: 10px;
-            font-size: 10.5pt;
-        }
-
-        .col-resultat {
-            width: 20%;
-            text-align: left;
-            padding-left: 20px;
-            font-size: 10.5pt;
-        }
-
-        .col-valref {
-            width: 20%;
-            text-align: left;
-            padding-left: 20px;
-            font-size: 10.5pt;
-        }
-
-        .col-anteriorite {
-            width: 8%;
-            padding-left: 10px;
-            text-align: left;
-            font-size: 10.5pt;
-        }
-
-        /* Styles des titres */
-        .section-title {
-            color: #042379ff;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .header-cols {
-            font-size: 8pt;
-            color: #000;
-            font-style: italic;
-        }
-
-        /* Niveaux de hiérarchie */
-        .parent-row {
-            font-weight: bold;
-        }
-
-        .child-row td:first-child {
-            padding-left: 20px;
-        }
-
-        .subchild-row td:first-child {
-            padding-left: 40px;
-        }
-
-        /* ✅ NOUVEAUX STYLES : Antibiogrammes */
-        .antibiogramme-header td {
-            background-color: #f8f9fa;
-            border-top: 1px solid #ccc;
-            border-bottom: 1px solid #e9ecef;
-            font-weight: bold;
-            font-size: 10pt;
-            color: #333;
-            padding: 6px 0 4px 0;
-        }
-
-        .antibiogramme-row td {
-            padding: 2px 0;
-            font-size: 9pt;
-            line-height: 1.3;
-        }
-
-        .antibiogramme-row td:first-child {
-            color: #666;
-            font-weight: 500;
-        }
-
-        /* Styles spéciaux pour les germes */
-        .germe-result {
-            font-style: italic;
-            font-weight: normal;
-        }
-
-        .germe-option {
-            font-style: normal;
-            text-transform: capitalize;
-        }
-
-        /* Styles spéciaux */
-        .indent-1 {
-            padding-left: 20px !important;
-        }
-
-        .indent-2 {
-            padding-left: 40px !important;
-        }
-
-        /* Signature */
-        .signature {
-            margin-top: 20px;
-            text-align: right;
-            padding-right: 40px;
-        }
-
-        /* Espacement */
-        .spacing {
-            height: 3px;
-        }
-
-        /* Résultats pathologiques */
-        .pathologique {
-            font-weight: bold;
-            color: #000;
-        }
-
-        /* Styles pour conclusions */
-        .conclusion-section {
-            margin-top: 15px;
-            margin-bottom: 10px;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
-
-        .conclusion-title {
-            font-weight: bold;
-            font-size: 11pt;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .conclusion-content {
-            font-size: 10pt;
-            line-height: 1.4;
-            text-align: justify;
-            color: #000;
-        }
-
-        .conclusion-examen {
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-
-        .conclusion-examen-title {
-            font-weight: bold;
-            font-size: 10pt;
-            margin-bottom: 3px;
-            color: #666;
-        }
-
-        .conclusion-examen-content {
-            font-size: 9.5pt;
-            line-height: 1.3;
-            text-align: justify;
-            margin-left: 10px;
-        }
-
-        .conclusion-row td {
-            padding: 3px 0;
-            font-size: 9pt;
-            color: #666;
-            font-style: italic;
-        }
-
-        /* ✅ STYLES RESPONSIVES pour les antibiotiques */
-        .antibiotique-sensible {
-            color: #28a745;
-        }
-
-        .antibiotique-resistant {
-            color: #0542ebff;
-            font-weight: bold;
-        }
-
-        .antibiotique-intermediaire {
-            color: #ffc107;
-            font-style: italic;
-        }
-
-        /* Séparateurs visuels */
-        .section-separator {
-            border-top: 1px solid #e9ecef;
-            margin: 5px 0;
-        }
-
-        /* Amélioration de la lisibilité */
-        .analyse-principale {
-            border-bottom: 1px solid #f1f3f4;
-        }
-
-        .sous-analyse {
-            background-color: #fafbfc;
-        }
-    </style>
+    @include('pdf.analyses.styles')
 </head>
 <body>
+    @php
+        $patientFullName = trim(($prescription->patient->civilite ?? '') . ' ' . 
+                                ($prescription->patient->nom ?? 'N/A') . ' ' . 
+                                ($prescription->patient->prenom ?? ''));
+    @endphp
+
     {{-- En-tête avec logo --}}
     <div class="header-section">
-        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/images/logo.png'))) }}" alt="LABORATOIRE LA LNB" class="header-logo">
+        <img src="{{ public_path('assets/images/logo.png') }}" alt="LABORATOIRE LA REFERENCE" class="header-logo">
     </div>
     
     <div class="red-line"></div>
     
     <div class="content-wrapper">
         {{-- Informations patient --}}
-     <div class="patient-info">
-            <div class="patient-info-row">
-                <div class="patient-info-left">
-                    <div class="info-value">
-                        <span class="info-label">Résultats de :</span><br>
-                        <span class="text-fine patient-name">{{ $prescription->patient->civilite ?? '' }} 
-                        {{ $prescription->patient->nom ?? 'N/A' }} 
-                        {{ $prescription->patient->prenom ?? '' }}</span>
-                    </div>
-                    
-                    <div class="info-value">
-                        <span class="info-label">Âge :</span>
-                        <span class="text-muted text-fine">{{ $prescription->age ?? 'N/A' }} {{ $prescription->unite_age ?? '' }}</span>
-                    </div>
-                    
-                    @if($prescription->patient->telephone)
-                    <div class="info-value">
-                        <span class="info-label">Tél:</span>
-                        <span class="text-muted text-fine">{{ $prescription->patient->telephone }}</span>
-                    </div>
-                    @endif
-                </div>
-                
-                <div class="patient-info-right">
-                    <div class="info-value">
-                        <span class="text-fine medecin-name">
-                            {{ 
-                                ($prescription->prescripteur->grade ?? '') . ' ' . 
-                                ($prescription->prescripteur->prenom ?? '') . ' ' . 
-                                ($prescription->prescripteur->nom ?? 'Non assigné') 
-                            }}
-                        </span>
-                    </div>
-                    <div class="info-value">
-                        <span class="info-label">Dossier n° :</span>
-                        <span class="text-muted text-fine">{{ $prescription->patient->numero_dossier ?? $prescription->reference }} du {{ $prescription->created_at->format('d/m/Y') }}</span>
-                    </div>
-                    @if(!empty($prescription->renseignement_clinique))
-                    <div class="renseignement-clinique">
-                    {{ $prescription->renseignement_clinique }}
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- Contenu des analyses par examen --}}
+        @include('pdf.analyses.header')
+        
+        {{-- Contenu des examens --}}
         @foreach($examens as $examen)
-            @if($examen->analyses->isNotEmpty())
-                {{-- En-tête du tableau pour chaque examen --}}
+            @php
+                $hasValidResults = $examen->analyses->some(function($analyse) {
+                    return $analyse->resultats->isNotEmpty() ||
+                           ($analyse->children && $analyse->children->some(function($child) {
+                               return $child->resultats->isNotEmpty();
+                           })) ||
+                           ($analyse->antibiogrammes && $analyse->antibiogrammes->isNotEmpty());
+                });
+            @endphp
+
+            @if($hasValidResults)
+                {{-- En-tête du tableau --}}
                 <table class="main-table">
                     <tr>
                         <td class="col-designation section-title">{{ strtoupper($examen->name) }}</td>
-                        <td class="col-resultat header-cols text-muted">Résultat</td>
-                        <td class="col-valref header-cols text-muted">Val Réf</td>
-                        <td class="col-anteriorite header-cols text-muted">Antériorité</td>
+                        <td class="col-resultat header-cols">Résultat</td>
+                        <td class="col-valref header-cols">Val Réf</td>
+                        <td class="col-anteriorite header-cols">Antériorité</td>
                     </tr>
                 </table>
                 
                 <div class="red-line"></div>
                 <div class="spacing"></div>
 
-                {{-- Contenu des analyses --}}
+                {{-- Contenu principal --}}
                 <table class="main-table">
                     @foreach($examen->analyses as $analyse)
+                        {{-- Afficher seulement les analyses parents ou sans parent --}}
                         @if($analyse->level === 'PARENT' || is_null($analyse->parent_id))
-                            {{-- Analyse parent --}}
                             @include('pdf.analyses.analyse-row', ['analyse' => $analyse, 'level' => 0])
                             
-                            {{-- Ses enfants --}}
+                            {{-- Afficher les enfants --}}
                             @if($analyse->children && $analyse->children->count() > 0)
-                                @include('pdf.analyses.children-analyse', ['children' => $analyse->children, 'level' => 1])
+                                @include('pdf.analyses.analyse-children', ['children' => $analyse->children, 'level' => 1])
                             @endif
                         @endif
                     @endforeach
                 </table>
 
                 {{-- Conclusions pour cet examen --}}
-                @if(isset($examen->conclusions) && $examen->conclusions->isNotEmpty())
-                    <div class="conclusion-examen">
-                        <div class="conclusion-examen-title">Conclusion :</div>
-                        @foreach($examen->conclusions as $conclusion)
-                            <div class="conclusion-examen-content">
-                                {!! nl2br(e($conclusion['conclusion'])) !!}
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-
+                @include('pdf.analyses.conclusion-examen', ['examen' => $examen])
+                
                 <div class="spacing"></div>
             @endif
         @endforeach
 
-        {{-- Conclusion générale de la prescription --}}
+        {{-- Conclusion générale --}}
         @if(isset($conclusion_generale) && !empty($conclusion_generale))
             <div class="conclusion-section">
                 <div class="conclusion-title">Conclusion générale :</div>

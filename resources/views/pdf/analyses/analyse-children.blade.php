@@ -241,7 +241,7 @@
 
         {{-- ✅ RÉCURSION : Traiter les sous-enfants --}}
         @if($child->children && $child->children->count() > 0)
-            @include('pdf.analyses.children-analyse', ['children' => $child->children, 'level' => $level + 1])
+            @include('pdf.analyses.analyse-children', ['children' => $child->children, 'level' => $level + 1])
         @endif
     @endif
 @endforeach

@@ -280,4 +280,9 @@ class Prescription extends Model
         $numero = str_pad($compteur, 5, '0', STR_PAD_LEFT);
         return "PRE-{$annee}-{$numero}";
     }
+
+    public function antibiogrammes()
+    {
+        return $this->hasMany(\App\Models\Antibiogramme::class);
+    }
 }

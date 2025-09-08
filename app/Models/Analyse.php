@@ -128,4 +128,9 @@ class Analyse extends Model
         }
         return $ids;
     }
+
+    public function children()
+    {
+        return $this->enfantsRecursive();
+    }
 }

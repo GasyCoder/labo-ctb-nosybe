@@ -6,10 +6,11 @@
     $isInfoLine = !$hasResult && $analyse->designation && ($analyse->prix == 0 || $analyse->level === 'PARENT');
     
     // Vérifier la présence d'antibiogrammes
-    $hasAntibiogrammes = $analyse->has_antibiogrammes;
+    $hasAntibiogrammes = $analyse->has_antibiogrammes ?? false;
 @endphp
 
-@if($hasResult || $isInfoLine || $hasAntibiogrammes)
+{{-- CONDITION d'affichage élargie pour éviter les analyses masquées --}}
+@if($hasResult || $isInfoLine || $hasAntibiogrammes || $analyse->designation)
     <tr class="{{ $level === 0 ? 'parent-row' : 'child-row' }}">
         <td class="col-designation {{ ($analyse->level === 'PARENT' || $analyse->is_bold) ? 'bold' : '' }}"
             @if($level > 0) style="padding-left: {{ $level * 20 }}px;" @endif>
@@ -139,8 +140,8 @@
         @endif
     @endif
 
-    {{-- Afficher les antibiogrammes --}}
-    @if($hasAntibiogrammes && $analyse->antibiogrammes)
+    {{-- AFFICHAGE ANTIBIOGRAMMES --}}
+    @if($hasAntibiogrammes && isset($analyse->antibiogrammes))
         @foreach($analyse->antibiogrammes as $antibiogramme)
             {{-- En-tête de l'antibiogramme --}}
             <tr class="antibiogramme-header">
@@ -216,7 +217,7 @@
 
     {{-- CONCLUSION spécifique du résultat --}}
     @if($hasResult && $resultat && isset($resultat->conclusion) && !empty($resultat->conclusion))
-        <tr class="conclusion-row">
+        @tr class="conclusion-row">
             <td style="padding-left: {{ ($level + 1) * 20 }}px; font-size: 9pt; color: #666; font-style: italic;">
                 Conclusion :
             </td>
@@ -226,10 +227,30 @@
         </tr>
     @endif
 
-    {{-- Traiter les enfants --}}
-    @if($analyse->children && $analyse->children->isNotEmpty())
+    {{-- CORRECTION CLEF : Traiter les enfants AVEC protection contre les doublons --}}
+    @if(isset($analyse->children) && $analyse->children->isNotEmpty() && $level < 5)
+        @php 
+            // PROTECTION: Créer une liste des IDs déjà traités pour éviter les boucles
+            $processedIds = $processedIds ?? [];
+        @endphp
+        
         @foreach($analyse->children as $child)
-            @include('pdf.analyses.analyse-row', ['analyse' => $child, 'level' => $level + 1])
+            @php
+                // GARDE-FOU: Éviter de traiter le même ID plusieurs fois
+                if (in_array($child->id, $processedIds)) {
+                    continue;
+                }
+                $processedIds[] = $child->id;
+            @endphp
+            
+            {{-- Afficher l'enfant SEULEMENT s'il a du contenu --}}
+            {{-- @if($child->designation && ($child->resultats->isNotEmpty() || $child->has_antibiogrammes || $child->level === 'PARENT'))
+                @include('pdf.analyses.analyse-row', [
+                    'analyse' => $child, 
+                    'level' => $level + 1,
+                    'processedIds' => $processedIds
+                ])
+            @endif --}}
         @endforeach
     @endif
 @endif
