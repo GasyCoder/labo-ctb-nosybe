@@ -14,7 +14,7 @@ return [
     */
     'laboratoire_name' => env('LABORATOIRE_NAME', 'LABORATOIRE'),
     'name' => env('APP_NAME', 'DashWind'),
-    'desc' => env('APP_DESC', 'Tailwind CSS Admin Dashboard Template'),
+    'desc' => env('APP_DESC', 'LNB Laboratoire'),
     'version' => env('APP_VERSION', '1.0.0'),
     'build' => env('APP_RELEASE', '12122024'),
 

@@ -84,7 +84,7 @@
 
         {{-- Signature --}}
         <div class="signature">
-            <img src="{{ public_path('assets/images/signature.png') }}" alt="Signature" style="max-width: 180px;">
+            <img src="{{ public_path('assets/images/signe.png') }}" alt="Signature" style="max-width: 120px;">
         </div>
     </div>
 </body>

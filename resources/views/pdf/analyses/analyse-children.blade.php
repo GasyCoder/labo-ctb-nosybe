@@ -1,4 +1,4 @@
-{{-- resources/views/pdf/analyses/children-analyse.blade.php --}}
+{{-- resources/views/pdf/analyses/analyse-children.blade.php - VERSION COMPLÈTE CORRIGÉE --}}
 @foreach($children as $child)
     @php
         $resultat = $child->resultats->first();
@@ -6,7 +6,7 @@
         $isPathologique = $resultat && $resultat->est_pathologique;
         $isInfoLine = !$hasResult && $child->designation;
         
-        // ✅ CORRECTION : Vérifier la présence d'antibiogrammes pour les enfants
+        // Vérifier la présence d'antibiogrammes pour les enfants
         $hasAntibiogrammes = false;
         if (isset($child->antibiogrammes) && $child->antibiogrammes->isNotEmpty()) {
             $hasAntibiogrammes = true;
@@ -25,8 +25,8 @@
             </td>
             <td class="col-resultat">
                 @if($hasResult)
-                    @if($resultat->isGermeType() || $resultat->isCultureType())
-                        {{-- ✅ GERMES : Affichage spécial pour GERME/CULTURE --}}
+                    @if(method_exists($resultat, 'isGermeType') && ($resultat->isGermeType() || $resultat->isCultureType()))
+                        {{-- GERMES : Affichage spécial pour GERME/CULTURE --}}
                         @php 
                             $selectedOptions = $resultat->resultats_pdf;
                             $autreValeur = $resultat->valeur;
@@ -47,8 +47,8 @@
                             <i>{{ $autreValeur }}</i>
                         @endif
                         
-                    @elseif($resultat->isLeucocytesType())
-                        {{-- ✅ CORRECTION : LEUCOCYTES avec sous-détails --}}
+                    @elseif(method_exists($resultat, 'isLeucocytesType') && $resultat->isLeucocytesType())
+                        {{-- LEUCOCYTES avec sous-détails --}}
                         @php $leucoData = $resultat->leucocytes_data; @endphp
                         @if($leucoData)
                             {{ $leucoData['valeur'] ?? '' }} /mm³
@@ -84,62 +84,127 @@
                             @endif
                         @endif
                     @else
-                        {{-- ✅ CORRECTION : AUTRES TYPES avec meilleure gestion --}}
-                        @if($resultat->display_value_pdf)
-                            {!! $resultat->display_value_pdf !!}
-                        @else
-                            @php
-                                $displayValue = '';
-                                
-                                if ($child->type && $child->type->name === 'SELECT_MULTIPLE') {
-                                    $resultatsArray = $resultat->resultats_pdf;
+                        {{-- GESTION COMPLÈTE DE TOUS LES TYPES D'ANALYSES ENFANTS --}}
+                        @php
+                            $displayValue = '';
+                            $childType = $child->type->name ?? '';
+                            
+                            switch($childType) {
+                                // TYPES DE SAISIE SIMPLE
+                                case 'INPUT':
+                                case 'DOSAGE':
+                                case 'COMPTAGE':
+                                    $displayValue = $resultat->valeur;
+                                    break;
+                                    
+                                case 'INPUT_SUFFIXE':
+                                    $displayValue = $resultat->valeur;
+                                    break;
+                                    
+                                // TYPES DE SÉLECTION
+                                case 'SELECT':
+                                case 'TEST':
+                                    $displayValue = $resultat->resultats ?: $resultat->valeur;
+                                    break;
+                                    
+                                case 'SELECT_MULTIPLE':
+                                    $resultatsArray = $resultat->resultats_pdf ?? $resultat->resultats;
                                     if (is_array($resultatsArray)) {
                                         $displayValue = implode(', ', $resultatsArray);
-                                    }
-                                } elseif ($child->type && $child->type->name === 'NEGATIF_POSITIF_3') {
-                                    if ($resultat->resultats === 'Positif' && $resultat->valeur) {
-                                        $displayValue = $resultat->resultats;
-                                        $values = is_array($resultat->valeur) ? 
-                                            implode(', ', $resultat->valeur) : 
-                                            $resultat->valeur;
-                                        $displayValue .= ' (' . $values . ')';
                                     } else {
-                                        $displayValue = $resultat->resultats ?: $resultat->valeur;
+                                        $displayValue = $resultatsArray;
                                     }
-                                } elseif ($child->type && $child->type->name === 'FV') {
+                                    break;
+                                    
+                                // TYPES NÉGATIF/POSITIF
+                                case 'NEGATIF_POSITIF_1':
+                                    $displayValue = $resultat->valeur;
+                                    break;
+                                    
+                                case 'NEGATIF_POSITIF_2':
+                                    $displayValue = $resultat->valeur; // NEGATIF ou POSITIF
+                                    if ($resultat->valeur === 'POSITIF' && $resultat->resultats) {
+                                        $displayValue .= ' (' . $resultat->resultats . ')';
+                                    }
+                                    break;
+                                    
+                                case 'NEGATIF_POSITIF_3':
+                                    $displayValue = $resultat->valeur;
+                                    if ($resultat->resultats) {
+                                        if (is_array($resultat->resultats)) {
+                                            $resultatsStr = implode(', ', $resultat->resultats);
+                                            $displayValue .= ' (' . $resultatsStr . ')';
+                                        } else {
+                                            $displayValue .= ' (' . $resultat->resultats . ')';
+                                        }
+                                    }
+                                    break;
+                                    
+                                // TYPES ABSENCE/PRÉSENCE
+                                case 'ABSENCE_PRESENCE_2':
+                                    $displayValue = $resultat->valeur;
+                                    if ($resultat->resultats) {
+                                        $displayValue .= ' (' . $resultat->resultats . ')';
+                                    }
+                                    break;
+                                    
+                                // FLORE VAGINALE
+                                case 'FV':
                                     if ($resultat->resultats) {
                                         $displayValue = $resultat->resultats;
+                                        
                                         if ($resultat->valeur && in_array($resultat->resultats, [
                                             'Flore vaginale équilibrée',
                                             'Flore vaginale intermédiaire', 
                                             'Flore vaginale déséquilibrée'
                                         ])) {
                                             $displayValue .= ' (Score de Nugent: ' . $resultat->valeur . ')';
+                                        } elseif ($resultat->resultats === 'Autre' && $resultat->valeur) {
+                                            $displayValue = $resultat->valeur;
                                         }
+                                    } elseif ($resultat->valeur) {
+                                        $displayValue = $resultat->valeur;
                                     }
-                                } else {
-                                    $displayValue = $resultat->valeur_pdf ?: $resultat->resultats_pdf;
-                                    if (is_array($displayValue)) {
-                                        $displayValue = implode(', ', $displayValue);
+                                    break;
+                                    
+                                // LABEL
+                                case 'LABEL':
+                                    $displayValue = '';
+                                    break;
+                                    
+                                // FALLBACK POUR TYPES INCONNUS
+                                default:
+                                    if ($resultat->resultats) {
+                                        if (is_array($resultat->resultats)) {
+                                            $displayValue = implode(', ', $resultat->resultats);
+                                        } else {
+                                            $displayValue = $resultat->resultats;
+                                        }
+                                        
+                                        if ($resultat->resultats === 'Autre' && $resultat->valeur) {
+                                            $displayValue = $resultat->valeur;
+                                        }
+                                    } elseif ($resultat->valeur) {
+                                        $displayValue = $resultat->valeur;
                                     }
-                                }
-                                
-                                // Ajouter les unités si nécessaire et pas déjà présentes
-                                if ($displayValue && $child->unite && !str_contains($displayValue, $child->unite)) {
-                                    $displayValue .= ' ' . $child->unite;
-                                }
-                                
-                                if ($displayValue && $child->suffixe && !str_contains($displayValue, $child->suffixe)) {
-                                    $displayValue .= ' ' . $child->suffixe;
-                                }
-                                
-                                if ($resultat->est_pathologique && $displayValue) {
-                                    $displayValue = '<strong>' . $displayValue . '</strong>';
-                                }
-                            @endphp
+                                    break;
+                            }
                             
-                            {!! $displayValue !!}
-                        @endif
+                            // POST-TRAITEMENT COMMUN
+                            if ($displayValue && $child->unite && !str_contains($displayValue, $child->unite)) {
+                                $displayValue .= ' ' . $child->unite;
+                            }
+                            
+                            if ($displayValue && $child->suffixe && !str_contains($displayValue, $child->suffixe)) {
+                                $displayValue .= ' ' . $child->suffixe;
+                            }
+                            
+                            if ($resultat->est_pathologique && $displayValue) {
+                                $displayValue = '<strong>' . $displayValue . '</strong>';
+                            }
+                        @endphp
+                        
+                        {!! $displayValue !!}
                     @endif
                 @endif
             </td>
@@ -153,7 +218,7 @@
             </td>
         </tr>
 
-        {{-- ✅ CORRECTION : Afficher les antibiogrammes pour les enfants --}}
+        {{-- AFFICHAGE ANTIBIOGRAMMES POUR LES ENFANTS --}}
         @if($hasAntibiogrammes && isset($child->antibiogrammes))
             @foreach($child->antibiogrammes as $antibiogramme)
                 <tr class="antibiogramme-header">
@@ -165,7 +230,6 @@
                     </td>
                 </tr>
 
-                {{-- ✅ CORRECTION : Antibiotiques sensibles (S) --}}
                 @if(isset($antibiogramme->antibiotiques_sensibles) && $antibiogramme->antibiotiques_sensibles->isNotEmpty())
                     <tr class="antibiogramme-row">
                         <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
@@ -181,7 +245,6 @@
                     </tr>
                 @endif
 
-                {{-- ✅ CORRECTION : Antibiotiques résistants (R) --}}
                 @if(isset($antibiogramme->antibiotiques_resistants) && $antibiogramme->antibiotiques_resistants->isNotEmpty())
                     <tr class="antibiogramme-row">
                         <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
@@ -197,7 +260,6 @@
                     </tr>
                 @endif
 
-                {{-- ✅ CORRECTION : Antibiotiques intermédiaires (I) --}}
                 @if(isset($antibiogramme->antibiotiques_intermediaires) && $antibiogramme->antibiotiques_intermediaires->isNotEmpty())
                     <tr class="antibiogramme-row">
                         <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
@@ -213,7 +275,6 @@
                     </tr>
                 @endif
 
-                {{-- Notes de l'antibiogramme --}}
                 @if($antibiogramme->notes)
                     <tr class="antibiogramme-row">
                         <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666;">
@@ -227,7 +288,7 @@
             @endforeach
         @endif
 
-        {{-- ✅ CORRECTION : Conclusion spécifique du résultat enfant --}}
+        {{-- Conclusion spécifique du résultat enfant --}}
         @if($hasResult && $resultat && !empty($resultat->conclusion))
             <tr class="conclusion-row">
                 <td style="padding-left: {{ ($level + 1) * 20 }}px; font-size: 9pt; color: #666; font-style: italic;">
@@ -239,7 +300,7 @@
             </tr>
         @endif
 
-        {{-- ✅ RÉCURSION : Traiter les sous-enfants --}}
+        {{-- RÉCURSION : Traiter les sous-enfants --}}
         @if($child->children && $child->children->count() > 0)
             @include('pdf.analyses.analyse-children', ['children' => $child->children, 'level' => $level + 1])
         @endif

@@ -1,4 +1,4 @@
-{{-- resources/views/pdf/analyses/analyse-row.blade.php --}}
+{{-- resources/views/pdf/analyses/analyse-row.blade.php - VERSION COMPLÈTE CORRIGÉE --}}
 @php
     $resultat = $analyse->resultats->first();
     $hasResult = $resultat && ($resultat->valeur || $resultat->resultats);
@@ -9,7 +9,6 @@
     $hasAntibiogrammes = $analyse->has_antibiogrammes ?? false;
 @endphp
 
-{{-- CONDITION d'affichage élargie pour éviter les analyses masquées --}}
 @if($hasResult || $isInfoLine || $hasAntibiogrammes || $analyse->designation)
     <tr class="{{ $level === 0 ? 'parent-row' : 'child-row' }}">
         <td class="col-designation {{ ($analyse->level === 'PARENT' || $analyse->is_bold) ? 'bold' : '' }}"
@@ -47,62 +46,127 @@
                         {{ $leucoData['valeur'] }} /mm³
                     @endif
                 @else
-                    {{-- AUTRES TYPES --}}
-                    @if(isset($resultat->display_value_pdf))
-                        {!! $resultat->display_value_pdf !!}
-                    @else
-                        @php
-                            $displayValue = '';
-                            
-                            if ($analyse->type && $analyse->type->name === 'SELECT_MULTIPLE') {
+                    {{-- GESTION COMPLÈTE DE TOUS LES TYPES D'ANALYSES --}}
+                    @php
+                        $displayValue = '';
+                        $analyseType = $analyse->type->name ?? '';
+                        
+                        switch($analyseType) {
+                            // TYPES DE SAISIE SIMPLE
+                            case 'INPUT':
+                            case 'DOSAGE':
+                            case 'COMPTAGE':
+                                $displayValue = $resultat->valeur;
+                                break;
+                                
+                            case 'INPUT_SUFFIXE':
+                                $displayValue = $resultat->valeur;
+                                break;
+                                
+                            // TYPES DE SÉLECTION
+                            case 'SELECT':
+                            case 'TEST':
+                                $displayValue = $resultat->resultats ?: $resultat->valeur;
+                                break;
+                                
+                            case 'SELECT_MULTIPLE':
                                 $resultatsArray = $resultat->resultats_pdf ?? $resultat->resultats;
                                 if (is_array($resultatsArray)) {
                                     $displayValue = implode(', ', $resultatsArray);
-                                }
-                            } elseif ($analyse->type && $analyse->type->name === 'NEGATIF_POSITIF_3') {
-                                if ($resultat->resultats === 'Positif' && $resultat->valeur) {
-                                    $displayValue = $resultat->resultats;
-                                    $values = is_array($resultat->valeur) ? 
-                                        implode(', ', $resultat->valeur) : 
-                                        $resultat->valeur;
-                                    $displayValue .= ' (' . $values . ')';
                                 } else {
-                                    $displayValue = $resultat->resultats ?: $resultat->valeur;
+                                    $displayValue = $resultatsArray;
                                 }
-                            } elseif ($analyse->type && $analyse->type->name === 'FV') {
+                                break;
+                                
+                            // TYPES NÉGATIF/POSITIF
+                            case 'NEGATIF_POSITIF_1':
+                                $displayValue = $resultat->valeur;
+                                break;
+                                
+                            case 'NEGATIF_POSITIF_2':
+                                $displayValue = $resultat->valeur; // NEGATIF ou POSITIF
+                                if ($resultat->valeur === 'POSITIF' && $resultat->resultats) {
+                                    $displayValue .= ' (' . $resultat->resultats . ')';
+                                }
+                                break;
+                                
+                            case 'NEGATIF_POSITIF_3':
+                                $displayValue = $resultat->valeur;
+                                if ($resultat->resultats) {
+                                    if (is_array($resultat->resultats)) {
+                                        $resultatsStr = implode(', ', $resultat->resultats);
+                                        $displayValue .= ' (' . $resultatsStr . ')';
+                                    } else {
+                                        $displayValue .= ' (' . $resultat->resultats . ')';
+                                    }
+                                }
+                                break;
+                                
+                            // TYPES ABSENCE/PRÉSENCE
+                            case 'ABSENCE_PRESENCE_2':
+                                $displayValue = $resultat->valeur;
+                                if ($resultat->resultats) {
+                                    $displayValue .= ' (' . $resultat->resultats . ')';
+                                }
+                                break;
+                                
+                            // FLORE VAGINALE
+                            case 'FV':
                                 if ($resultat->resultats) {
                                     $displayValue = $resultat->resultats;
+                                    
                                     if ($resultat->valeur && in_array($resultat->resultats, [
                                         'Flore vaginale équilibrée',
                                         'Flore vaginale intermédiaire', 
                                         'Flore vaginale déséquilibrée'
                                     ])) {
                                         $displayValue .= ' (Score de Nugent: ' . $resultat->valeur . ')';
+                                    } elseif ($resultat->resultats === 'Autre' && $resultat->valeur) {
+                                        $displayValue = $resultat->valeur;
                                     }
+                                } elseif ($resultat->valeur) {
+                                    $displayValue = $resultat->valeur;
                                 }
-                            } else {
-                                $displayValue = $resultat->valeur_pdf ?? $resultat->valeur ?? $resultat->resultats_pdf ?? $resultat->resultats;
-                                if (is_array($displayValue)) {
-                                    $displayValue = implode(', ', $displayValue);
+                                break;
+                                
+                            // LABEL
+                            case 'LABEL':
+                                $displayValue = '';
+                                break;
+                                
+                            // FALLBACK POUR TYPES INCONNUS
+                            default:
+                                if ($resultat->resultats) {
+                                    if (is_array($resultat->resultats)) {
+                                        $displayValue = implode(', ', $resultat->resultats);
+                                    } else {
+                                        $displayValue = $resultat->resultats;
+                                    }
+                                    
+                                    if ($resultat->resultats === 'Autre' && $resultat->valeur) {
+                                        $displayValue = $resultat->valeur;
+                                    }
+                                } elseif ($resultat->valeur) {
+                                    $displayValue = $resultat->valeur;
                                 }
-                            }
-                            
-                            // Ajouter les unités si nécessaire
-                            if ($displayValue && $analyse->unite && !str_contains($displayValue, $analyse->unite)) {
-                                $displayValue .= ' ' . $analyse->unite;
-                            }
-                            
-                            if ($displayValue && isset($analyse->suffixe) && $analyse->suffixe && !str_contains($displayValue, $analyse->suffixe)) {
-                                $displayValue .= ' ' . $analyse->suffixe;
-                            }
-                            
-                            if ($resultat->est_pathologique && $displayValue) {
-                                $displayValue = '<strong>' . $displayValue . '</strong>';
-                            }
-                        @endphp
+                                break;
+                        }
                         
-                        {!! $displayValue !!}
-                    @endif
+                        // POST-TRAITEMENT COMMUN
+                        if ($displayValue && $analyse->unite && !str_contains($displayValue, $analyse->unite)) {
+                            $displayValue .= ' ' . $analyse->unite;
+                        }
+                        
+                        if ($displayValue && isset($analyse->suffixe) && $analyse->suffixe && !str_contains($displayValue, $analyse->suffixe)) {
+                            $displayValue .= ' ' . $analyse->suffixe;
+                        }
+                        
+                        if ($resultat->est_pathologique && $displayValue) {
+                            $displayValue = '<strong>' . $displayValue . '</strong>';
+                        }
+                    @endphp
+                    
+                    {!! $displayValue !!}
                 @endif
             @endif
         </td>
@@ -143,7 +207,6 @@
     {{-- AFFICHAGE ANTIBIOGRAMMES --}}
     @if($hasAntibiogrammes && isset($analyse->antibiogrammes))
         @foreach($analyse->antibiogrammes as $antibiogramme)
-            {{-- En-tête de l'antibiogramme --}}
             <tr class="antibiogramme-header">
                 <td colspan="4" style="padding: 8px 0 4px {{ ($level + 1) * 20 }}px; font-weight: bold; font-size: 10pt; color: #333;">
                     Antibiogramme - <i>{{ $antibiogramme->bacterie->designation ?? 'Bactérie inconnue' }}</i>
@@ -153,7 +216,6 @@
                 </td>
             </tr>
 
-            {{-- Antibiotiques sensibles (S) --}}
             @if($antibiogramme->antibiotiques_sensibles->isNotEmpty())
                 <tr class="antibiogramme-row">
                     <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666; font-weight: 200;">
@@ -169,7 +231,6 @@
                 </tr>
             @endif
 
-            {{-- Antibiotiques résistants (R) --}}
             @if($antibiogramme->antibiotiques_resistants->isNotEmpty())
                 <tr class="antibiogramme-row">
                     <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666; font-weight: 200;">
@@ -185,7 +246,6 @@
                 </tr>
             @endif
 
-            {{-- Antibiotiques intermédiaires (I) --}}
             @if($antibiogramme->antibiotiques_intermediaires->isNotEmpty())
                 <tr class="antibiogramme-row">
                     <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666; font-weight: 200;">
@@ -201,7 +261,6 @@
                 </tr>
             @endif
 
-            {{-- Notes de l'antibiogramme --}}
             @if(isset($antibiogramme->notes) && $antibiogramme->notes)
                 <tr class="antibiogramme-row">
                     <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666; font-weight: 500;">
@@ -217,7 +276,7 @@
 
     {{-- CONCLUSION spécifique du résultat --}}
     @if($hasResult && $resultat && isset($resultat->conclusion) && !empty($resultat->conclusion))
-        @tr class="conclusion-row">
+        <tr class="conclusion-row">
             <td style="padding-left: {{ ($level + 1) * 20 }}px; font-size: 9pt; color: #666; font-style: italic;">
                 Conclusion :
             </td>
@@ -227,30 +286,13 @@
         </tr>
     @endif
 
-    {{-- CORRECTION CLEF : Traiter les enfants AVEC protection contre les doublons --}}
-    @if(isset($analyse->children) && $analyse->children->isNotEmpty() && $level < 5)
-        @php 
-            // PROTECTION: Créer une liste des IDs déjà traités pour éviter les boucles
-            $processedIds = $processedIds ?? [];
-        @endphp
-        
+    {{-- Traiter les enfants --}}
+    {{-- @if(isset($analyse->children) && $analyse->children->isNotEmpty() && $level < 5)
         @foreach($analyse->children as $child)
-            @php
-                // GARDE-FOU: Éviter de traiter le même ID plusieurs fois
-                if (in_array($child->id, $processedIds)) {
-                    continue;
-                }
-                $processedIds[] = $child->id;
-            @endphp
-            
-            {{-- Afficher l'enfant SEULEMENT s'il a du contenu --}}
-            {{-- @if($child->designation && ($child->resultats->isNotEmpty() || $child->has_antibiogrammes || $child->level === 'PARENT'))
-                @include('pdf.analyses.analyse-row', [
-                    'analyse' => $child, 
-                    'level' => $level + 1,
-                    'processedIds' => $processedIds
-                ])
-            @endif --}}
+            @include('pdf.analyses.analyse-row', [
+                'analyse' => $child, 
+                'level' => $level + 1
+            ])
         @endforeach
-    @endif
+    @endif --}}
 @endif

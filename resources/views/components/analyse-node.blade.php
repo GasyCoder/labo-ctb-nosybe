@@ -250,45 +250,36 @@
                     </div>
                     @break
 
-                @case('NEGATIF_POSITIF_2')
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                        <div class="space-y-3">
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Résultat</label>
-                            <div class="flex gap-4">
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="radio" value="NEGATIF" wire:model="{{ $path }}.valeur"
-                                           class="w-4 h-4 text-green-600 bg-white dark:bg-slate-600 border-slate-300 dark:border-slate-500 focus:ring-green-500 dark:focus:ring-green-400">
-                                    <span class="text-green-600 dark:text-green-400 font-medium text-sm group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">Négatif</span>
+                    @case('NEGATIF_POSITIF_2')
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="space-y-3">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Résultat</label>
+                                <div class="flex gap-6">
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="radio" value="NEGATIF" wire:model="{{ $path }}.valeur"
+                                            class="w-4 h-4 text-green-600 bg-white dark:bg-slate-600 border-slate-300 dark:border-slate-500 focus:ring-green-500 dark:focus:ring-green-400">
+                                        <span class="text-green-600 dark:text-green-400 font-medium text-sm group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">Négatif</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="radio" value="POSITIF" wire:model="{{ $path }}.valeur"
+                                            class="w-4 h-4 text-red-600 bg-white dark:bg-slate-600 border-slate-300 dark:border-slate-500 focus:ring-red-500 dark:focus:ring-red-400">
+                                        <span class="text-red-600 dark:text-red-400 font-medium text-sm group-hover:text-red-700 dark:group-hover:text-red-300 transition-colors">Positif</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Valeur {{ $node->unite ? "({$node->unite})" : '' }}
                                 </label>
-                                <label class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="radio" value="POSITIF" wire:model="{{ $path }}.valeur"
-                                           class="w-4 h-4 text-red-600 bg-white dark:bg-slate-600 border-slate-300 dark:border-slate-500 focus:ring-red-500 dark:focus:ring-red-400">
-                                    <span class="text-red-600 dark:text-red-400 font-medium text-sm group-hover:text-red-700 dark:group-hover:text-red-300 transition-colors">Positif</span>
-                                </label>
+                                <input type="text" wire:model.blur="{{ $path }}.resultats"
+                                    class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors"
+                                    placeholder="Valeur de référence">
                             </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="block text-xs text-slate-700 dark:text-slate-300">
-                                Valeur {{ $node->unite ? "({$node->unite})" : '' }}
-                            </label>
-                            <input type="text" wire:model.blur="{{ $path }}.resultats"
-                                   class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors"
-                                   placeholder="Valeur de référence">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Interprétation</label>
-                            <select wire:model="{{ $path }}.interpretation"
-                                    class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors">
-                                <option value="">Sélectionner</option>
-                                <option value="NORMAL" selected>Normal</option>
-                                <option value="PATHOLOGIQUE">Pathologique</option>
-                            </select>
-                        </div>
-                    </div>
-                    @break
+                        @break
 
-                @case('NEGATIF_POSITIF_3')
-                    <div class="space-y-4">
+                    @case('NEGATIF_POSITIF_3')
+                        <div class="space-y-4">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <div class="space-y-3">
                                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Résultat</label>

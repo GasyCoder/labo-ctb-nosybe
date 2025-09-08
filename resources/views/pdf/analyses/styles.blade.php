@@ -138,7 +138,7 @@
         width: 20%;
         text-align: left;
         padding-left: 20px;
-        font-size: 10.5pt;
+        font-size: 9pt;
     }
 
     .col-valref {
