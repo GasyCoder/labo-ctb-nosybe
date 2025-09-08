@@ -130,11 +130,21 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Analyse $analyse
  * @property-read \App\Models\Bacterie $bacterie
+ * @property-read mixed $analyse_nom
+ * @property-read mixed $bacterie_nom
+ * @property-read mixed $nombre_antibiotiques
+ * @property-read mixed $nombre_intermediaires
+ * @property-read mixed $nombre_resistants
+ * @property-read mixed $nombre_sensibles
  * @property-read \App\Models\Prescription $prescription
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ResultatAntibiotique> $resultatsAntibiotiques
  * @property-read int|null $resultats_antibiotiques_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme avecRelations()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme parAnalyse($analyseId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme parBacterie($bacterieId)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme parPrescription($prescriptionId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereAnalyseId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Antibiogramme whereBacterieId($value)
@@ -656,9 +666,19 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Antibiogramme $antibiogramme
  * @property-read \App\Models\Antibiotique $antibiotique
+ * @property-read mixed $est_intermediaiire
+ * @property-read mixed $est_resistant
+ * @property-read mixed $est_sensible
+ * @property-read mixed $interpretation_color
+ * @property-read mixed $interpretation_label
+ * @property-read mixed $resultat_complet
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique intermediaires()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique parInterpretation($interpretation)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique resistants()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique sensibles()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereAntibiogrammeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereAntibiotiqueId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResultatAntibiotique whereCreatedAt($value)
