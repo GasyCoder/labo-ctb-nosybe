@@ -110,13 +110,17 @@ class PatientDetail extends Component
         }
         
         return $query->get()->map(function ($prescription) {
-            $prescription->status_label = match ($prescription->status) {
-                'EN_ATTENTE' => 'En attente',
-                'EN_COURS' => 'En cours',
-                'TERMINE' => 'Terminée',
-                default => $prescription->status,
-            };
-            return $prescription;
+            return array_merge(
+                $prescription->toArray(),
+                [
+                    'status_label' => match ($prescription->status) {
+                        'EN_ATTENTE' => 'En attente',
+                        'EN_COURS' => 'En cours',
+                        'TERMINE' => 'Terminée',
+                        default => $prescription->status,
+                    }
+                ]
+            );
         })->values();
     }
 
