@@ -1,3 +1,4 @@
+{{-- resources/views/livewire/secretaire/prescription/partials/confirmation.blade.php --}}
 @if ($etape === 'confirmation')
     <div class="max-w-md mx-auto">
         <!-- Message de succès en haut -->
