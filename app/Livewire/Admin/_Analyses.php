@@ -21,7 +21,6 @@ class Analyses extends Component
 
     // Filtres et pagination
     public $selectedExamen = '';
-    public $selectedLevel = 'racines'; // NOUVEAU: Filtre de niveau d'affichage
     public $perPage = 10;
     public $search = '';
 
@@ -116,11 +115,6 @@ class Analyses extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedLevel()
-    {
-        $this->resetPage();
-    }
-
     public function updatedSearch()
     {
         $this->resetPage();
@@ -142,45 +136,18 @@ class Analyses extends Component
         }
     }
 
-    // PROPRIÉTÉ COMPUTED POUR LES ANALYSES - MODIFIÉE avec filtre de niveau
+    // PROPRIÉTÉ COMPUTED POUR LES ANALYSES
     public function getAnalysesProperty()
     {
-        $query = Analyse::with(['examen', 'type', 'parent', 'enfants']);
+        $query = Analyse::with(['examen', 'type', 'parent', 'enfants'])
+            ->orderBy('level', 'DESC')
+            ->orderBy('ordre')
+            ->orderBy('designation');
 
-        // Appliquer le filtre de niveau d'affichage
-        switch ($this->selectedLevel) {
-            case 'parents':
-                // Seulement les analyses Parent
-                $query->where('level', 'PARENT');
-                break;
-            case 'racines':
-                // Analyses sans parent (Parent + Normal sans parent)
-                $query->whereNull('parent_id');
-                break;
-            case 'normales':
-                // Seulement les analyses Normal
-                $query->where('level', 'NORMAL');
-                break;
-            case 'enfants':
-                // Seulement les analyses Child
-                $query->where('level', 'CHILD');
-                break;
-            case 'tous':
-            default:
-                // Toutes les analyses (comportement par défaut)
-                break;
-        }
-
-        $query->orderBy('level', 'DESC')
-              ->orderBy('ordre')
-              ->orderBy('designation');
-
-        // Filtre par examen
         if (!empty($this->selectedExamen)) {
             $query->where('examen_id', $this->selectedExamen);
         }
 
-        // Filtre de recherche textuelle
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('code', 'like', '%' . $this->search . '%')
@@ -192,24 +159,12 @@ class Analyses extends Component
         return $query->paginate($this->perPage);
     }
 
-    // NOUVELLE MÉTHODE pour obtenir le nombre d'analyses par niveau
-    public function getAnalysesCountByLevel()
-    {
-        return [
-            'racines' => Analyse::whereNull('parent_id')->count(),
-            'parents' => Analyse::where('level', 'PARENT')->count(),
-            'normales' => Analyse::where('level', 'NORMAL')->count(),
-            'enfants' => Analyse::where('level', 'CHILD')->count(),
-            'tous' => Analyse::count(),
-        ];
-    }
-
     public function render()
     {
         return view('livewire.admin.analyses');
     }
 
-    // ACTIONS CRUD (inchangées)
+    // ACTIONS CRUD
     public function show($id)
     {
         $this->analyse = Analyse::with(['examen', 'type', 'parent', 'enfants'])->findOrFail($id);
@@ -229,7 +184,7 @@ class Analyses extends Component
         $this->mode = 'edit';
     }
 
-    // NOUVELLES MÉTHODES pour gestion sous-analyses (inchangées)
+    // NOUVELLES MÉTHODES pour gestion sous-analyses
     public function addSousAnalyse()
     {
         $this->sousAnalyses[] = [
@@ -250,6 +205,7 @@ class Analyses extends Component
         unset($this->sousAnalyses[$index]);
         $this->sousAnalyses = array_values($this->sousAnalyses);
         
+        // Réordonner
         foreach ($this->sousAnalyses as $key => $value) {
             $this->sousAnalyses[$key]['ordre'] = $key + 1;
         }
@@ -262,6 +218,7 @@ class Analyses extends Component
             $this->sousAnalyses[$index] = $this->sousAnalyses[$index - 1];
             $this->sousAnalyses[$index - 1] = $temp;
             
+            // Mettre à jour les ordres
             $this->sousAnalyses[$index]['ordre'] = $index + 1;
             $this->sousAnalyses[$index - 1]['ordre'] = $index;
         }
@@ -274,19 +231,22 @@ class Analyses extends Component
             $this->sousAnalyses[$index] = $this->sousAnalyses[$index + 1];
             $this->sousAnalyses[$index + 1] = $temp;
             
+            // Mettre à jour les ordres
             $this->sousAnalyses[$index]['ordre'] = $index + 1;
             $this->sousAnalyses[$index + 1]['ordre'] = $index + 2;
         }
     }
 
-    // Store et Update méthodes (inchangées de la version corrigée précédente)
     public function store()
     {
+        // Construire les règles de validation dynamiquement
         $rules = $this->rules;
         $rules['code'] = 'required|string|max:50|unique:analyses,code';
 
+        // Si on a des sous-analyses, ajouter les règles de validation unique pour chaque code
         if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
             foreach ($this->sousAnalyses as $index => $sousAnalyse) {
+                // Construire la règle complète pour chaque sous-analyse
                 $rules["sousAnalyses.{$index}.code"] = 'required|string|max:50|unique:analyses,code';
                 $rules["sousAnalyses.{$index}.designation"] = 'required|string|max:255';
                 $rules["sousAnalyses.{$index}.prix"] = 'required|numeric|min:0';
@@ -300,6 +260,7 @@ class Analyses extends Component
         $this->validate($rules);
 
         DB::transaction(function () {
+            // Créer l'analyse principale
             $analyseParent = Analyse::create([
                 'code' => $this->code,
                 'level' => $this->level,
@@ -318,6 +279,7 @@ class Analyses extends Component
                 'status' => $this->status,
             ]);
 
+            // Créer les sous-analyses si applicable
             if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
                 foreach ($this->sousAnalyses as $sousAnalyse) {
                     Analyse::create([
@@ -327,8 +289,8 @@ class Analyses extends Component
                         'designation' => $sousAnalyse['designation'],
                         'prix' => $sousAnalyse['prix'],
                         'is_bold' => $sousAnalyse['is_bold'] ?? false,
-                        'examen_id' => $this->examen_id,
-                        'type_id' => $this->type_id,
+                        'examen_id' => $this->examen_id, // Hérite de l'examen parent
+                        'type_id' => $this->type_id, // Hérite du type parent
                         'valeur_ref' => $sousAnalyse['valeur_ref'],
                         'unite' => $sousAnalyse['unite'],
                         'ordre' => $sousAnalyse['ordre'],
@@ -385,11 +347,10 @@ class Analyses extends Component
             ->get();
     }
 
-    // MÉTHODES DE FILTRAGE - MODIFIÉES pour inclure le filtre de niveau
+    // MÉTHODES DE FILTRAGE
     public function resetFilters()
     {
         $this->selectedExamen = '';
-        $this->selectedLevel = 'racines';
         $this->search = '';
         $this->resetPage();
     }
@@ -400,7 +361,7 @@ class Analyses extends Component
         $this->resetPage();
     }
 
-    // MÉTHODES PRIVÉES (inchangées)
+    // MÉTHODES PRIVÉES
     private function fillForm()
     {
         $this->code = $this->analyse->code;
@@ -419,6 +380,7 @@ class Analyses extends Component
         $this->ordre = $this->analyse->ordre;
         $this->status = $this->analyse->status;
         
+        // Réinitialiser les sous-analyses en mode édition
         $this->createWithChildren = false;
         $this->sousAnalyses = [];
     }
@@ -445,15 +407,14 @@ class Analyses extends Component
         $this->resetErrorBag();
     }
 
-    // MÉTHODES UTILITAIRES (inchangées)
+    // MÉTHODES UTILITAIRES
     public function toggleStatus($id)
     {
-        $analyse = Analyse::find($id);
-        $analyse->status = !$analyse->status;
-        $analyse->save();
-        
-        // Forcer le rechargement des données paginées
-        $this->resetPage();
+        $analyse = Analyse::findOrFail($id);
+        $analyse->update(['status' => !$analyse->status]);
+
+        $status = $analyse->status ? 'activée' : 'désactivée';
+        session()->flash('message', "Analyse {$status} avec succès !");
     }
 
     public function duplicate($id)

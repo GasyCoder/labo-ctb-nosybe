@@ -13,14 +13,14 @@ return [
     |
     */
     'laboratoire_name' => env('LABORATOIRE_NAME', 'LABORATOIRE'),
-    'name' => env('APP_NAME', 'DashWind'),
-    'desc' => env('APP_DESC', 'LNB Laboratoire'),
+    'name' => env('APP_NAME', 'SmartLabo'),
+    'desc' => env('APP_DESC', 'SmartLabo'),
     'version' => env('APP_VERSION', '1.0.0'),
     'build' => env('APP_RELEASE', '12122024'),
 
     // Site Information
-    'site_name' => env('SITE_NAME', 'GASYCODER'),
-    'site_email' => env('SITE_EMAIL', 'info@softnio.com'),
+    'site_name' => env('SITE_NAME', 'SmartLabo'),
+    'site_email' => env('SITE_EMAIL', 'info@gasycoder.com'),
     'json_encode_options' => JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
     /*
     |--------------------------------------------------------------------------

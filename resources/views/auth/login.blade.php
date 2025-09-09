@@ -4,16 +4,20 @@
     <div class="relative flex flex-col flex-shrink-0 w-full min-h-full bg-white dark:bg-gray-950">
         <div class="m-auto w-full max-w-[420px] xs:max-w-[520px] p-5">
             <div class="relative flex justify-center flex-shrink-0 pb-6">
-                <a href="{{ url('/') }}" class="relative inline-block h-10 transition-opacity duration-300">
-                    <img class="h-full opacity-0 dark:opacity-100" src="{{ asset('assets/images/logo_facture.jpg') }}" srcset="{{ asset('assets/images/logo_facture.jpg') }}" alt="logo">
-                    <img class="absolute top-0 h-full opacity-100 dark:opacity-0 start-0" src="{{ asset('assets/images/logo_facture.jpg') }}" srcset="{{ asset('assets/images/logo_facture.jpg') }}" alt="logo">
+                <a href="{{ url('/') }}" class="relative inline-block h-18 transition-opacity duration-300">
+                    <img class="h-full opacity-0 dark:opacity-100" 
+                        src="{{ \App\Models\Setting::getLogo() }}" 
+                        alt="{{ \App\Models\Setting::getNomEntreprise() }}">
+                    <img class="absolute top-0 h-full opacity-100 dark:opacity-0 start-0" 
+                        src="{{ \App\Models\Setting::getLogo() }}" 
+                        alt="{{ \App\Models\Setting::getNomEntreprise() }}">
                 </a>
             </div>
             <div class="p-5 border border-gray-300 rounded dark:border-gray-900 sm:p-6 md:p-10">
                 <div class="pb-5">
                     <h5 class="mb-2 text-xl font-bold font-heading -tracking-snug text-slate-700 dark:text-white leading-tighter">Connexion</h5>
                     <p class="text-sm leading-6 text-slate-400">
-                        Accédez au panneau CTB NOSY BE en utilisant votre identifiant et votre mot de passe.
+                        Accédez au panneau SmartLabo en utilisant votre identifiant et votre mot de passe.
                     </p>
                 </div>
 

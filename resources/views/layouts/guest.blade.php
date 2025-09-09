@@ -1,3 +1,10 @@
+@php
+    $settings = \App\Models\Setting::first();
+    $favicon = $settings && $settings->favicon 
+        ? asset('storage/' . $settings->favicon) 
+        : asset('favicon.ico');
+    $nomEntreprise = $settings ? $settings->nom_entreprise : 'CTB NOSY BE';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" id="pageroot" class="{{ dark_mode() ? 'dark' : '' }}">
     <head>
@@ -10,7 +17,8 @@
         <link rel="shortcut icon" href="{{ asset('images/favicon/favicon.ico') }}" />
         <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicon/apple-touch-icon.png') }}" />
         <link rel="manifest" href="{{ asset('images/favicon/site.webmanifest') }}" />
-        <title>@isset($title) {{ $title }} | @endisset{{ config('app.desc') }}</title>
+        <title>SmartLabo - Connexion</title>
+        <link rel="icon" type="image/x-icon" href="{{ $favicon }}">
 
         @vite(['resources/css/app.css'])
 

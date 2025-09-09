@@ -1,4 +1,4 @@
-{{-- resources/views/factures/ccare-style.blade.php - CORRIGÉ --}}
+{{-- resources/views/factures/ccare-style.blade.php - AVEC SETTINGS --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -312,6 +312,13 @@
 </head>
 <body>
     @php
+        // Récupérer les settings de l'application
+        $settings = \App\Models\Setting::first();
+        $nomEntreprise = $settings ? $settings->nom_entreprise : 'LABORATOIRE CTB';
+        $nifEntreprise = $settings ? $settings->nif : '2000000000';
+        $statutEntreprise = $settings ? $settings->statut : '72102 11 2010 010000';
+        $formatArgent = $settings ? $settings->format_unite_argent : 'Ar';
+        
         $paiement = $prescription->paiements->first();
         $estPaye = $paiement ? $paiement->status : false;
         $totalAnalyses = 0;
@@ -324,20 +331,34 @@
             <div class="header-left">
                 <div class="logo-section">
                     @php
-                        $logoPath = public_path('assets/images/logo_facture.jpg');
-                        if (file_exists($logoPath)) {
-                            $logoData = file_get_contents($logoPath);
-                            $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+                        // Utiliser le logo des settings ou logo par défaut
+                        if ($settings && $settings->logo) {
+                            $logoPath = storage_path('app/public/' . $settings->logo);
+                            if (file_exists($logoPath)) {
+                                $logoData = file_get_contents($logoPath);
+                                $extension = pathinfo($settings->logo, PATHINFO_EXTENSION);
+                                $mimeType = $extension === 'png' ? 'png' : 'jpeg';
+                                $logoBase64 = 'data:image/' . $mimeType . ';base64,' . base64_encode($logoData);
+                            } else {
+                                $logoBase64 = null;
+                            }
                         } else {
-                            $logoBase64 = null;
+                            // Logo par défaut
+                            $logoPath = public_path('assets/images/logo_facture.jpg');
+                            if (file_exists($logoPath)) {
+                                $logoData = file_get_contents($logoPath);
+                                $logoBase64 = 'data:image/jpeg;base64,' . base64_encode($logoData);
+                            } else {
+                                $logoBase64 = null;
+                            }
                         }
                     @endphp
                     
                     @if($logoBase64)
-                        <img src="{{ $logoBase64 }}" alt="Logo" class="logo">
+                        <img src="{{ $logoBase64 }}" alt="Logo {{ $nomEntreprise }}" class="logo">
                     @else
-                        <div style="width: 180px; height: 180px; background: #2E8B57; color: white; text-align: center; line-height: 100px; font-size: 10pt; font-weight: bold;">
-                            LOGO
+                        <div style="width: 150px; height: 100px; background: #2E8B57; color: white; text-align: center; line-height: 100px; font-size: 10pt; font-weight: bold;">
+                            {{ strtoupper(substr($nomEntreprise, 0, 4)) }}
                         </div>
                     @endif
                 </div>
@@ -427,9 +448,9 @@
                     <th style="width: 8%">N° de série</th>
                     <th style="width: 42%">Détails / Désignation</th>
                     <th style="width: 8%">Unités</th>
-                    <th style="width: 14%">Tarif (MGA)</th>
-                    <th style="width: 14%">Remise (MGA)</th>
-                    <th style="width: 14%">Montant (MGA)</th>
+                    <th style="width: 14%">Tarif ({{ $formatArgent }})</th>
+                    <th style="width: 14%">Remise ({{ $formatArgent }})</th>
+                    <th style="width: 14%">Montant ({{ $formatArgent }})</th>
                 </tr>
             </thead>
             <tbody>
@@ -480,7 +501,7 @@
                         $remise = $prescription->remise ?? 0;
                         $total = max(0, $sousTotal - $remise);
                     @endphp
-                    Quatre-vingt-dix-huit mille cent quatre-vingt-dix-huit ariary
+                    Quatre-vingt-dix-huit mille cent quatre-vingt-dix-huit {{ strtolower($formatArgent) }}
                 </div>
             </div>
             
@@ -541,12 +562,12 @@
             </div>
         </div>
 
-        {{-- SECTION RÉSUMÉ - CORRIGÉE SANS REDONDANCE --}}
+        {{-- SECTION RÉSUMÉ --}}
         <div class="resume-section">
             <div class="resume-left">
-                <div><strong>Total facture :</strong> {{ number_format($total, 2) }} Ar</div>
-                <div><strong>Montant encaissé :</strong> {{ number_format($paiement ? $paiement->montant : 0, 2) }} Ar</div>
-                <div><strong>Solde restant :</strong> {{ number_format(max(0, $total - ($paiement ? $paiement->montant : 0)), 2) }} Ar</div>
+                <div><strong>Total facture :</strong> {{ number_format($total, 2) }} {{ $formatArgent }}</div>
+                <div><strong>Montant encaissé :</strong> {{ number_format($paiement ? $paiement->montant : 0, 2) }} {{ $formatArgent }}</div>
+                <div><strong>Solde restant :</strong> {{ number_format(max(0, $total - ($paiement ? $paiement->montant : 0)), 2) }} {{ $formatArgent }}</div>
                 <div><strong>Préparé par :</strong> {{ $prescription->secretaire->name ?? 'SECRÉTAIRE' }}</div>
             </div>
             
@@ -557,10 +578,18 @@
             </div>
         </div>
 
-        {{-- FOOTER --}}
+        {{-- FOOTER AVEC INFORMATIONS DYNAMIQUES --}}
         <div class="footer">
-            <div class="footer-line"><strong>LABORATOIRE CTB</strong></div>
-            <div class="footer-line">NIF: 2000000000 - RC: 2010000000 - STAT: 72102 11 2010 010000</div>
+            <div class="footer-line"><strong>{{ strtoupper($nomEntreprise) }}</strong></div>
+            <div class="footer-line">
+                @if($nifEntreprise)
+                    NIF: {{ $nifEntreprise }}
+                @endif
+                @if($nifEntreprise && $statutEntreprise) - @endif
+                @if($statutEntreprise)
+                    STAT: {{ $statutEntreprise }}
+                @endif
+            </div>
             <div class="footer-line">Siège social: Antananarivo - Tél: +261 34 XX XXX XX - Email: contact@laboratoire.mg</div>
             <div class="footer-line">Comptes bancaires: MCB TANA: 00000 00000 00000000000 - BNI-CL TANA: 00000 021579201023</div>
         </div>

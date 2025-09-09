@@ -1,4 +1,4 @@
-<div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
+<div class="p-6 transition-colors duration-200">
     {{-- Toggle Dark/Light Mode --}}
     <div class="fixed top-4 right-4 z-50">
         <button wire:click="toggleDarkMode" 

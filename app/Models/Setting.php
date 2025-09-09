@@ -18,6 +18,8 @@ class Setting extends Model
         'format_unite_argent',
         'commission_prescripteur',
         'commission_prescripteur_pourcentage',
+        'logo',        // AJOUTER CETTE LIGNE
+        'favicon',     // AJOUTER CETTE LIGNE
     ];
 
     protected $casts = [
@@ -64,5 +66,35 @@ class Setting extends Model
         }
         
         return (float) $setting->commission_prescripteur_pourcentage;
+    }
+
+
+    public static function getSettings()
+    {
+        return cache()->remember('app_settings', 3600, function () {
+            return self::first();
+        });
+    }
+
+    public static function getLogo()
+    {
+        $settings = self::getSettings();
+        return $settings && $settings->logo 
+            ? asset('storage/' . $settings->logo) 
+            : asset('assets/images/logo_facture.jpg');
+    }
+
+    public static function getNomEntreprise()
+    {
+        $settings = self::getSettings();
+        return $settings ? $settings->nom_entreprise : 'CTB NOSY BE';
+    }
+
+    public static function getFavicon()
+    {
+        $settings = self::getSettings();
+        return $settings && $settings->favicon 
+            ? asset('storage/' . $settings->favicon) 
+            : asset('favicon.ico');
     }
 }

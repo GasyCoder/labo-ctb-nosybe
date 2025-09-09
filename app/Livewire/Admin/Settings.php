@@ -255,6 +255,8 @@ class Settings extends Component
         } catch (\Exception $e) {
             flash()->error('❌ Erreur lors de la sauvegarde : ' . $e->getMessage());
         }
+
+        cache()->forget('app_settings');
     }
 
     public function sauvegarderRemises()

@@ -1,11 +1,19 @@
+@php
+    $settings = \App\Models\Setting::first();
+    $favicon = $settings && $settings->favicon 
+        ? asset('storage/' . $settings->favicon) 
+        : asset('favicon.ico');
+    $nomEntreprise = $settings ? $settings->nom_entreprise : 'CTB NOSY BE';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" id="pageroot" class="{{ dark_mode() ? 'dark' : '' }}">
     <head>
         <meta charset="UTF-8">
         <meta name="author" content="BEZARA Florent">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
-        <title>@isset($title) {{ $title }} | @endisset{{ config('app.desc') }}</title>
+        <meta name="description" content="{{ config('app.desc') }}">
+        <title>SmartLabo - {{ $nomEntreprise }} </title>
+        <link rel="icon" type="image/x-icon" href="{{ $favicon }}">
         @vite(['resources/css/app.css'])
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     </head>  
