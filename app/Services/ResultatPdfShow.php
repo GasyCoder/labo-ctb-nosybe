@@ -14,19 +14,29 @@ use Illuminate\Support\Facades\Storage;
 class ResultatPdfShow
 {
     /**
-     * Récupérer les examens avec leurs analyses et résultats validés (SIMPLIFIÉ selon ancien code)
+     * Récupérer les examens avec leurs analyses et résultats validés OU terminés
      */
     private function getValidatedExamens(Prescription $prescription)
     {
-        // 1. Récupérer les résultats validés
-        $validatedResultats = Resultat::where('prescription_id', $prescription->id)
-            ->where('status', 'VALIDE')
-            ->whereNotNull('validated_by')
-            ->with(['analyse' => function($query) {
-                $query->with(['type', 'examen'])
-                      ->orderBy('ordre', 'asc');
-            }])
-            ->get();
+        // 1. Récupérer les résultats selon le statut de la prescription
+        $query = Resultat::where('prescription_id', $prescription->id);
+        
+        if ($prescription->status === Prescription::STATUS_VALIDE) {
+            // Pour prescriptions validées : seulement les résultats validés
+            $query->where('status', 'VALIDE')->whereNotNull('validated_by');
+        } else {
+            // Pour prescriptions terminées : tous les résultats saisis
+            $query->where(function($q) {
+                $q->whereNotNull('valeur')
+                  ->where('valeur', '!=', '')
+                  ->orWhereNotNull('resultats');
+            });
+        }
+        
+        $validatedResultats = $query->with(['analyse' => function($query) {
+            $query->with(['type', 'examen'])
+                  ->orderBy('ordre', 'asc');
+        }])->get();
 
         if ($validatedResultats->isEmpty()) {
             return collect();
@@ -35,7 +45,7 @@ class ResultatPdfShow
         // 2. Récupérer les IDs d'analyses
         $analysesIds = $validatedResultats->pluck('analyse_id')->unique();
 
-        // 3. Récupérer les analyses avec hiérarchie (SIMPLIFIÉ comme ancien code)
+        // 3. Récupérer les analyses avec hiérarchie
         $analyses = Analyse::where(function($query) use ($analysesIds) {
             $query->whereIn('id', $analysesIds)
                 ->orWhereHas('children', function($q) use ($analysesIds) {
@@ -65,7 +75,7 @@ class ResultatPdfShow
             ->get()
             ->groupBy('analyse_id');
 
-        // 5. Associer les résultats aux analyses (SIMPLIFIÉ)
+        // 5. Associer les résultats aux analyses
         $analyses = $analyses->map(function($analyse) use ($validatedResultats, $antibiogrammes) {
             $analyse->resultats = $validatedResultats->where('analyse_id', $analyse->id);
 
@@ -137,7 +147,7 @@ class ResultatPdfShow
             return $analyse;
         });
 
-        // 6. Regrouper et ordonner les examens (COMME L'ANCIEN CODE)
+        // 6. Regrouper et ordonner les examens
         return Examen::whereHas('analyses', function($query) use ($analyses) {
             $query->whereIn('id', $analyses->pluck('id'));
         })
@@ -171,7 +181,7 @@ class ResultatPdfShow
     }
 
     /**
-     * Récupérer les examens avec tous les résultats saisis (SIMPLIFIÉ pour aperçu)
+     * Récupérer les examens avec tous les résultats saisis
      */
     private function getAllResultsExamens(Prescription $prescription)
     {
@@ -331,29 +341,44 @@ class ResultatPdfShow
     }
 
     /**
-     * Générer le PDF FINAL des résultats validés uniquement
+     * Générer le PDF FINAL des résultats - CORRIGÉ pour accepter TERMINE et VALIDE
      */
     public function generateFinalPDF(Prescription $prescription)
     {
-        if ($prescription->status !== Prescription::STATUS_VALIDE) {
-            throw new \Exception('La prescription doit être validée pour générer le PDF final');
+        // CORRECTION : Accepter les statuts TERMINE et VALIDE
+        if (!in_array($prescription->status, [Prescription::STATUS_VALIDE, Prescription::STATUS_TERMINE])) {
+            throw new \Exception('La prescription doit être terminée ou validée pour générer le PDF final');
         }
 
-        $hasValidResults = Resultat::where('prescription_id', $prescription->id)
-            ->where('status', 'VALIDE')
-            ->whereNotNull('validated_by')
-            ->exists();
+        $hasResults = false;
+        
+        if ($prescription->status === Prescription::STATUS_VALIDE) {
+            // Pour prescriptions validées : vérifier les résultats validés
+            $hasResults = Resultat::where('prescription_id', $prescription->id)
+                ->where('status', 'VALIDE')
+                ->whereNotNull('validated_by')
+                ->exists();
+        } else {
+            // Pour prescriptions terminées : vérifier tous les résultats saisis
+            $hasResults = Resultat::where('prescription_id', $prescription->id)
+                ->where(function($query) {
+                    $query->whereNotNull('valeur')
+                          ->where('valeur', '!=', '')
+                          ->orWhereNotNull('resultats');
+                })
+                ->exists();
+        }
 
         $hasAntibiogrammes = Antibiogramme::where('prescription_id', $prescription->id)->exists();
 
-        if (!$hasValidResults && !$hasAntibiogrammes) {
-            throw new \Exception('Aucun résultat validé ou antibiogramme trouvé pour cette prescription');
+        if (!$hasResults && !$hasAntibiogrammes) {
+            throw new \Exception('Aucun résultat saisi ou antibiogramme trouvé pour cette prescription');
         }
 
         $examens = $this->getValidatedExamens($prescription);
 
         if ($examens->isEmpty()) {
-            throw new \Exception('Aucun résultat validé trouvé pour cette prescription');
+            throw new \Exception('Aucun résultat trouvé pour cette prescription');
         }
 
         return $this->generatePDF($prescription, $examens, 'final');
@@ -388,7 +413,7 @@ class ResultatPdfShow
     }
 
     /**
-     * Méthode commune pour générer les PDFs (SIMPLIFIÉ comme ancien code)
+     * Méthode commune pour générer les PDFs
      */
     private function generatePDF(Prescription $prescription, $examens, $type = 'final')
     {
@@ -417,16 +442,35 @@ class ResultatPdfShow
     }
 
     /**
-     * Vérifier si on peut générer le PDF final
+     * Vérifier si on peut générer le PDF final - CORRIGÉ
      */
     public function canGenerateFinalPdf(Prescription $prescription): bool
     {
-        return $prescription->status === Prescription::STATUS_VALIDE && 
-               (Resultat::where('prescription_id', $prescription->id)
-                   ->where('status', 'VALIDE')
-                   ->whereNotNull('validated_by')
-                   ->exists() ||
-                Antibiogramme::where('prescription_id', $prescription->id)->exists());
+        // CORRECTION : Accepter TERMINE et VALIDE
+        if (!in_array($prescription->status, [Prescription::STATUS_VALIDE, Prescription::STATUS_TERMINE])) {
+            return false;
+        }
+
+        $hasResults = false;
+        
+        if ($prescription->status === Prescription::STATUS_VALIDE) {
+            $hasResults = Resultat::where('prescription_id', $prescription->id)
+                ->where('status', 'VALIDE')
+                ->whereNotNull('validated_by')
+                ->exists();
+        } else {
+            $hasResults = Resultat::where('prescription_id', $prescription->id)
+                ->where(function($query) {
+                    $query->whereNotNull('valeur')
+                          ->where('valeur', '!=', '')
+                          ->orWhereNotNull('resultats');
+                })
+                ->exists();
+        }
+
+        $hasAntibiogrammes = Antibiogramme::where('prescription_id', $prescription->id)->exists();
+
+        return $hasResults || $hasAntibiogrammes;
     }
 
     /**

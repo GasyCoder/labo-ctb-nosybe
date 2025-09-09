@@ -101,6 +101,14 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
     Route::get('dashboard', Dashboard::class)->name('dashboard');
 });
 
+// ============================================ Résultats PDF prescriptions
+// ROUTES SPÉCIFIQUES AUX SECRETAIRES, BIOLOGISTES
+// ============================================
+Route::middleware(['auth', 'verified', 'role:secretaire,biologiste'])->prefix('laboratoire')->name('laboratoire.')->group(function () {
+    // ✅ CORRECTION : Routes PDF avec deux options
+    Route::get('/prescription/{prescription}/pdf', [PrescriptionPdfController::class, 'show'])
+        ->name('prescription.pdf');
+});
 
 // ============================================
 // ROUTES SPÉCIFIQUES AUX TECHNICIENS
@@ -118,11 +126,6 @@ Route::middleware(['auth', 'verified', 'role:biologiste'])->prefix('biologiste')
     Route::get('/analyse-valide', AnalyseValide::class)->name('analyse.index');
     Route::get('/prescription/{prescription}', ShowPrescription::class)->name('prescription.show');
     Route::get('/valide/{prescription}/analyse', BiologisteAnalysisForm::class)->name('valide.show');
-    
-    // ✅ CORRECTION : Routes PDF avec deux options
-    Route::get('/prescription/{prescription}/pdf', [PrescriptionPdfController::class, 'show'])
-        ->name('prescription.pdf');
-
 });
 
 // ============================================

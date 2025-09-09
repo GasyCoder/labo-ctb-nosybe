@@ -69,22 +69,24 @@
                             $estPaye = $paiement ? $paiement->status : false;
                         @endphp
                         @if ($paiement)
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" wire:model="paiementStatus.{{ $prescription->id }}"
-                                    wire:change="togglePaiementStatus({{ $prescription->id }})" class="sr-only peer"
-                                    {{ $estPaye ? 'checked' : '' }}>
-                                <div
-                                    class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 
-                                    peer-checked:after:translate-x-full peer-checked:after:border-white 
-                                    after:content-[''] after:absolute after:top-0.5 after:left-[2px] 
-                                    after:bg-white after:border-gray-300 after:border after:rounded-full 
-                                    after:h-5 after:w-5 after:transition-all 
-                                    peer-checked:bg-green-600">
-                                </div>
-                                <span class="ml-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-                                    {{ $estPaye ? 'Payé' : 'Non Payé' }}
-                                </span>
-                            </label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model="paiementStatus.{{ $prescription->id }}"
+                                wire:change="togglePaiementStatus({{ $prescription->id }})" class="sr-only peer"
+                                {{ $estPaye ? 'checked' : '' }}>
+                            <div
+                                class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 
+                                peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                after:content-[''] after:absolute after:top-0.5 after:left-[2px] 
+                                after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                after:h-5 after:w-5 after:transition-all 
+                                peer-checked:bg-green-600">
+                            </div>
+                            <span class="ml-2 text-xs font-medium 
+                                {{ $estPaye ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                {{ $estPaye ? 'Payé' : 'Non Payé' }}
+                            </span>
+                        </label>
+
                         @else
                             <span
                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
@@ -127,7 +129,7 @@
                                     title="Modifier">
                                     <em class="ni ni-edit"></em>
                                 </a>
-                                <a href="{{ route('secretaire.prescription.facture', $paiement->prescription_id) }}"
+                                <a href="{{ route('laboratoire.prescription.pdf', $prescription->id) }}"
                                     target="_blank" rel="noopener noreferrer"
                                     class="inline-flex items-center justify-center w-8 h-8 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                                     title="Voir PDF">
@@ -141,7 +143,7 @@
                                 </button>
                             @elseif(isset($currentTab) && $currentTab === 'valide')
                                 {{-- Actions pour les prescriptions validées --}}
-                                <a href="{{ route('secretaire.prescription.facture', $paiement->prescription_id) }}"
+                                <a href="{{ route('laboratoire.prescription.pdf', $prescription->id) }}"
                                     target="_blank" rel="noopener noreferrer"
                                     class="inline-flex items-center justify-center w-8 h-8 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
                                     title="Voir PDF">

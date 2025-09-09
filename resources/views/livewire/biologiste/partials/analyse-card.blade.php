@@ -128,7 +128,7 @@
                                     @endphp
 
                                     @if($hasAnyResults)
-                                        <a href="{{ route('biologiste.prescription.pdf', $prescription->id) }}" 
+                                        <a href="{{ route('laboratoire.prescription.pdf', $prescription->id) }}" 
                                         target="_blank"
                                         class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center justify-center gap-2"
                                         title="Générer un aperçu PDF des résultats saisis (peu importe le statut)">
