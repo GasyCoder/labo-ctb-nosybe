@@ -1,0 +1,184 @@
+{
+  "_isRTL-0_WXRM0q.js": {
+    "file": "assets/isRTL-0_WXRM0q.js",
+    "name": "isRTL"
+  },
+  "_world-bBUGHkdF.js": {
+    "file": "assets/world-bBUGHkdF.js",
+    "name": "world"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CW9vMyKr.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/fonts/Nioicon.svg": {
+    "file": "assets/Nioicon-BbLMLxdP.svg",
+    "src": "resources/fonts/Nioicon.svg"
+  },
+  "resources/fonts/Nioicon.ttf": {
+    "file": "assets/Nioicon-81EzONOx.ttf",
+    "src": "resources/fonts/Nioicon.ttf"
+  },
+  "resources/fonts/Nioicon.woff": {
+    "file": "assets/Nioicon-CdXEyyGP.woff",
+    "src": "resources/fonts/Nioicon.woff"
+  },
+  "resources/fonts/Nunito-Bold.eot": {
+    "file": "assets/Nunito-Bold-DXkw16y9.eot",
+    "src": "resources/fonts/Nunito-Bold.eot"
+  },
+  "resources/fonts/Nunito-Bold.ttf": {
+    "file": "assets/Nunito-Bold-E4WWBfJS.ttf",
+    "src": "resources/fonts/Nunito-Bold.ttf"
+  },
+  "resources/fonts/Nunito-Bold.woff": {
+    "file": "assets/Nunito-Bold-C-LBwSZ0.woff",
+    "src": "resources/fonts/Nunito-Bold.woff"
+  },
+  "resources/fonts/Nunito-Bold.woff2": {
+    "file": "assets/Nunito-Bold-CqlRzoaE.woff2",
+    "src": "resources/fonts/Nunito-Bold.woff2"
+  },
+  "resources/fonts/Nunito-Regular.eot": {
+    "file": "assets/Nunito-Regular-DsRLXTRo.eot",
+    "src": "resources/fonts/Nunito-Regular.eot"
+  },
+  "resources/fonts/Nunito-Regular.ttf": {
+    "file": "assets/Nunito-Regular-Dm_Elocd.ttf",
+    "src": "resources/fonts/Nunito-Regular.ttf"
+  },
+  "resources/fonts/Nunito-Regular.woff": {
+    "file": "assets/Nunito-Regular-VCwdpEvf.woff",
+    "src": "resources/fonts/Nunito-Regular.woff"
+  },
+  "resources/fonts/Nunito-Regular.woff2": {
+    "file": "assets/Nunito-Regular-CaFVKpgy.woff2",
+    "src": "resources/fonts/Nunito-Regular.woff2"
+  },
+  "resources/fonts/Roboto-Bold.eot": {
+    "file": "assets/Roboto-Bold-D_X5cL-b.eot",
+    "src": "resources/fonts/Roboto-Bold.eot"
+  },
+  "resources/fonts/Roboto-Bold.ttf": {
+    "file": "assets/Roboto-Bold-5byz6fKo.ttf",
+    "src": "resources/fonts/Roboto-Bold.ttf"
+  },
+  "resources/fonts/Roboto-Bold.woff": {
+    "file": "assets/Roboto-Bold-B7cOq_fN.woff",
+    "src": "resources/fonts/Roboto-Bold.woff"
+  },
+  "resources/fonts/Roboto-Bold.woff2": {
+    "file": "assets/Roboto-Bold-B2n1BHly.woff2",
+    "src": "resources/fonts/Roboto-Bold.woff2"
+  },
+  "resources/fonts/Roboto-Light.eot": {
+    "file": "assets/Roboto-Light-DKDbSA-H.eot",
+    "src": "resources/fonts/Roboto-Light.eot"
+  },
+  "resources/fonts/Roboto-Light.ttf": {
+    "file": "assets/Roboto-Light-CvdGXh6_.ttf",
+    "src": "resources/fonts/Roboto-Light.ttf"
+  },
+  "resources/fonts/Roboto-Light.woff": {
+    "file": "assets/Roboto-Light-D8eEbjjJ.woff",
+    "src": "resources/fonts/Roboto-Light.woff"
+  },
+  "resources/fonts/Roboto-Light.woff2": {
+    "file": "assets/Roboto-Light-BND1yEHK.woff2",
+    "src": "resources/fonts/Roboto-Light.woff2"
+  },
+  "resources/fonts/Roboto-Medium.eot": {
+    "file": "assets/Roboto-Medium-wdXOcZVn.eot",
+    "src": "resources/fonts/Roboto-Medium.eot"
+  },
+  "resources/fonts/Roboto-Medium.ttf": {
+    "file": "assets/Roboto-Medium-D3k-fcGv.ttf",
+    "src": "resources/fonts/Roboto-Medium.ttf"
+  },
+  "resources/fonts/Roboto-Medium.woff": {
+    "file": "assets/Roboto-Medium-BFS8JZeR.woff",
+    "src": "resources/fonts/Roboto-Medium.woff"
+  },
+  "resources/fonts/Roboto-Medium.woff2": {
+    "file": "assets/Roboto-Medium--cGQoWUT.woff2",
+    "src": "resources/fonts/Roboto-Medium.woff2"
+  },
+  "resources/fonts/Roboto-Regular.eot": {
+    "file": "assets/Roboto-Regular-CFbaRf1w.eot",
+    "src": "resources/fonts/Roboto-Regular.eot"
+  },
+  "resources/fonts/Roboto-Regular.ttf": {
+    "file": "assets/Roboto-Regular-Ds6KraGe.ttf",
+    "src": "resources/fonts/Roboto-Regular.ttf"
+  },
+  "resources/fonts/Roboto-Regular.woff": {
+    "file": "assets/Roboto-Regular-BsN8iP2n.woff",
+    "src": "resources/fonts/Roboto-Regular.woff"
+  },
+  "resources/fonts/Roboto-Regular.woff2": {
+    "file": "assets/Roboto-Regular-56L6iL-I.woff2",
+    "src": "resources/fonts/Roboto-Regular.woff2"
+  },
+  "resources/js/apps.js": {
+    "file": "assets/apps-nUup6GIY.js",
+    "name": "apps",
+    "src": "resources/js/apps.js",
+    "isEntry": true,
+    "imports": [
+      "_world-bBUGHkdF.js",
+      "_isRTL-0_WXRM0q.js"
+    ]
+  },
+  "resources/js/charts.js": {
+    "file": "assets/charts-z6dwjcIW.js",
+    "name": "charts",
+    "src": "resources/js/charts.js",
+    "isEntry": true,
+    "imports": [
+      "_isRTL-0_WXRM0q.js"
+    ]
+  },
+  "resources/js/scripts.js": {
+    "file": "assets/scripts-Duq7HxeF.js",
+    "name": "scripts",
+    "src": "resources/js/scripts.js",
+    "isEntry": true,
+    "imports": [
+      "_world-bBUGHkdF.js",
+      "_isRTL-0_WXRM0q.js"
+    ],
+    "css": [
+      "assets/app-CW9vMyKr.css"
+    ],
+    "assets": [
+      "assets/Nioicon-81EzONOx.ttf",
+      "assets/Nioicon-CdXEyyGP.woff",
+      "assets/Nioicon-BbLMLxdP.svg",
+      "assets/Nunito-Regular-DsRLXTRo.eot",
+      "assets/Nunito-Regular-CaFVKpgy.woff2",
+      "assets/Nunito-Regular-VCwdpEvf.woff",
+      "assets/Nunito-Regular-Dm_Elocd.ttf",
+      "assets/Nunito-Bold-DXkw16y9.eot",
+      "assets/Nunito-Bold-CqlRzoaE.woff2",
+      "assets/Nunito-Bold-C-LBwSZ0.woff",
+      "assets/Nunito-Bold-E4WWBfJS.ttf",
+      "assets/Roboto-Light-DKDbSA-H.eot",
+      "assets/Roboto-Light-BND1yEHK.woff2",
+      "assets/Roboto-Light-D8eEbjjJ.woff",
+      "assets/Roboto-Light-CvdGXh6_.ttf",
+      "assets/Roboto-Regular-CFbaRf1w.eot",
+      "assets/Roboto-Regular-56L6iL-I.woff2",
+      "assets/Roboto-Regular-BsN8iP2n.woff",
+      "assets/Roboto-Regular-Ds6KraGe.ttf",
+      "assets/Roboto-Medium-wdXOcZVn.eot",
+      "assets/Roboto-Medium--cGQoWUT.woff2",
+      "assets/Roboto-Medium-BFS8JZeR.woff",
+      "assets/Roboto-Medium-D3k-fcGv.ttf",
+      "assets/Roboto-Bold-D_X5cL-b.eot",
+      "assets/Roboto-Bold-B2n1BHly.woff2",
+      "assets/Roboto-Bold-B7cOq_fN.woff",
+      "assets/Roboto-Bold-5byz6fKo.ttf"
+    ]
+  }
+}
