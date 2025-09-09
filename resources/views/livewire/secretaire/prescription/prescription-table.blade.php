@@ -107,7 +107,7 @@
 
                     {{-- Actions --}}
                     <td class="px-6 py-4">
-                        <div class="flex gap-2 justify-end">
+                        <div class="flex gap-2">
                             @if (isset($currentTab) && $currentTab === 'deleted')
                                 {{-- Actions pour la corbeille --}}
                                 <button wire:click="confirmRestore({{ $prescription->id }})"
@@ -129,13 +129,6 @@
                                     title="Modifier">
                                     <em class="ni ni-edit"></em>
                                 </a>
-                                <a href="{{ route('laboratoire.prescription.pdf', $prescription->id) }}"
-                                    target="_blank" rel="noopener noreferrer"
-                                    class="inline-flex items-center justify-center w-8 h-8 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
-                                    title="Voir PDF">
-                                    <em class="ni ni-file-pdf"></em>
-                                </a>
-
                                 <button wire:click="confirmDelete({{ $prescription->id }})"
                                     class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
                                     title="Corbeille">

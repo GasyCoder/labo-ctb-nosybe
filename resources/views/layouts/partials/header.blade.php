@@ -17,22 +17,6 @@
                     </a>
                 </div>
 
-                <!-- Desktop Notification -->
-                <div class="px-1 py-2 hidden xl:block">
-                    <a class="flex items-center transition-all duration-300" href="#">
-                        <div class="w-8 inline-flex flex-shrink-0">
-                            <em class="text-2xl leading-none text-primary-600 ni ni-card-view"></em>
-                        </div>
-                        <div class="flex items-center max-w-[calc(100%-theme(spacing.8))]">
-                            <p class="text-sm text-slate-600 dark:text-slate-300 font-medium text-ellipsis overflow-hidden whitespace-nowrap w-[calc(100%-theme(spacing.8))]">
-                                Do you know the latest update of 2022? 
-                                <span class="text-slate-400 dark:text-slate-500 font-normal">A overview of our is now available on YouTube</span>
-                            </p>
-                            <em class="text-slate-400 ms-1 ni ni-external"></em>
-                        </div>
-                    </a>
-                </div>
-
                 <!-- Right Side Controls -->
                 <div class="px-1 py-3.5 ms-auto">
                     <ul class="flex item-center -mx-1.5 sm:-mx-2.5">

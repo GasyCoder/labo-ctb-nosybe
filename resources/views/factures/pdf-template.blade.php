@@ -1,3 +1,4 @@
+{{-- resources/views/factures/ccare-style.blade.php - CORRIGÉ --}}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -5,7 +6,7 @@
     <title>Facture - {{ $prescription->reference }}</title>
     <style>
         @page {
-            margin: 20mm 18mm 20mm 18mm;
+            margin: 15mm 10mm 15mm 10mm;
             size: A4;
         }
         
@@ -16,254 +17,300 @@
         }
         
         body {
-            font-family: 'Times New Roman', serif;
-            font-size: 12px;
-            line-height: 1.4;
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            line-height: 1.2;
             color: #000;
-            padding: 10px 15px;
         }
         
         .container {
             max-width: 100%;
             margin: 0 auto;
+            padding: 5px;
         }
         
-        .header {
+        /* En-tête principal */
+        .main-header {
             display: table;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            border: 0px solid #000;
         }
         
         .header-left {
             display: table-cell;
-            width: 60%;
+            width: 30%;
             vertical-align: top;
-            padding-right: 15px;
+            padding: 8px;
+        }
+        
+        .header-center {
+            display: table-cell;
+            width: 40%;
+            vertical-align: top;
+            text-align: center;
+            padding: 8px;
+            border-left: 0px solid #000;
+            border-right: 0px solid #000;
         }
         
         .header-right {
             display: table-cell;
-            width: 40%;
+            width: 30%;
             vertical-align: top;
-            text-align: right;
+            padding: 8px;
         }
         
         .logo-section {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
+            text-align: center;
+            margin-bottom: 5px;
         }
         
         .logo {
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
+            max-width: 150px;
+            max-height: 100px;
             object-fit: contain;
         }
         
-        .lab-title-section {
-            flex: 1;
-        }
-        
-        .lab-title {
-            font-size: 18px;
+        .lab-name {
             font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            line-height: 1.2;
-        }
-        
-        .lab-details {
-            font-size: 11px;
-            line-height: 1.3;
+            font-size: 8pt;
+            color: #2E8B57;
+            margin-top: 3px;
         }
         
         .facture-title {
-            font-size: 24px;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 10px;
-        }
-        
-        .reference-info {
-            font-size: 11px;
-            font-weight: bold;
-        }
-        
-        .divider {
-            text-align: center;
-            margin: 15px 0;
+            font-size: 16pt;
             font-weight: bold;
             text-transform: uppercase;
-        }
-        
-        .patient-info {
-            display: table;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        
-        .patient-left, .patient-right {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-            padding-right: 15px;
-        }
-        
-        .section-title {
-            font-weight: bold;
-            text-decoration: underline;
             margin-bottom: 8px;
-            font-size: 13px;
         }
         
-        .info-line {
-            margin-bottom: 3px;
-            font-size: 11px;
+        .facture-info {
+            font-size: 8pt;
+            text-align: center;
         }
         
-        .info-label {
-            display: inline-block;
-            width: 80px;
+        .facture-info div {
+            margin-bottom: 2px;
+        }
+        
+        .barcode-section {
+            text-align: right;
+            font-size: 7pt;
+        }
+        
+        /* Section patient avec tableau pour alignement parfait */
+        .patient-section {
+            border: 0px solid #000;
+            margin: 8px 0;
+            padding: 0;
+        }
+        
+        .patient-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        
+        .patient-table td {
+            padding: 4px 6px;
+            vertical-align: top;
+            border-bottom: 1px dotted #000;
+        }
+        
+        .patient-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .patient-label {
             font-weight: bold;
+            width: 120px;
+            background-color: #f9f9f9;
         }
         
+        .patient-value {
+            min-height: 16px;
+        }
+        
+        .patient-separator {
+            width: 20px;
+            border-bottom: none !important;
+        }
+        
+        /* Tableau des analyses */
         .analyses-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 10px;
+            margin: 10px 0;
+            font-size: 8pt;
         }
         
         .analyses-table th {
+            background-color: #f0f0f0;
+            border: 1px solid #000;
+            padding: 4px 2px;
             text-align: center;
-            padding: 6px 4px;
             font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 2px solid #000;
-            border-top: 2px solid #000;
+            font-size: 7pt;
         }
         
         .analyses-table td {
-            padding: 4px;
+            border: 1px solid #000;
+            padding: 3px 2px;
             text-align: center;
-            vertical-align: middle;
-            border-bottom: 1px solid #000;
         }
         
-        .designation {
+        .designation-cell {
             text-align: left !important;
-            padding-left: 6px;
+            padding-left: 4px;
         }
         
-        .prix {
+        .montant-cell {
             text-align: right !important;
-            padding-right: 6px;
+            padding-right: 4px;
             font-weight: bold;
         }
         
-        .totals {
-            float: right;
-            width: 250px;
+        /* Section totaux */
+        .totaux-section {
+            display: table;
+            width: 100%;
             margin: 10px 0;
         }
         
-        .total-line {
-            display: table;
+        .totaux-left {
+            display: table-cell;
+            width: 60%;
+            vertical-align: top;
+            padding-right: 10px;
+        }
+        
+        .totaux-right {
+            display: table-cell;
+            width: 40%;
+            vertical-align: top;
+        }
+        
+        .arret-text {
+            font-size: 8pt;
+            font-style: italic;
+            border: 0px solid #000;
+            padding: 5px;
+            text-align: justify;
+        }
+        
+        .totaux-table {
+            border: 0px solid #000;
             width: 100%;
-            margin-bottom: 4px;
-            font-size: 11px;
+            font-size: 8pt;
         }
         
-        .total-label {
-            display: table-cell;
-            text-align: left;
-            font-weight: bold;
+        .totaux-table td {
+            padding: 3px 5px;
+            border-bottom: 0px solid #000;
         }
         
-        .total-value {
-            display: table-cell;
+        .totaux-label {
             text-align: right;
             font-weight: bold;
         }
         
-        .final-total {
-            border-top: 2px solid #000;
-            padding-top: 6px;
-            margin-top: 6px;
-            font-size: 13px;
+        .totaux-value {
+            text-align: right;
+            font-weight: bold;
+            width: 80px;
         }
         
-        .payment-section {
-            clear: both;
-            margin-top: 20px;
+        /* Section paiement */
+        .paiement-section {
+            border: 1px solid #000;
+            margin: 10px 0;
+            font-size: 8pt;
+        }
+        
+        .paiement-header {
+            background-color: #f0f0f0;
+            padding: 3px 5px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #000;
+        }
+        
+        .paiement-content {
+            padding: 5px;
+        }
+        
+        .paiement-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .paiement-table td {
+            padding: 2px 5px;
+            border: 1px solid #000;
+        }
+        
+        /* Section résumé */
+        .resume-section {
             display: table;
             width: 100%;
+            margin: 10px 0;
+            font-size: 8pt;
         }
         
-        .payment-left, .payment-right {
+        .resume-left {
             display: table-cell;
             width: 50%;
-            vertical-align: top;
-            padding-right: 15px;
+            padding-right: 10px;
         }
         
-        .signatures {
-            margin-top: 30px;
-            display: table;
-            width: 100%;
-        }
-        
-        .signature-box {
+        .resume-right {
             display: table-cell;
-            width: 33%;
+            width: 50%;
             text-align: center;
-            vertical-align: bottom;
-            height: 60px;
-            padding: 0 10px;
         }
         
-        .signature-line {
-            border-bottom: 1px solid #000;
+        .resume-left div {
+            margin-bottom: 3px;
+        }
+        
+        .cachet-paye {
+            border: 2px solid #000;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            transform: rotate(-15deg);
+            margin: 10px auto;
             width: 100px;
-            margin: 0 auto 5px auto;
-            height: 40px;
         }
         
-        .signature-title {
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .cachet-paye.paye {
+            color: #008000;
+            border-color: #008000;
         }
         
-        .signature-name {
-            font-size: 9px;
-            margin-top: 2px;
+        .cachet-paye.non-paye {
+            color: #ff0000;
+            border-color: #ff0000;
         }
         
+        /* Footer */
         .footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 9px;
-            border-top: 1px solid #000;
+            margin-top: 15px;
             padding-top: 8px;
-        }
-        
-        .status-global {
+            border-top: 1px solid #000;
+            font-size: 7pt;
             text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-            margin: 10px 0;
-            text-transform: uppercase;
         }
         
-        .clearfix {
-            clear: both;
+        .footer-line {
+            margin-bottom: 1px;
         }
     </style>
 </head>
 <body>
-    {{-- LOGIQUE DU STATUT DE PAIEMENT --}}
     @php
         $paiement = $prescription->paiements->first();
         $estPaye = $paiement ? $paiement->status : false;
@@ -272,120 +319,133 @@
     @endphp
 
     <div class="container">
-        {{-- HEADER --}}
-        <div class="header">
+        {{-- EN-TÊTE PRINCIPAL --}}
+        <div class="main-header">
             <div class="header-left">
                 <div class="logo-section">
-                    <img src="{{ public_path('logo1.png') }}" alt="Logo Laboratoire" class="logo">
-                    <div class="lab-title-section">
-                        <div class="lab-title">LABORATOIRE D'ANALYSES MEDICALES</div>
-                    </div>
+                    @php
+                        $logoPath = public_path('assets/images/logo_facture.jpg');
+                        if (file_exists($logoPath)) {
+                            $logoData = file_get_contents($logoPath);
+                            $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
+                        } else {
+                            $logoBase64 = null;
+                        }
+                    @endphp
+                    
+                    @if($logoBase64)
+                        <img src="{{ $logoBase64 }}" alt="Logo" class="logo">
+                    @else
+                        <div style="width: 180px; height: 180px; background: #2E8B57; color: white; text-align: center; line-height: 100px; font-size: 10pt; font-weight: bold;">
+                            LOGO
+                        </div>
+                    @endif
                 </div>
-                <div class="lab-details">
-                    <p><strong>Directeur Technique:</strong> Dr. {{ $prescription->prescripteur->nom ?? 'RESPONSABLE' }}</p>
-                    <p><strong>Adresse:</strong> Centre ville, Antananarivo, Madagascar</p>
-                    <p><strong>Téléphone:</strong> +261 34 XX XXX XX</p>
-                    <p><strong>Email:</strong> contact@laboratoire.mg</p>
-                    <p><strong>Autorisation N°:</strong> 2024/MSAN/LAB/001</p>
+            </div>
+            
+            <div class="header-center">
+                <div class="facture-title">FACTURE</div>
+                <div class="facture-info">
+                    <div><strong>Du:</strong> {{ $prescription->created_at->format('d/m/Y H:i') }}</div>
+                    <div><strong>N°:</strong> {{ $prescription->reference }}</div>
                 </div>
             </div>
             
             <div class="header-right">
-                <div class="facture-title">FACTURE</div>
-                <div class="reference-info">
-                    <p>Réf: {{ $prescription->reference }}</p>
-                    <p>Date: {{ $prescription->created_at->format('d/m/Y') }}</p>
-                    <p>Heure: {{ $prescription->created_at->format('H:i') }}</p>
+                <div class="barcode-section" style="text-align: center;">
+                    @php
+                        try {
+                            $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+                            $barcodeImage = $generator->getBarcode($prescription->reference, $generator::TYPE_CODE_128, 2, 40);
+                            $barcodeBase64 = 'data:image/png;base64,' . base64_encode($barcodeImage);
+                        } catch (Exception $e) {
+                            $barcodeBase64 = null;
+                        }
+                    @endphp
+                    
+                    @if($barcodeBase64)
+                        <img src="{{ $barcodeBase64 }}" alt="Code-barres" style="max-width: 120px; height: 40px; display: block; margin: 0 auto;">
+                    @else
+                        <div style="font-family: monospace; border: 1px solid #000; padding: 5px; font-size: 8pt; text-align: center;">
+                            {{ $prescription->reference }}
+                        </div>
+                    @endif
+                    
+                    <div style="font-size: 7pt; text-align: center; margin-top: 3px;">
+                        {{ $prescription->reference }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- STATUT GLOBAL --}}
-        <div class="status-global">
-            {{ $estPaye ? 'FACTURE PAYEE' : 'FACTURE NON PAYEE' }}
-        </div>
-
-        <div class="divider">PRESCRIPTION MEDICALE N° {{ $prescription->reference }}</div>
-
-        {{-- INFORMATIONS PATIENT --}}
-        <div class="patient-info">
-            <div class="patient-left">
-                <div class="section-title">PATIENT</div>
-                <div class="info-line">
-                    <span class="info-label">Nom:</span>
-                    {{ strtoupper($prescription->patient->nom) }} {{ ucfirst($prescription->patient->prenom) }}
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Civilité:</span>
-                    {{ $prescription->patient->civilite }}
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Âge:</span>
-                    {{ $prescription->age }} {{ $prescription->unite_age ?? 'ans' }}
-                </div>
-                @if($prescription->patient->telephone)
-                <div class="info-line">
-                    <span class="info-label">Téléphone:</span>
-                    {{ $prescription->patient->telephone }}
-                </div>
-                @endif
-                @if($prescription->poids)
-                <div class="info-line">
-                    <span class="info-label">Poids:</span>
-                    {{ $prescription->poids }} kg
-                </div>
-                @endif
-            </div>
-            
-            <div class="patient-right">
-                <div class="section-title">PRESCRIPTION</div>
-                <div class="info-line">
-                    <span class="info-label">Type:</span>
-                    {{ $prescription->patient_type ?? 'EXTERNE' }}
-                </div>
-                @if($prescription->prescripteur)
-                <div class="info-line">
-                    <span class="info-label">Médecin:</span>
-                    Dr. {{ $prescription->prescripteur->nom }} {{ $prescription->prescripteur->prenom ?? '' }}
-                </div>
-                @endif
-                <div class="info-line">
-                    <span class="info-label">Secrétaire:</span>
-                    {{ $prescription->secretaire->name ?? 'N/A' }}
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Statut:</span>
-                    {{ $prescription->status }}
-                </div>
-            </div>
+        {{-- INFORMATIONS PATIENT - TABLEAU ALIGNÉ --}}
+        <div class="patient-section">
+            <table class="patient-table">
+                <tr>
+                    <td class="patient-label">PID :</td>
+                    <td class="patient-value">{{ $prescription->patient->numero_dossier ?? $prescription->reference }}</td>
+                    <td class="patient-separator"></td>
+                    <td class="patient-label">STAT :</td>
+                    <td class="patient-value">{{ $prescription->status }}</td>
+                </tr>
+                <tr>
+                    <td class="patient-label">Visit ID :</td>
+                    <td class="patient-value">{{ $prescription->reference }}</td>
+                    <td class="patient-separator"></td>
+                    <td class="patient-label">Panel :</td>
+                    <td class="patient-value">EXTERNE</td>
+                </tr>
+                <tr>
+                    <td class="patient-label">Nom du patient :</td>
+                    <td class="patient-value" colspan="4">{{ strtoupper($prescription->patient->civilite ?? '') }} {{ strtoupper($prescription->patient->nom) }} {{ strtoupper($prescription->patient->prenom ?? '') }}</td>
+                </tr>
+                <tr>
+                    <td class="patient-label">DDN/Sexe :</td>
+                    <td class="patient-value">{{ $prescription->age }} {{ $prescription->unite_age ?? 'ans' }}</td>
+                    <td class="patient-separator"></td>
+                    <td class="patient-label">Type de client :</td>
+                    <td class="patient-value">{{ $prescription->patient_type ?? 'EXTERNE' }}</td>
+                </tr>
+                <tr>
+                    <td class="patient-label">Non de portable :</td>
+                    <td class="patient-value">{{ $prescription->patient->telephone ?? '' }}</td>
+                    <td class="patient-separator"></td>
+                    <td class="patient-label">Référé par :</td>
+                    <td class="patient-value">{{ $prescription->prescripteur->nom ?? '' }} {{ $prescription->prescripteur->prenom ?? '' }}</td>
+                </tr>
+                <tr>
+                    <td class="patient-label">Adresse :</td>
+                    <td class="patient-value" colspan="4">{{ $prescription->patient->adresse ?? '' }}</td>
+                </tr>
+            </table>
         </div>
 
         {{-- TABLEAU DES ANALYSES --}}
-        @if(count($prescription->analyses) > 0 || count($prescription->prelevements) > 0)
         <table class="analyses-table">
             <thead>
                 <tr>
-                    <th style="width: 6%">N°</th>
-                    <th style="width: 10%">CODE</th>
-                    <th style="width: 45%">DESIGNATION</th>
-                    <th style="width: 12%">PRIX UNIT.</th>
-                    <th style="width: 6%">QTE</th>
-                    <th style="width: 12%">MONTANT</th>
-                    <th style="width: 9%">STATUT</th>
+                    <th style="width: 8%">N° de série</th>
+                    <th style="width: 42%">Détails / Désignation</th>
+                    <th style="width: 8%">Unités</th>
+                    <th style="width: 14%">Tarif (MGA)</th>
+                    <th style="width: 14%">Remise (MGA)</th>
+                    <th style="width: 14%">Montant (MGA)</th>
                 </tr>
             </thead>
             <tbody>
                 {{-- ANALYSES --}}
                 @foreach($prescription->analyses as $analyse)
-                @php $totalAnalyses += $analyse->prix; @endphp
+                @php 
+                    $totalAnalyses += $analyse->prix;
+                    $remiseIndividuelle = 0;
+                @endphp
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td><strong>{{ $analyse->code }}</strong></td>
-                    <td class="designation">{{ $analyse->designation }}</td>
-                    <td class="prix">{{ number_format($analyse->prix, 0) }} Ar</td>
-                    <td>1</td>
-                    <td class="prix">{{ number_format($analyse->prix, 0) }} Ar</td>
-                    <td>{{ $estPaye ? 'PAYE' : 'NON PAYE' }}</td>
+                    <td class="designation-cell">{{ $analyse->designation }}</td>
+                    <td>1.00</td>
+                    <td class="montant-cell">{{ number_format($analyse->prix, 2) }}</td>
+                    <td class="montant-cell">{{ number_format($remiseIndividuelle, 2) }}</td>
+                    <td class="montant-cell">{{ number_format($analyse->prix - $remiseIndividuelle, 2) }}</td>
                 </tr>
                 @endforeach
 
@@ -396,139 +456,113 @@
                     $quantite = $prelevement->pivot->quantite ?? 1;
                     $montantPrelevement = $prixUnitaire * $quantite;
                     $totalPrelevements += $montantPrelevement;
+                    $remisePrelevement = 0;
                 @endphp
                 <tr>
                     <td>{{ count($prescription->analyses) + $loop->iteration }}</td>
-                    <td><strong>PREL</strong></td>
-                    <td class="designation">{{ $prelevement->nom }}</td>
-                    <td class="prix">{{ number_format($prixUnitaire, 0) }} Ar</td>
-                    <td>{{ $quantite }}</td>
-                    <td class="prix">{{ number_format($montantPrelevement, 0) }} Ar</td>
-                    <td>{{ $estPaye ? 'PAYE' : 'NON PAYE' }}</td>
+                    <td class="designation-cell">{{ $prelevement->nom }}</td>
+                    <td>{{ $quantite }}.00</td>
+                    <td class="montant-cell">{{ number_format($prixUnitaire, 2) }}</td>
+                    <td class="montant-cell">{{ number_format($remisePrelevement, 2) }}</td>
+                    <td class="montant-cell">{{ number_format($montantPrelevement, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-        @endif
 
-        {{-- TOTAUX --}}
-        <div class="totals">
-            @php
-                $sousTotal = $totalAnalyses + $totalPrelevements;
-                $remise = $prescription->remise ?? 0;
-                $total = max(0, $sousTotal - $remise);
-            @endphp
-            
-            @if($totalAnalyses > 0)
-            <div class="total-line">
-                <div class="total-label">Sous-total Analyses:</div>
-                <div class="total-value">{{ number_format($totalAnalyses, 0) }} Ar</div>
-            </div>
-            @endif
-            
-            @if($totalPrelevements > 0)
-            <div class="total-line">
-                <div class="total-label">Sous-total Prélèvements:</div>
-                <div class="total-value">{{ number_format($totalPrelevements, 0) }} Ar</div>
-            </div>
-            @endif
-            
-            <div class="total-line">
-                <div class="total-label">Total Brut:</div>
-                <div class="total-value">{{ number_format($sousTotal, 0) }} Ar</div>
+        {{-- SECTION TOTAUX --}}
+        <div class="totaux-section">
+            <div class="totaux-left">
+                <div class="arret-text">
+                    <strong>Arrêt la présente facture à la somme de :</strong><br>
+                    @php
+                        $sousTotal = $totalAnalyses + $totalPrelevements;
+                        $remise = $prescription->remise ?? 0;
+                        $total = max(0, $sousTotal - $remise);
+                    @endphp
+                    Quatre-vingt-dix-huit mille cent quatre-vingt-dix-huit ariary
+                </div>
             </div>
             
-            @if($remise > 0)
-            <div class="total-line">
-                <div class="total-label">Remise Accordée:</div>
-                <div class="total-value">-{{ number_format($remise, 0) }} Ar</div>
-            </div>
-            @endif
-            
-            <div class="total-line final-total">
-                <div class="total-label">TOTAL A PAYER:</div>
-                <div class="total-value">{{ number_format($total, 0) }} Ar</div>
+            <div class="totaux-right">
+                <table class="totaux-table">
+                    <tr>
+                        <td class="totaux-label">Montant total (hors TVA) :</td>
+                        <td class="totaux-value">{{ number_format($sousTotal, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="totaux-label">Montant total de la TVA :</td>
+                        <td class="totaux-value">0.00</td>
+                    </tr>
+                    <tr>
+                        <td class="totaux-label">TVA incluse :</td>
+                        <td class="totaux-value">0.00</td>
+                    </tr>
+                    <tr>
+                        <td class="totaux-label">Montant de la remise :</td>
+                        <td class="totaux-value">{{ number_format($remise, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="totaux-label">Montant assuré :</td>
+                        <td class="totaux-value">0.00</td>
+                    </tr>
+                    <tr style="border-top: 2px solid #000;">
+                        <td class="totaux-label"><strong>Montant payé :</strong></td>
+                        <td class="totaux-value"><strong>{{ number_format($total, 2) }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="totaux-label">Montant du solde :</td>
+                        <td class="totaux-value">0.00</td>
+                    </tr>
+                </table>
             </div>
         </div>
 
-        <div class="clearfix"></div>
-
-        {{-- INFORMATIONS DE PAIEMENT --}}
-        <div class="payment-section">
-            <div class="payment-left">
-                <div class="section-title">PAIEMENT</div>
-                <div class="info-line">
-                    <span class="info-label">Mode:</span>
-                    {{ $paiement ? ($paiement->paymentMethod->label ?? 'ESPECES') : 'ESPECES' }}
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Montant payé:</span>
-                    {{ number_format($paiement ? $paiement->montant : 0, 0) }} Ar
-                </div>
-                @if($paiement && $paiement->montant > $total)
-                <div class="info-line">
-                    <span class="info-label">Monnaie:</span>
-                    {{ number_format($paiement->montant - $total, 0) }} Ar
-                </div>
-                @endif
-                <div class="info-line">
-                    <span class="info-label">Statut:</span>
-                    {{ $estPaye ? 'PAYE' : 'NON PAYE' }}
-                </div>
-                @if($paiement)
-                <div class="info-line">
-                    <span class="info-label">Date:</span>
-                    {{ $paiement->created_at->format('d/m/Y H:i') }}
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Reçu par:</span>
-                    {{ $paiement->utilisateur->name ?? 'N/A' }}
-                </div>
-                @endif
-            </div>
-            
-            <div class="payment-right">
-                <div class="section-title">RESUME</div>
-                <div class="info-line">
-                    <span class="info-label">Analyses:</span>
-                    {{ count($prescription->analyses) }} item(s)
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Prélèvements:</span>
-                    {{ count($prescription->prelevements) }} item(s)
-                </div>
-                <div class="info-line">
-                    <span class="info-label">Tubes:</span>
-                    {{ $prescription->tubes->count() }} tube(s)
-                </div>
-               
+        {{-- SECTION PAIEMENT --}}
+        <div class="paiement-section">
+            <div class="paiement-header">Informations de paiement</div>
+            <div class="paiement-content">
+                <table class="paiement-table">
+                    <tr>
+                        <td><strong>Date et heure de reçu</strong></td>
+                        <td><strong>N° de reçu</strong></td>
+                        <td><strong>Montant</strong></td>
+                        <td><strong>Mode de paiement</strong></td>
+                        <td><strong>Collecté par</strong></td>
+                    </tr>
+                    <tr>
+                        <td>{{ $paiement ? $paiement->created_at->format('d/m/Y H:i') : '' }}</td>
+                        <td>{{ $paiement ? $paiement->id : '' }}</td>
+                        <td>{{ $paiement ? number_format($paiement->montant, 2) : '0.00' }}</td>
+                        <td>{{ $paiement ? ($paiement->paymentMethod->label ?? 'ESPÈCES') : 'ESPÈCES' }}</td>
+                        <td>{{ $paiement ? ($paiement->utilisateur->name ?? '') : '' }}</td>
+                    </tr>
+                </table>
             </div>
         </div>
 
-        {{-- SIGNATURES --}}
-        <div class="signatures">
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div class="signature-title">Signature Patient</div>
-                <div class="signature-name">{{ $prescription->patient->nom }} {{ $prescription->patient->prenom }}</div>
+        {{-- SECTION RÉSUMÉ - CORRIGÉE SANS REDONDANCE --}}
+        <div class="resume-section">
+            <div class="resume-left">
+                <div><strong>Total facture :</strong> {{ number_format($total, 2) }} Ar</div>
+                <div><strong>Montant encaissé :</strong> {{ number_format($paiement ? $paiement->montant : 0, 2) }} Ar</div>
+                <div><strong>Solde restant :</strong> {{ number_format(max(0, $total - ($paiement ? $paiement->montant : 0)), 2) }} Ar</div>
+                <div><strong>Préparé par :</strong> {{ $prescription->secretaire->name ?? 'SECRÉTAIRE' }}</div>
             </div>
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div class="signature-title">Cachet Laboratoire</div>
-                <div class="signature-name">{{ now()->format('d/m/Y') }}</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div class="signature-title">Signature Responsable</div>
-                <div class="signature-name">{{ $prescription->secretaire->name ?? 'SECRÉTAIRE' }}</div>
+            
+            <div class="resume-right">
+                <div class="cachet-paye {{ $estPaye ? 'paye' : 'non-paye' }}">
+                    {{ $estPaye ? 'PAYÉ' : 'NON PAYÉ' }}
+                </div>
             </div>
         </div>
 
         {{-- FOOTER --}}
         <div class="footer">
-            <p><strong>LABORATOIRE D'ANALYSES MEDICALES</strong> - Antananarivo, Madagascar</p>
-            <p>contact@laboratoire.mg - +261 34 XX XXX XX - Autorisation N° 2024/MSAN/LAB/001</p>
-            <p>Document généré le {{ now()->format('d/m/Y à H:i:s') }} - {{ $prescription->reference }}</p>
+            <div class="footer-line"><strong>LABORATOIRE CTB</strong></div>
+            <div class="footer-line">NIF: 2000000000 - RC: 2010000000 - STAT: 72102 11 2010 010000</div>
+            <div class="footer-line">Siège social: Antananarivo - Tél: +261 34 XX XXX XX - Email: contact@laboratoire.mg</div>
+            <div class="footer-line">Comptes bancaires: MCB TANA: 00000 00000 00000000000 - BNI-CL TANA: 00000 021579201023</div>
         </div>
     </div>
 </body>

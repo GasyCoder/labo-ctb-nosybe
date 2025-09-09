@@ -135,16 +135,6 @@
             @endif
         @endforeach
 
-        {{-- Conclusion générale --}}
-        @if(isset($conclusion_generale) && !empty($conclusion_generale))
-            <div class="conclusion-section">
-                <div class="conclusion-title">Conclusion générale :</div>
-                <div class="conclusion-content">
-                    {!! nl2br(e($conclusion_generale)) !!}
-                </div>
-            </div>
-        @endif
-
         {{-- Signature --}}
         <div class="signature">
             <img src="{{ public_path('assets/images/signe.png') }}" alt="Signature" style="max-width: 120px;">

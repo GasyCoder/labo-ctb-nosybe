@@ -549,27 +549,28 @@
             </div>
             <div class="p-6">
                 <form wire:submit.prevent="update" class="space-y-6">
-                    {{-- Même contenu que le mode création, mais avec les valeurs pré-remplies --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div>
-                            <label for="edit_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Code <span class="text-red-500">*</span>
                             </label>
                             <input type="text" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 dark:bg-gray-700 dark:text-white @error('code') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
-                                   id="edit_code" 
-                                   wire:model="code">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('code') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
+                                   id="code" 
+                                   wire:model="code"
+                                   placeholder="Ex: GLY">
                             @error('code')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="edit_level" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label for="level" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Niveau <span class="text-red-500">*</span>
                             </label>
                             <select wire:model="level" 
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 dark:bg-gray-700 dark:text-white @error('level') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('level') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                                <option value="">Sélectionnez un niveau</option>
                                 <option value="PARENT">PARENT (Panel)</option>
                                 <option value="NORMAL">NORMAL</option>
                                 <option value="CHILD">CHILD (Sous-analyse)</option>
@@ -580,11 +581,11 @@
                         </div>
 
                         <div>
-                            <label for="edit_parent_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label for="parent_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Parent (si applicable)
                             </label>
                             <select wire:model="parent_id" 
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 dark:bg-gray-700 dark:text-white">
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                                 <option value="">Aucun parent</option>
                                 @if($analysesParents)
                                     @foreach($analysesParents as $parent)
@@ -595,7 +596,154 @@
                         </div>
                     </div>
 
-                    {{-- Autres champs similaires au mode création... --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="designation" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Désignation <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('designation') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
+                                   id="designation" 
+                                   wire:model="designation"
+                                   placeholder="Ex: Glycémie">
+                            @error('designation')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="prix" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Prix (Ar) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" 
+                                   step="0.01"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('prix') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
+                                   id="prix" 
+                                   wire:model="prix"
+                                   placeholder="0.00">
+                            @error('prix')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Description
+                        </label>
+                        <textarea wire:model="description" 
+                                  id="description"
+                                  rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                                  placeholder="Description optionnelle de l'analyse"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <label for="examen_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Examen <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model="examen_id" 
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('examen_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                                <option value="">Sélectionnez un examen</option>
+                                @if($examens)
+                                    @foreach($examens as $examen)
+                                        <option value="{{ $examen->id }}">{{ $examen->abr }} - {{ $examen->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            @error('examen_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="type_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Type <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model="type_id" 
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('type_id') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror">
+                                <option value="">Sélectionnez un type</option>
+                                @if($types)
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            @error('type_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="unite" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Unité
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                   id="unite" 
+                                   wire:model="unite"
+                                   placeholder="Ex: g/l, mmol/l">
+                        </div>
+
+                        <div>
+                            <label for="ordre" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Ordre d'affichage
+                            </label>
+                            <input type="number" 
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                   id="ordre" 
+                                   wire:model="ordre"
+                                   placeholder="99">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="valeur_ref" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Valeurs de référence
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                   id="valeur_ref" 
+                                   wire:model="valeur_ref"
+                                   placeholder="Ex: 3.89 - 6.05">
+                        </div>
+
+                        <div>
+                            <label for="suffixe" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Suffixe
+                            </label>
+                            <input type="text" 
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                   id="suffixe" 
+                                   wire:model="suffixe"
+                                   placeholder="Suffixe optionnel">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-6">
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   id="is_bold" 
+                                   wire:model="is_bold"
+                                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <label for="is_bold" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                Texte en gras
+                            </label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   id="status" 
+                                   wire:model="status"
+                                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                   checked>
+                            <label for="status" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                Analyse active
+                            </label>
+                        </div>
+                    </div>
 
                     <div class="flex space-x-4">
                         <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg flex items-center transition-colors">

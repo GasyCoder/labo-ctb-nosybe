@@ -114,10 +114,22 @@
         <div wire:key="prescriptions-list" class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" wire:loading.remove wire:target="searchPrescriptions,filtrerParStatut,resetSearch">
             @if($prescriptionsFiltrees->count() > 0)
                 @foreach($prescriptionsFiltrees as $prescription)
-                    <div wire:key="prescription-{{ $prescription->id }}" class="group relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-100/50 dark:border-gray-700/50 shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 hover:shadow-xl hover:shadow-gray-200/60 dark:hover:shadow-gray-900/60 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5
-                        {{ $prescription->created_at->isAfter(now()->subDays(30)) ? 'ring-1 ring-blue-200/50 dark:ring-blue-800/50 bg-gradient-to-br from-blue-50/30 via-white/60 to-indigo-50/30 dark:from-blue-900/10 dark:via-gray-800/60 dark:to-indigo-900/10' : '' }}">
-                        <!-- Existing prescription card content -->
-                        @if($prescription->created_at->isAfter(now()->subDays(30)))
+                    @php
+                        // Vérifier si $prescription est un tableau ou un objet
+                        $isArray = is_array($prescription);
+                        $prescriptionId = $isArray ? $prescription['id'] : $prescription->id;
+                        $createdAt = $isArray ? \Carbon\Carbon::parse($prescription['created_at']) : $prescription->created_at;
+                        $reference = $isArray ? $prescription['reference'] : $prescription->reference;
+                        $status = $isArray ? $prescription['status'] : $prescription->status;
+                        $statusLabel = $isArray ? ($prescription['status_label'] ?? $prescription['status']) : ($prescription->status_label ?? $prescription->status);
+                        $prescripteurNom = $isArray ? ($prescription['prescripteur']['nom'] ?? 'Non spécifié') : ($prescription->prescripteur->nom ?? 'Non spécifié');
+                        $analysesCount = $isArray ? count($prescription['analyses'] ?? []) : $prescription->analyses->count();
+                        $montantTotal = $isArray ? ($prescription['montant_total'] ?? 0) : $prescription->montant_total;
+                    @endphp
+                    
+                    <div wire:key="prescription-{{ $prescriptionId }}" class="group relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-gray-100/50 dark:border-gray-700/50 shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 hover:shadow-xl hover:shadow-gray-200/60 dark:hover:shadow-gray-900/60 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5
+                        {{ $createdAt->isAfter(now()->subDays(30)) ? 'ring-1 ring-blue-200/50 dark:ring-blue-800/50 bg-gradient-to-br from-blue-50/30 via-white/60 to-indigo-50/30 dark:from-blue-900/10 dark:via-gray-800/60 dark:to-indigo-900/10' : '' }}">
+                        @if($createdAt->isAfter(now()->subDays(30)))
                             <div class="absolute -top-2 -right-2 z-10">
                                 <div class="relative">
                                     <div class="px-2 py-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-xs font-bold rounded-full shadow-lg shadow-blue-500/30 animate-pulse">
@@ -134,78 +146,87 @@
                             <div class="flex items-start justify-between mb-3">
                                 <div>
                                     <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate">
-                                        @if($searchPrescriptions && stripos($prescription->reference, $searchPrescriptions) !== false)
-                                            {!! str_ireplace($searchPrescriptions, '<mark class="bg-gradient-to-r from-yellow-200 to-amber-200 dark:from-yellow-800/50 dark:to-amber-800/50 text-gray-900 dark:text-white px-1 rounded">' . $searchPrescriptions . '</mark>', $prescription->reference) !!}
+                                        @if($searchPrescriptions && stripos($reference, $searchPrescriptions) !== false)
+                                            {!! str_ireplace($searchPrescriptions, '<mark class="bg-gradient-to-r from-yellow-200 to-amber-200 dark:from-yellow-800/50 dark:to-amber-800/50 text-gray-900 dark:text-white px-1 rounded">' . $searchPrescriptions . '</mark>', $reference) !!}
                                         @else
-                                            {{ $prescription->reference }}
+                                            {{ $reference }}
                                         @endif
                                     </h4>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $prescription->created_at->format('d/m/Y') }}
+                                        {{ $createdAt->format('d/m/Y') }}
                                     </p>
                                 </div>
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
-                                    @if($prescription->status === 'EN_ATTENTE') bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-800 dark:text-amber-300
-                                    @elseif($prescription->status === 'EN_COURS') bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-800 dark:text-blue-300
-                                    @elseif($prescription->status === 'TERMINE') bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 text-emerald-800 dark:text-emerald-300
+                                    @if($status === 'EN_ATTENTE') bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-800 dark:text-amber-300
+                                    @elseif($status === 'EN_COURS') bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-800 dark:text-blue-300
+                                    @elseif($status === 'TERMINE') bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 text-emerald-800 dark:text-emerald-300
                                     @else bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-800 dark:to-slate-800 text-gray-800 dark:text-gray-300 @endif">
-                                    @if($prescription->status === 'EN_ATTENTE')
+                                    @if($status === 'EN_ATTENTE')
                                         <span class="w-1.5 h-1.5 bg-amber-400 rounded-full mr-1 animate-pulse"></span>
-                                    @elseif($prescription->status === 'EN_COURS')
+                                    @elseif($status === 'EN_COURS')
                                         <span class="w-1.5 h-1.5 bg-blue-400 rounded-full mr-1"></span>
-                                    @elseif($prescription->status === 'TERMINE')
+                                    @elseif($status === 'TERMINE')
                                         <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1"></span>
                                     @else
                                         <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1"></span>
                                     @endif
-                                    {{ $prescription->status_label ?? $prescription->status }}
+                                    {{ $statusLabel }}
                                 </span>
                             </div>
                             <div class="flex items-center justify-between text-xs mb-3">
                                 <span class="text-gray-600 dark:text-gray-400 font-medium">
-                                    Dr. {{ $prescription->prescripteur->nom ?? 'Non spécifié' }}
+                                    Dr. {{ $prescripteurNom }}
                                 </span>
                                 <span class="inline-flex items-center px-2 py-0.5 bg-blue-100/80 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full">
-                                    {{ $prescription->analyses->count() }} analyse{{ $prescription->analyses->count() > 1 ? 's' : '' }}
+                                    {{ $analysesCount }} analyse{{ $analysesCount > 1 ? 's' : '' }}
                                 </span>
                             </div>
                             <div class="space-y-2 mb-3">
-                                @foreach($prescription->analyses->take(2) as $analyse)
+                                @php
+                                    $analyses = $isArray ? ($prescription['analyses'] ?? []) : $prescription->analyses;
+                                @endphp
+                                
+                                @foreach(array_slice($analyses, 0, 2) as $analyse)
+                                    @php
+                                        $analyseDesignation = $isArray ? ($analyse['designation'] ?? '') : $analyse->designation;
+                                    @endphp
                                     <div class="flex items-center space-x-2">
                                         <div class="flex-shrink-0 w-2 h-2 rounded-full 
-                                            @if($prescription->status === 'TERMINE') bg-emerald-500
-                                            @elseif($prescription->status === 'EN_COURS') bg-blue-500
+                                            @if($status === 'TERMINE') bg-emerald-500
+                                            @elseif($status === 'EN_COURS') bg-blue-500
                                             @else bg-amber-400 @endif">
                                         </div>
                                         <p class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
-                                            @if($searchPrescriptions && stripos($analyse->designation, $searchPrescriptions) !== false)
-                                                {!! str_ireplace($searchPrescriptions, '<mark class="bg-gradient-to-r from-yellow-200 to-amber-200 dark:from-yellow-800/50 dark:to-amber-800/50 text-gray-900 dark:text-white px-1 rounded">' . $searchPrescriptions . '</mark>', $analyse->designation) !!}
+                                            @if($searchPrescriptions && stripos($analyseDesignation, $searchPrescriptions) !== false)
+                                                {!! str_ireplace($searchPrescriptions, '<mark class="bg-gradient-to-r from-yellow-200 to-amber-200 dark:from-yellow-800/50 dark:to-amber-800/50 text-gray-900 dark:text-white px-1 rounded">' . $searchPrescriptions . '</mark>', $analyseDesignation) !!}
                                             @else
-                                                {{ $analyse->designation }}
+                                                {{ $analyseDesignation }}
                                             @endif
                                         </p>
                                     </div>
                                 @endforeach
-                                @if($prescription->analyses->count() > 2)
+                                @if($analysesCount > 2)
                                     <div class="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                        +{{ $prescription->analyses->count() - 2 }} autres analyses...
+                                        +{{ $analysesCount - 2 }} autres analyses...
                                     </div>
                                 @endif
                             </div>
                             <div class="flex items-center justify-between pt-3 border-t border-gray-100/50 dark:border-gray-600/50">
-                                @if($prescription->montant_total > 0)
+                                @if($montantTotal > 0)
                                     <span class="text-sm font-bold text-gray-900 dark:text-white">
-                                        {{ number_format($prescription->montant_total, 0, ',', ' ') }} Ar
+                                        {{ number_format($montantTotal, 0, ',', ' ') }} Ar
                                     </span>
                                 @endif
-                                <button 
-                                    wire:click="voirPrescription({{ $prescription->id }})"
-                                    class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 flex items-center">
-                                    Résultats
-                                    <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </button>
+                                @if($status === 'VALIDE')
+                                    <a href="{{ route('laboratoire.prescription.pdf', ['prescription' => $prescriptionId]) }}"
+                                        target="_blank" rel="noopener noreferrer"
+                                        class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 flex items-center">
+                                        Résultats
+                                        <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -278,21 +278,11 @@
     @if($hasResult && $resultat && isset($resultat->conclusion) && !empty($resultat->conclusion))
         <tr class="conclusion-row">
             <td style="padding-left: {{ ($level + 1) * 20 }}px; font-size: 9pt; color: #666; font-style: italic;">
-                Conclusion :
+               {!! nl2br(e($resultat->conclusion)) !!}
             </td>
-            <td colspan="3" style="font-size: 9pt; line-height: 1.3;">
+            {{-- <td colspan="3" style="font-size: 9pt; line-height: 1.3;">
                 {!! nl2br(e($resultat->conclusion)) !!}
-            </td>
+            </td> --}}
         </tr>
     @endif
-
-    {{-- Traiter les enfants --}}
-    {{-- @if(isset($analyse->children) && $analyse->children->isNotEmpty() && $level < 5)
-        @foreach($analyse->children as $child)
-            @include('pdf.analyses.analyse-row', [
-                'analyse' => $child, 
-                'level' => $level + 1
-            ])
-        @endforeach
-    @endif --}}
 @endif

@@ -10,19 +10,11 @@
             </div>
             <div class="min-w-0 flex-1">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
-                    {{ $patient->nom }}{{ $patient->prenom ? ' ' . $patient->prenom : '' }}
+                    {{ $patient->civilite }} {{ $patient->nom }}{{ $patient->prenom ? ' ' . $patient->prenom : '' }}
                 </h1>
                 <div class="flex items-center space-x-2 mt-1">
                     <span class="inline-flex items-center px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 text-xs font-semibold rounded-md">
                         {{ $patient->numero_dossier }}
-                    </span>
-                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
-                        @if($patient->civilite === 'Monsieur') bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300
-                        @elseif($patient->civilite === 'Madame') bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300
-                        @elseif($patient->civilite === 'Mademoiselle') bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300
-                        @elseif($patient->civilite === 'Enfant') bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300
-                        @else bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 @endif">
-                        {{ $patient->civilite }}
                     </span>
                 </div>
             </div>

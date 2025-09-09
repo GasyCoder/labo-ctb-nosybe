@@ -51,22 +51,3 @@
     // Supprimer les doublons de conclusions
     $conclusionsExamen = $conclusionsExamen->unique('conclusion');
 @endphp
-
-@if($conclusionsExamen->isNotEmpty())
-    <div class="conclusion-examen">
-        <div class="conclusion-examen-title">Commentaire :</div>
-        @foreach($conclusionsExamen as $conclusion)
-            <div class="conclusion-examen-content">
-                {!! nl2br(e($conclusion['conclusion'])) !!}
-                @if($conclusionsExamen->count() > 1)
-                    <span class="text-fine" style="font-size: 8pt; color: #999;">
-                        ({{ $conclusion['analyse_designation'] }})
-                    </span>
-                @endif
-            </div>
-            @if(!$loop->last)
-                <div style="margin: 5px 0;"></div>
-            @endif
-        @endforeach
-    </div>
-@endif
