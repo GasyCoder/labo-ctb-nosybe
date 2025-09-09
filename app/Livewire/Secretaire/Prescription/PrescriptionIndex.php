@@ -23,6 +23,13 @@ class PrescriptionIndex extends Component
 
     public ?Prescription $prescription = null;
     public $countArchive; // Add property for archive count
+    
+    // Nouvelles propriétés pour les statistiques détaillées
+    public $countEnAttente = 0;
+    public $countEnCours = 0;
+    public $countTermine = 0;
+    public $countValide = 0;
+    public $countDeleted = 0;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -58,7 +65,7 @@ class PrescriptionIndex extends Component
     public function mount()
     {
         $this->tab = request()->query('tab', 'actives');
-        $this->refreshArchiveCount(); // Initialize count on mount
+        $this->refreshCounts(); // Initialize all counts on mount
     }
 
     public function switchTab($tab)
@@ -78,10 +85,33 @@ class PrescriptionIndex extends Component
         $this->resetPage();
     }
 
+    /**
+     * Refresh all statistics counts
+     */
+    public function refreshCounts()
+    {
+        $this->countEnAttente = Prescription::where('status', 'EN_ATTENTE')->count();
+        $this->countEnCours = Prescription::where('status', 'EN_COURS')->count();
+        $this->countTermine = Prescription::where('status', 'TERMINE')->count();
+        $this->countValide = Prescription::where('status', 'VALIDE')->count();
+        $this->countArchive = Prescription::where('status', 'ARCHIVE')->count();
+        $this->countDeleted = Prescription::onlyTrashed()->count();
+        
+        // Dispatch events for real-time updates if needed
+        $this->dispatch('updateCounts', [
+            'enAttente' => $this->countEnAttente,
+            'enCours' => $this->countEnCours,
+            'termine' => $this->countTermine,
+            'valide' => $this->countValide,
+            'archive' => $this->countArchive,
+            'deleted' => $this->countDeleted
+        ]);
+    }
+
     public function refreshArchiveCount()
     {
         $this->countArchive = Prescription::where('status', Prescription::STATUS_ARCHIVE)->count();
-        $this->dispatch('updateArchiveCount', count: $this->countArchive); // Dispatch event
+        $this->dispatch('updateArchiveCount', count: $this->countArchive);
     }
 
     public function resetModal()
@@ -193,6 +223,7 @@ class PrescriptionIndex extends Component
 
             session()->flash('success', 'Prescription mise en corbeille avec succès.');
             $this->resetModal();
+            $this->refreshCounts(); // Refresh all counts
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
@@ -217,6 +248,7 @@ class PrescriptionIndex extends Component
 
             session()->flash('success', 'Prescription restaurée avec succès.');
             $this->resetModal();
+            $this->refreshCounts(); // Refresh all counts
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
@@ -246,8 +278,8 @@ class PrescriptionIndex extends Component
 
             session()->flash('success', 'Prescription supprimée définitivement.');
             $this->resetModal();
+            $this->refreshCounts(); // Refresh all counts
             $this->dispatch('$refresh');
-            $this->refreshArchiveCount(); // Refresh count after deletion
 
         } catch (\Exception $e) {
             Log::error('Erreur suppression définitive prescription', [
@@ -271,7 +303,7 @@ class PrescriptionIndex extends Component
             if ($prescription->status === 'VALIDE') {
                 $prescription->update(['status' => 'ARCHIVE']);
                 session()->flash('success', 'Prescription archivée avec succès.');
-                $this->refreshArchiveCount(); // Refresh count after archiving
+                $this->refreshCounts(); // Refresh all counts
             } else {
                 session()->flash('error', 'Seules les prescriptions validées peuvent être archivées.');
             }
@@ -299,7 +331,7 @@ class PrescriptionIndex extends Component
             $prescription = Prescription::findOrFail($this->selectedPrescriptionId);
             $prescription->update(['status' => 'VALIDE']);
             session()->flash('success', 'Prescription désarchivée avec succès.');
-            $this->refreshArchiveCount(); // Refresh count after unarchiving
+            $this->refreshCounts(); // Refresh all counts
 
             $this->resetModal();
             $this->dispatch('$refresh');
@@ -341,7 +373,7 @@ class PrescriptionIndex extends Component
             'prescripteur:id,nom',
             'analyses',
             'resultats',
-            'paiements.paymentMethod', // ← Ajouter la relation avec les paiements
+            'paiements.paymentMethod',
             'paiements.utilisateur:id,name'
         ])
             ->whereHas('patient', fn($q) => $q->whereNull('deleted_at'));
@@ -387,7 +419,13 @@ class PrescriptionIndex extends Component
             'activePrescriptions' => $activePrescriptions,
             'validePrescriptions' => $validePrescriptions,
             'deletedPrescriptions' => $deletedPrescriptions,
-            'countArchive' => $this->countArchive, // Pass count to view
+            'countArchive' => $this->countArchive,
+            // Passer les nouvelles statistiques à la vue
+            'countEnAttente' => $this->countEnAttente,
+            'countEnCours' => $this->countEnCours,
+            'countTermine' => $this->countTermine,
+            'countValide' => $this->countValide,
+            'countDeleted' => $this->countDeleted,
         ]);
     }
 }
