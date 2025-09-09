@@ -76,12 +76,27 @@ class Setting extends Model
         });
     }
 
-    public static function getLogo()
+    public static function getLogo($size = 'normal')
     {
         $settings = self::getSettings();
-        return $settings && $settings->logo 
-            ? asset('storage/' . $settings->logo) 
+        $logoUrl = $settings && $settings->logo 
+            ? asset('storage/' . $settings->logo)
             : asset('assets/images/logo_facture.jpg');
+        
+        return [
+            'url' => $logoUrl,
+            'class' => self::getLogoClass($size)
+        ];
+    }
+
+    private static function getLogoClass($size)
+    {
+        return match($size) {
+            'small' => 'h-8 w-auto',
+            'medium' => 'h-18 w-auto',
+            'large' => 'h-24 w-auto',
+            default => 'h-20 w-auto max-w-xs object-contain'
+        };
     }
 
     public static function getNomEntreprise()
