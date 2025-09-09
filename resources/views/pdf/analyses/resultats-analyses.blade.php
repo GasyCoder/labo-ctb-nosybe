@@ -14,10 +14,10 @@
         
         // LIMITE CORRIGÉE : Plus réaliste pour DomPDF
         $hauteurCumulee = 0;
-        $limitePage = 80; // Augmenté ! (~15cm réels)
+        $limitePage = 600; // Augmenté ! (~15cm réels)
         
         // Hauteur initiale plus précise
-        $hauteurCumulee += 80; // Logo + header + patient info
+        $hauteurCumulee += 160; // Logo + header + patient info
         
         $sautEffectue = false;
     @endphp
@@ -47,7 +47,7 @@
                 if (!$hasValidResults) continue;
                 
                 // Estimation plus conservative de la hauteur
-                $hauteurExamen = 15; // Titre de section
+                $hauteurExamen = 30; // Titre de section
                 
                 // Compter plus précisément les lignes
                 $nombreLignes = 0;
@@ -71,7 +71,7 @@
                     }
                 }
                 
-                $hauteurExamen += $nombreLignes * 12; // 15px par ligne
+                $hauteurExamen += $nombreLignes * 15; // 15px par ligne
                 
                 // DÉCISION plus conservative
                 $needsPageBreak = false;
