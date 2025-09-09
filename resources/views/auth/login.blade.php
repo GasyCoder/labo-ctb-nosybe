@@ -4,11 +4,11 @@
     <div class="relative flex flex-col flex-shrink-0 w-full min-h-full bg-white dark:bg-gray-950">
         <div class="m-auto w-full max-w-[420px] xs:max-w-[520px] p-5">
             <div class="relative flex justify-center flex-shrink-0 pb-6">
-                <a href="{{ url('/') }}" class="relative inline-block h-18 transition-opacity duration-300">
-                    <img class="h-full opacity-0 dark:opacity-100" 
+                <a href="{{ url('/') }}" class="relative inline-block h-16 w-auto transition-opacity duration-300">
+                    <img class="h-full w-auto object-contain opacity-0 dark:opacity-100" 
                         src="{{ \App\Models\Setting::getLogo() }}" 
                         alt="{{ \App\Models\Setting::getNomEntreprise() }}">
-                    <img class="absolute top-0 h-full opacity-100 dark:opacity-0 start-0" 
+                    <img class="absolute top-0 left-0 h-full w-auto object-contain opacity-100 dark:opacity-0" 
                         src="{{ \App\Models\Setting::getLogo() }}" 
                         alt="{{ \App\Models\Setting::getNomEntreprise() }}">
                 </a>

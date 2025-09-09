@@ -93,7 +93,7 @@ class Setting extends Model
     {
         return match($size) {
             'small' => 'h-8 w-auto',
-            'medium' => 'h-18 w-auto',
+            'medium' => 'h-16 w-auto',
             'large' => 'h-24 w-auto',
             default => 'h-20 w-auto max-w-xs object-contain'
         };
