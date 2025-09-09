@@ -30,9 +30,6 @@ class IndexTechnicien extends Component
     public $sortField = 'created_at';
     public $sortDirection = 'desc';
 
-    // Ancien filtre de statut remplacé par activeTab
-    // public $statusFilter = '';
-
     protected $queryString = [
         'activeTab' => ['except' => 'en_attente'],
         'search' => ['except' => ''],
@@ -91,9 +88,6 @@ class IndexTechnicien extends Component
         $this->resetPage();
     }
 
-    /**
-     * ✅ MÉTHODE ADAPTÉE : Démarrer l'analyse (votre méthode originale avec améliorations)
-     */
     public function startAnalysis($prescriptionId)
     {
         try {
@@ -142,84 +136,92 @@ class IndexTechnicien extends Component
         }
     }
 
-    /**
-     * ✅ NOUVELLES MÉTHODES : Issues du deuxième code
-     */
+    public function continueAnalysis($prescriptionId)
+    {
+        try {
+            $prescription = Prescription::findOrFail($prescriptionId);
+            
+            // Vérifier que la prescription est bien en cours
+            if ($prescription->status !== 'EN_COURS') {
+                session()->flash('error', 'Cette prescription ne peut pas être continuée.');
+                return;
+            }
+            
+            // Redirection vers la page de traitement
+            return redirect()->route('technicien.prescription.show', $prescription);
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la continuation de l\'analyse', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage(),
+            ]);
+            
+            session()->flash('error', 'Erreur lors de la continuation de l\'analyse : ' . $e->getMessage());
+        }
+    }
+
     public function viewResults($prescriptionId)
     {
         return redirect()->route('technicien.voir-resultats', $prescriptionId);
     }
 
-  public function redoAnalysis($prescriptionId)
-{
-    try {
-        DB::beginTransaction();
+    public function redoAnalysis($prescriptionId)
+    {
+        try {
+            DB::beginTransaction();
 
-        $prescription = Prescription::findOrFail($prescriptionId);
+            $prescription = Prescription::findOrFail($prescriptionId);
 
-        // Vérifier que la prescription existe
-        if (!$prescription) {
-            session()->flash('error', 'Prescription introuvable.');
+            if (!$prescription) {
+                session()->flash('error', 'Prescription introuvable.');
+                DB::rollBack();
+                return;
+            }
+
+            $prescription->update([
+                'status' => 'EN_COURS',
+                'technicien_id' => auth()->id(),
+                'commentaire_biologiste' => null,
+                'date_debut_traitement' => now(),
+                'date_reprise_traitement' => now()
+            ]);
+
+            Log::info('Prescription relancée pour un nouveau traitement', [
+                'prescription_id' => $prescriptionId,
+                'reference' => $prescription->reference,
+                'user_id' => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            session()->flash('message', 'La prescription ' . $prescription->reference . ' a été relancée pour un nouveau traitement.');
+
+            return redirect()->route('technicien.prescription.show', $prescription);
+
+        } catch (\Exception $e) {
             DB::rollBack();
-            return;
+
+            Log::error('Erreur lors du recommencement de l\'analyse', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            session()->flash('error', 'Erreur lors du recommencement : ' . $e->getMessage());
         }
-
-        // On remet les champs nécessaires puis on relance directement en EN_COURS
-        $prescription->update([
-            'status' => 'EN_COURS',
-            'technicien_id' => auth()->id(),
-            'commentaire_biologiste' => null,
-            'date_debut_traitement' => now(),
-            'date_reprise_traitement' => now()
-        ]);
-
-        // Logger l'action
-        Log::info('Prescription relancée pour un nouveau traitement', [
-            'prescription_id' => $prescriptionId,
-            'reference' => $prescription->reference,
-            'user_id' => Auth::id(),
-        ]);
-
-        DB::commit();
-
-        // Message de succès
-        session()->flash('message', 'La prescription ' . $prescription->reference . ' a été relancée pour un nouveau traitement.');
-
-        // Redirection directe vers la page de traitement
-        return redirect()->route('technicien.prescription.show', $prescription);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-
-        Log::error('Erreur lors du recommencement de l\'analyse', [
-            'prescription_id' => $prescriptionId,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-
-        session()->flash('error', 'Erreur lors du recommencement : ' . $e->getMessage());
     }
-}
-
 
     public function exportData()
     {
-        // Logique d'export selon l'onglet actif
         $fileName = 'analyses_' . $this->activeTab . '_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
-        
-        // Ici vous pouvez implémenter la logique d'export
         session()->flash('message', 'Export des données en cours...');
     }
 
     public function handlePrescriptionUpdate($prescriptionId)
     {
-        // Rafraîchir les données après mise à jour
         $this->dispatch('refreshData');
     }
 
-    /**
-     * ✅ MÉTHODE ADAPTÉE : Requête de base avec vos filtres originaux + nouveaux
-     */
     private function getBaseQuery()
     {
         $query = Prescription::with(['patient:id,nom,prenom', 'prescripteur:id,nom,prenom', 'analyses:id,designation'])
@@ -260,21 +262,12 @@ class IndexTechnicien extends Component
         return $query->orderBy($this->sortField, $this->sortDirection);
     }
 
-    /**
-     * ✅ PROPRIÉTÉS CALCULÉES : Remplacent l'ancienne méthode render()
-     */
-    public function getPrescriptionsEnAttenteProperty()
+    // MODIFICATION PRINCIPALE : L'onglet "En attente" affiche maintenant EN_ATTENTE ET EN_COURS
+    public function getPrescriptionsToutesProperty()
     {
         return $this->getBaseQuery()
-            ->where('status', 'EN_ATTENTE')
-            ->paginate(15, ['*'], 'page-en-attente');
-    }
-
-    public function getPrescriptionsEnCoursProperty()
-    {
-        return $this->getBaseQuery()
-            ->where('status', 'EN_COURS')
-            ->paginate(15, ['*'], 'page-en-cours');
+            ->whereIn('status', ['EN_ATTENTE', 'EN_COURS'])
+            ->paginate(15, ['*'], 'page-toutes');
     }
 
     public function getPrescriptionsTermineesProperty()
@@ -284,16 +277,13 @@ class IndexTechnicien extends Component
             ->paginate(15, ['*'], 'page-termine');
     }
 
-       public function getPrescriptionsARefaireProperty()
+    public function getPrescriptionsARefaireProperty()
     {
         return $this->getBaseQuery()
             ->where('status', 'A_REFAIRE')
             ->paginate(15, ['*'], 'page-À-refaire');
     }
 
-    /**
-     * ✅ STATS ADAPTÉES : Vos stats originales
-     */
     public function getStatsProperty()
     {
         $stats = [
@@ -303,6 +293,8 @@ class IndexTechnicien extends Component
             'a_refaire'=> Prescription::where('status', 'A_REFAIRE')->count(),
         ];
         
+        // Pour l'onglet "En attente" on combine EN_ATTENTE + EN_COURS
+        $stats['toutes'] = $stats['en_attente'] + $stats['en_cours'];
         $stats['total'] = array_sum($stats);
         
         return $stats;
@@ -313,22 +305,16 @@ class IndexTechnicien extends Component
         return Prescripteur::orderBy('nom')->get();
     }
 
-    /**
-     * ✅ MÉTHODE RENDER ADAPTÉE : Utilise la nouvelle interface
-     */
     public function render()
     {
         $data = [
             'stats' => $this->stats,
-            // 'prescripteurs' => $this->prescripteurs,
         ];
 
         // Ajouter les prescriptions selon l'onglet actif
         switch ($this->activeTab) {
             case 'en_attente':
-            case 'en_cours':
-                $data['prescriptionsEnAttente'] = $this->prescriptionsEnAttente;
-                $data['prescriptionsEnCours'] = $this->prescriptionsEnCours;
+                $data['prescriptionsToutes'] = $this->prescriptionsToutes;
                 break;
             case 'termine':
                 $data['prescriptionsTerminees'] = $this->prescriptionsTerminees;
