@@ -6,7 +6,7 @@
             <div class="relative flex justify-center flex-shrink-0 pb-6">
                 <a href="{{ url('/') }}" class="relative inline-block h-10 transition-opacity duration-300">
                     <img class="h-full opacity-0 dark:opacity-100" src="{{ asset('assets/images/logo_facture.jpg') }}" srcset="{{ asset('assets/images/logo_facture.jpg') }}" alt="logo">
-                    <img class="absolute top-0 h-full opacity-100 dark:opacity-0 start-0" src="{{ asset('assets/images/logo.png') }}" srcset="{{ asset('assets/images/logo.png') }}" alt="logo">
+                    <img class="absolute top-0 h-full opacity-100 dark:opacity-0 start-0" src="{{ asset('assets/images/logo_facture.jpg') }}" srcset="{{ asset('assets/images/logo_facture.jpg') }}" alt="logo">
                 </a>
             </div>
             <div class="p-5 border border-gray-300 rounded dark:border-gray-900 sm:p-6 md:p-10">
