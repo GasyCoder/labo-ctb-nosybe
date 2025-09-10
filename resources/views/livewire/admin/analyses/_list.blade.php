@@ -1,5 +1,5 @@
-{{-- Liste des analyses ultra-optimisée mobile --}}
-<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+{{-- Liste des analyses complète optimisée --}}
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 w-full max-w-full overflow-hidden">
     <div class="bg-gray-50 dark:bg-gray-700 px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
             <h6 class="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">
@@ -35,8 +35,8 @@
                 @endif
             </h6>
             
-            {{-- Légende - cachée sur mobile, visible sur tablet+ --}}
-            <div class="hidden md:flex items-center text-sm text-gray-600 dark:text-gray-400 space-x-4">
+            {{-- Légende - cachée sur mobile, visible sur desktop --}}
+            <div class="hidden sm:flex items-center text-sm text-gray-600 dark:text-gray-400 space-x-4">
                 @if($selectedLevel === 'tous' || $selectedLevel === 'racines')
                     <div class="flex items-center">
                         <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
@@ -60,8 +60,8 @@
     </div>
     
     @if($this->analyses->count() > 0)
-        {{-- Version Desktop : Tableau classique (inchangé) --}}
-        <div class="hidden lg:block overflow-x-auto">
+        {{-- Version Desktop : Tableau classique --}}
+        <div class="hidden sm:block overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                     <tr>
@@ -204,14 +204,14 @@
             </table>
         </div>
 
-        {{-- Version Mobile et Tablet : Format simplifié et linéaire --}}
-        <div class="lg:hidden">
+        {{-- Version Mobile : Format simplifié et linéaire --}}
+        <div class="sm:hidden w-full">
             @foreach($this->analyses as $analyse)
-                <div class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                    <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                <div class="border-b border-gray-200 dark:border-gray-700 last:border-b-0 w-full">
+                    <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors w-full max-w-full overflow-hidden">
                         {{-- Ligne 1: Code + Badge niveau + Prix --}}
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center min-w-0 flex-1">
+                        <div class="flex items-center justify-between mb-2 w-full">
+                            <div class="flex items-center min-w-0 flex-1 mr-2">
                                 {{-- Indicateur de niveau --}}
                                 @if($analyse->level === 'PARENT')
                                     <div class="w-2.5 h-2.5 bg-purple-500 rounded-full mr-2 flex-shrink-0"></div>
@@ -222,7 +222,7 @@
                                 @endif
                                 
                                 {{-- Code --}}
-                                <span class="font-mono text-sm font-medium mr-2 {{ $analyse->is_bold ? 'font-bold' : '' }}
+                                <span class="font-mono text-sm font-medium mr-2 truncate {{ $analyse->is_bold ? 'font-bold' : '' }}
                                     {{ $analyse->level === 'PARENT' ? 'text-purple-700 dark:text-purple-300' : '' }}
                                     {{ $analyse->level === 'CHILD' ? 'text-gray-600 dark:text-gray-400' : '' }}">
                                     {{ $analyse->code }}
@@ -250,53 +250,53 @@
                         </div>
 
                         {{-- Ligne 2: Désignation --}}
-                        <div class="mb-2">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white leading-5 {{ $analyse->is_bold ? 'font-bold' : '' }}
+                        <div class="mb-2 w-full">
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white leading-5 break-words {{ $analyse->is_bold ? 'font-bold' : '' }}
                                 {{ $analyse->level === 'PARENT' ? 'text-purple-900 dark:text-purple-200' : '' }}
                                 {{ $analyse->level === 'CHILD' ? 'text-gray-700 dark:text-gray-300' : '' }}">
                                 {{ $analyse->designation }}
                             </h4>
                             @if($analyse->description)
-                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-4">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-4 break-words">
                                     {{ Str::limit($analyse->description, 80) }}
                                 </p>
                             @endif
                         </div>
 
                         {{-- Ligne 3: Métadonnées en ligne --}}
-                        <div class="flex items-center text-xs space-x-3 mb-3">
+                        <div class="flex items-center text-xs space-x-2 mb-3 overflow-x-auto pb-1">
                             {{-- Type --}}
                             @if($analyse->type)
-                                <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">
-                                    {{ Str::limit($analyse->type->name, 10) }}
+                                <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                    {{ Str::limit($analyse->type->name, 8) }}
                                 </span>
                             @endif
 
                             {{-- Examen --}}
                             @if($analyse->examen)
-                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
+                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded whitespace-nowrap">
                                     {{ $analyse->examen->abr }}
                                 </span>
                             @endif
 
                             {{-- Parent (pour les enfants) --}}
                             @if($selectedLevel === 'enfants' && $analyse->parent)
-                                <span class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">
+                                <span class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded whitespace-nowrap">
                                     {{ $analyse->parent->code }}
                                 </span>
                             @endif
 
                             {{-- Nombre d'enfants (pour les parents) --}}
                             @if($selectedLevel === 'parents' && $analyse->enfants && count($analyse->enfants) > 0)
-                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full whitespace-nowrap">
                                     {{ count($analyse->enfants) }} sous
                                 </span>
                             @endif
 
                             {{-- Statut --}}
-                            <span class="inline-flex items-center
+                            <span class="inline-flex items-center whitespace-nowrap
                                 {{ $analyse->status ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     @if($analyse->status)
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                     @else
