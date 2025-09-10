@@ -14,7 +14,7 @@
         </div>
         <div class="relative flex flex-shrink-0">
             <a href="{{ url('/') }}" class="relative inline-block transition-opacity duration-300 h-9 group-[&.is-compact:not(.has-hover)]/sidebar:opacity-0">
-                <span class="text-xl font-bold text-primary-500 whitespace-nowrap group-[&.is-compact:not(.has-hover)]/sidebar:hidden">Labo-CTB-Nosy-Be</span>
+                <span class="text-xl font-bold text-primary-500 whitespace-nowrap group-[&.is-compact:not(.has-hover)]/sidebar:hidden">SMARTLABO </span>
                 <span class="text-xl font-bold text-primary-500 hidden group-[&.is-compact:not(.has-hover)]/sidebar:block">L</span>
             </a>
         </div>

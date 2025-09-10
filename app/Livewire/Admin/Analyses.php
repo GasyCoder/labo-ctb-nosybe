@@ -42,6 +42,9 @@ class Analyses extends Component
     public $ordre = 99;
     public $status = true;
 
+    public $showDeleteModal = false;
+    public $analyseToDelete = null;
+
     // NOUVELLE PROPRIÉTÉ pour la création en lot
     public $sousAnalyses = [];
     public $createWithChildren = false;
@@ -466,5 +469,34 @@ class Analyses extends Component
         $copy->save();
 
         session()->flash('message', 'Analyse dupliquée avec succès !');
+    }
+
+
+    // Ouvrir le modal de confirmation
+    public function confirmDelete($id)
+    {
+        $this->analyseToDelete = Analyse::findOrFail($id);
+        $this->showDeleteModal = true;
+    }
+
+    // Supprimer l'analyse
+    public function delete()
+    {
+        try {
+            $this->analyseToDelete->delete();
+            session()->flash('message', "L'analyse a été supprimée avec succès.");
+            $this->closeDeleteModal();
+            $this->resetPage();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Erreur lors de la suppression.');
+            $this->closeDeleteModal();
+        }
+    }
+
+    // Fermer le modal
+    public function closeDeleteModal()
+    {
+        $this->showDeleteModal = false;
+        $this->analyseToDelete = null;
     }
 }

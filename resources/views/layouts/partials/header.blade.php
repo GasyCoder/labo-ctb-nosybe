@@ -11,9 +11,13 @@
 
                 <!-- Mobile Logo -->
                 <div class="px-1 py-3.5 flex xl:hidden">
-                    <a href="{{ url('/') }}" class="relative inline-block transition-opacity duration-300 h-9">
-                        <img class="h-full opacity-0 dark:opacity-100" src="{{ asset('images/logo.png') }}" srcset="{{ asset('images/logo2x.png 2x') }}" alt="{{ site_info('name') }}">
-                        <img class="h-full opacity-100 dark:opacity-0 absolute start-0 top-0" src="{{ asset('images/logo-dark.png') }}" srcset="{{ asset('images/logo-dark2x.png 2x') }}" alt="{{ site_info('name') }}">
+                    <a href="{{ url('/') }}" class="relative inline-block transition-opacity duration-300">
+                        <img class="h-9 w-auto object-contain opacity-0 dark:opacity-100" 
+                            src="{{ \App\Models\Setting::getLogo() }}" 
+                            alt="{{ \App\Models\Setting::getNomEntreprise() }}">
+                        <img class="h-9 w-auto object-contain opacity-100 dark:opacity-0 absolute left-0 top-0" 
+                            src="{{ \App\Models\Setting::getLogo() }}" 
+                            alt="{{ \App\Models\Setting::getNomEntreprise() }}">
                     </a>
                 </div>
 

@@ -24,6 +24,9 @@ class Prelevements extends Component
     public $quantite = 1;
     public $is_active = true;
 
+    public $showDeleteModal = false;
+    public $prelevementToDelete = null;
+
     protected $rules = [
         'nom' => 'required|string|max:255',
         'description' => 'required|string|max:1000',
@@ -139,20 +142,6 @@ class Prelevements extends Component
         $this->backToList();
     }
 
-    public function delete($id)
-    {
-        $prelevement = Prelevement::findOrFail($id);
-
-        // Vérifier s'il y a des prescriptions liées
-        if (method_exists($prelevement, 'prescriptions') && $prelevement->prescriptions()->count() > 0) {
-            session()->flash('error', 'Impossible de supprimer ce prélèvement car il est utilisé dans des prescriptions.');
-            return;
-        }
-
-        $prelevement->delete();
-        session()->flash('message', 'Prélèvement supprimé avec succès !');
-    }
-
     public function backToList()
     {
         $this->resetForm();
@@ -228,9 +217,14 @@ class Prelevements extends Component
         $this->prix = 0;
         $this->quantite = 1;
         $this->is_active = true;
+        
+        // Reset des propriétés du modal
+        $this->showDeleteModal = false;
+        $this->prelevementToDelete = null;
+        
         $this->resetErrorBag();
     }
-
+    
     // Méthodes utilitaires pour les statistiques
     public function getStatsProperty()
     {
@@ -333,5 +327,41 @@ class Prelevements extends Component
             'prix_min' => min($similaires),
             'prix_max' => max($similaires),
         ];
+    }
+
+
+    // Ouvrir le modal de confirmation
+    public function confirmDelete($id)
+    {
+        $this->prelevementToDelete = Prelevement::findOrFail($id);
+        $this->showDeleteModal = true;
+    }
+
+    // Supprimer le prélèvement (remplace votre méthode delete existante)
+    public function delete()
+    {
+        try {
+            // Vérifier s'il y a des prescriptions liées
+            if (method_exists($this->prelevementToDelete, 'prescriptions') && $this->prelevementToDelete->prescriptions()->count() > 0) {
+                session()->flash('error', 'Impossible de supprimer ce prélèvement car il est utilisé dans des prescriptions.');
+                $this->closeDeleteModal();
+                return;
+            }
+
+            $this->prelevementToDelete->delete();
+            session()->flash('message', 'Prélèvement supprimé avec succès !');
+            $this->closeDeleteModal();
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Erreur lors de la suppression.');
+            $this->closeDeleteModal();
+        }
+    }
+
+    // Fermer le modal
+    public function closeDeleteModal()
+    {
+        $this->showDeleteModal = false;
+        $this->prelevementToDelete = null;
     }
 }
