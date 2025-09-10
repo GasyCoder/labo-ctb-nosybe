@@ -36,7 +36,7 @@
             </h6>
             
             {{-- Légende - cachée sur mobile, visible sur tablet+ --}}
-            <div class="hidden lg:flex items-center text-sm text-gray-600 dark:text-gray-400 space-x-4">
+            <div class="hidden md:flex items-center text-sm text-gray-600 dark:text-gray-400 space-x-4">
                 @if($selectedLevel === 'tous' || $selectedLevel === 'racines')
                     <div class="flex items-center">
                         <div class="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
@@ -60,207 +60,122 @@
     </div>
     
     @if($this->analyses->count() > 0)
-        {{-- Version desktop améliorée --}}
+        {{-- Version Desktop : Tableau classique (inchangé) --}}
         <div class="hidden lg:block overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                     <tr>
-                        <th class="w-48 px-6 py-4 text-left font-medium text-gray-900 dark:text-white">
-                            <div class="flex items-center">
-                                <span>Code</span>
-                                <svg class="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                                </svg>
-                            </div>
-                        </th>
-                        <th class="w-96 px-4 py-4 text-left font-medium text-gray-900 dark:text-white">Désignation</th>
+                        <th class="w-40 px-6 py-4 text-left font-medium text-gray-900 dark:text-white">Code</th>
+                        <th class="w-80 px-4 py-4 text-left font-medium text-gray-900 dark:text-white">Désignation</th>
                         @if($selectedLevel === 'enfants')
                             <th class="w-32 px-3 py-4 text-left font-medium text-gray-900 dark:text-white">Parent</th>
                         @endif
                         <th class="w-28 px-3 py-4 text-left font-medium text-gray-900 dark:text-white">Type</th>
                         <th class="w-28 px-3 py-4 text-left font-medium text-gray-900 dark:text-white">Examen</th>
-                        <th class="w-32 px-3 py-4 text-right font-medium text-gray-900 dark:text-white">
-                            <div class="flex items-center justify-end">
-                                <span>Prix (Ar)</span>
-                                <svg class="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                                </svg>
-                            </div>
-                        </th>
+                        <th class="w-24 px-3 py-4 text-right font-medium text-gray-900 dark:text-white">Prix</th>
                         @if($selectedLevel === 'parents')
                             <th class="w-24 px-3 py-4 text-center font-medium text-gray-900 dark:text-white">Sous-analyses</th>
                         @endif
                         <th class="w-24 px-3 py-4 text-center font-medium text-gray-900 dark:text-white">Statut</th>
-                        <th class="w-40 px-3 py-4 text-center font-medium text-gray-900 dark:text-white">Actions</th>
+                        <th class="w-32 px-3 py-4 text-center font-medium text-gray-900 dark:text-white">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach($this->analyses as $analyse)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 group">
-                            {{-- Colonne Code avec hiérarchie améliorée --}}
-                            <td class="w-48 px-6 py-4">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <td class="w-40 px-6 py-4">
                                 <div class="flex items-center">
-                                    {{-- Connecteurs hiérarchiques --}}
                                     @if($analyse->level === 'PARENT')
-                                        <div class="flex items-center mr-3">
-                                            @if($analyse->enfants && count($analyse->enfants) > 0)
-                                                <button wire:click="toggleChildren({{ $analyse->id }})" 
-                                                        class="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                                                    <svg class="w-3 h-3 text-gray-500 transform transition-transform" 
-                                                        :class="{'rotate-90': expanded}" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                                                    </svg>
-                                                </button>
-                                            @else
-                                                <div class="w-5 h-5"></div>
-                                            @endif
-                                            <div class="w-3 h-3 bg-purple-500 rounded-full ml-1"></div>
-                                        </div>
+                                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-3 flex-shrink-0"></div>
                                     @elseif($analyse->level === 'NORMAL')
-                                        <div class="flex items-center mr-3">
-                                            <div class="w-5 h-5"></div>
-                                            <div class="w-3 h-3 bg-blue-500 rounded-full ml-1"></div>
-                                        </div>
+                                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-3 flex-shrink-0"></div>
                                     @else
-                                        <div class="flex items-center mr-3">
-                                            {{-- Ligne de connexion pour les enfants --}}
-                                            <div class="w-5 h-5 border-l-2 border-b-2 border-gray-300 dark:border-gray-600 border-dashed ml-2"></div>
-                                            <div class="w-3 h-3 bg-gray-400 rounded-full ml-1"></div>
-                                        </div>
+                                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-3 {{ $selectedLevel === 'enfants' ? '' : 'ml-6' }} flex-shrink-0"></div>
                                     @endif
-                                    
-                                    {{-- Code avec style selon le niveau --}}
-                                    <div class="flex items-center">
-                                        <span class="font-mono text-sm font-medium
-                                            {{ $analyse->is_bold ? 'font-bold' : '' }}
-                                            {{ $analyse->level === 'PARENT' ? 'text-purple-800 dark:text-purple-300 text-base' : '' }}
-                                            {{ $analyse->level === 'NORMAL' ? 'text-blue-700 dark:text-blue-300' : '' }}
-                                            {{ $analyse->level === 'CHILD' ? 'text-gray-600 dark:text-gray-400 text-xs' : '' }}">
-                                            {{ $analyse->code }}
-                                        </span>
-                                        
-                                        {{-- Badge de niveau --}}
-                                        <span class="ml-2 px-1.5 py-0.5 text-xs rounded-full font-medium
-                                            {{ $analyse->level === 'PARENT' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' : '' }}
-                                            {{ $analyse->level === 'NORMAL' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' : '' }}
-                                            {{ $analyse->level === 'CHILD' ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : '' }}">
-                                            {{ $analyse->level === 'PARENT' ? 'P' : ($analyse->level === 'NORMAL' ? 'N' : 'E') }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </td>
-                            
-                            {{-- Colonne Désignation --}}
-                            <td class="w-96 px-4 py-4">
-                                <div class="flex flex-col">
-                                    <span class="font-medium text-gray-900 dark:text-white
+                                    <span class="font-mono text-sm font-medium break-all
                                         {{ $analyse->is_bold ? 'font-bold' : '' }}
-                                        {{ $analyse->level === 'PARENT' ? 'text-purple-900 dark:text-purple-200 text-base' : '' }}
-                                        {{ $analyse->level === 'CHILD' ? 'text-gray-700 dark:text-gray-300 text-sm' : '' }}">
-                                        {{ $analyse->designation }}
+                                        {{ $analyse->level === 'PARENT' ? 'text-purple-800 dark:text-purple-300' : '' }}
+                                        {{ $analyse->level === 'CHILD' ? 'text-gray-600 dark:text-gray-400 text-xs' : '' }}">
+                                        {{ $analyse->code }}
                                     </span>
-                                    @if($analyse->description)
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-4">
-                                            {{ Str::limit($analyse->description, 100) }}
-                                        </span>
-                                    @endif
-                                    {{-- Informations additionnelles pour les parents --}}
-                                    @if($analyse->level === 'PARENT' && $analyse->valeur_ref)
-                                        <span class="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                                            Réf: {{ $analyse->valeur_ref }} {{ $analyse->unite }}
-                                        </span>
-                                    @endif
                                 </div>
                             </td>
-                            
-                            {{-- Parent (pour les enfants) --}}
+                            <td class="w-80 px-4 py-4">
+                                <div class="{{ $analyse->is_bold ? 'font-bold' : '' }}
+                                    {{ $analyse->level === 'PARENT' ? 'text-purple-900 dark:text-purple-200 font-semibold' : '' }}
+                                    {{ $analyse->level === 'CHILD' && $selectedLevel !== 'enfants' ? 'text-gray-600 dark:text-gray-400 text-sm pl-4' : '' }} 
+                                    break-words">
+                                    {{ $analyse->designation }}
+                                </div>
+                                @if($analyse->description)
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">{{ Str::limit($analyse->description, 80) }}</p>
+                                @endif
+                            </td>
                             @if($selectedLevel === 'enfants')
                                 <td class="w-32 px-3 py-4">
                                     @if($analyse->parent)
-                                        <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs font-medium">
+                                        <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded text-xs font-medium block text-center">
                                             {{ $analyse->parent->code }}
                                         </span>
                                     @endif
                                 </td>
                             @endif
-                            
-                            {{-- Type --}}
                             <td class="w-28 px-3 py-4">
                                 @if($analyse->type)
-                                    <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-full text-xs font-medium">
-                                        {{ $analyse->type->name }}
+                                    <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-full text-xs font-medium block text-center">
+                                        {{ Str::limit($analyse->type->name, 8) }}
                                     </span>
                                 @endif
                             </td>
-                            
-                            {{-- Examen --}}
                             <td class="w-28 px-3 py-4">
                                 @if($analyse->examen)
-                                    <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">
+                                    <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-md text-xs font-medium block text-center">
                                         {{ $analyse->examen->abr }}
                                     </span>
                                 @endif
                             </td>
-                            
-                            {{-- Prix amélioré --}}
-                            <td class="w-32 px-3 py-4 text-right">
+                            <td class="w-24 px-3 py-4 text-right">
                                 @if($analyse->prix > 0)
-                                    <div class="flex flex-col items-end">
-                                        <span class="font-semibold text-gray-900 dark:text-white text-sm">
-                                            {{ number_format($analyse->prix, 0, ',', ' ') }}
-                                        </span>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">Ariary</span>
-                                    </div>
+                                    <span class="font-medium text-gray-900 dark:text-white text-sm whitespace-nowrap">
+                                        {{ number_format($analyse->prix, 0, ',', ' ') }}
+                                    </span>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Ar</div>
                                 @else
-                                    <span class="text-gray-400 dark:text-gray-500 text-sm italic">Inclus</span>
+                                    <span class="text-gray-400 dark:text-gray-500 text-sm">Inclus</span>
                                 @endif
                             </td>
-                            
-                            {{-- Nombre d'enfants (pour les parents) --}}
                             @if($selectedLevel === 'parents')
                                 <td class="w-24 px-3 py-4 text-center">
                                     @if($analyse->enfants && count($analyse->enfants) > 0)
-                                        <div class="flex flex-col items-center">
-                                            <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs font-medium">
-                                                {{ count($analyse->enfants) }}
-                                            </span>
-                                            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {{ count($analyse->enfants) > 1 ? 'analyses' : 'analyse' }}
-                                            </span>
-                                        </div>
+                                        <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs font-medium">
+                                            {{ count($analyse->enfants) }}
+                                        </span>
                                     @else
-                                        <span class="text-gray-400 dark:text-gray-500 text-xs">Aucune</span>
+                                        <span class="text-gray-400 dark:text-gray-500 text-xs">0</span>
                                     @endif
                                 </td>
                             @endif
-                            
-                            {{-- Statut amélioré --}}
                             <td class="w-24 px-3 py-4 text-center">
-                                <button wire:click="toggleStatus({{ $analyse->id }})" 
-                                        class="inline-flex items-center transition-all duration-200 hover:scale-105">
-                                    @if($analyse->status)
-                                        <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                            Actif
-                                        </span>
-                                    @else
-                                        <span class="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                            </svg>
-                                            Inactif
-                                        </span>
-                                    @endif
-                                </button>
+                                @if($analyse->status)
+                                    <span class="inline-flex items-center justify-center bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 w-16 py-1 rounded-full text-xs font-medium">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Actif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center justify-center bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 w-16 py-1 rounded-full text-xs font-medium">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Inactif
+                                    </span>
+                                @endif
                             </td>
-                            
-                            {{-- Actions améliorées --}}
-                            <td class="w-40 px-3 py-4">
-                                <div class="flex items-center justify-center space-x-1">
+                            <td class="w-32 px-3 py-4 text-center">
+                                <div class="flex justify-center space-x-2">
                                     <button wire:click="show({{ $analyse->id }})" 
-                                            class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800 p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                                            class="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800 p-2 rounded-lg transition-colors"
                                             title="Voir les détails">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -268,23 +183,14 @@
                                         </svg>
                                     </button>
                                     <button wire:click="edit({{ $analyse->id }})" 
-                                            class="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-800 p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                                            class="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-800 p-2 rounded-lg transition-colors"
                                             title="Modifier">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </button>
-                                    @if($analyse->level === 'PARENT' && $analyse->enfants && count($analyse->enfants) > 0)
-                                        <button wire:click="duplicate({{ $analyse->id }})" 
-                                                class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 p-2 rounded-lg transition-all duration-200 hover:scale-105"
-                                                title="Dupliquer avec sous-analyses">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                            </svg>
-                                        </button>
-                                    @endif
                                     <button wire:click="confirmDelete({{ $analyse->id }})" 
-                                            class="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/75 p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                                            class="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/75 p-2 rounded-lg transition-colors duration-200"
                                             title="Supprimer">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
