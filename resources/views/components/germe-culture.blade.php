@@ -152,11 +152,10 @@
 
                 <button
                     type="button"
-                    wire:click.stop="syncAntibiogrammes({{ $node->id }})"
+                    wire:click.stop.prevent="syncAntibiogrammes({{ $node->id }})"
                     wire:loading.attr="disabled"
                     wire:target="syncAntibiogrammes"
-                    class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
-                >
+                    class="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors">
                     <span wire:loading.remove wire:target="syncAntibiogrammes">Synchroniser</span>
                     <span wire:loading wire:target="syncAntibiogrammes">Synchronisation…</span>
                 </button>

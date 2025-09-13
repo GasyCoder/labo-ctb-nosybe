@@ -29,6 +29,7 @@
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Antibiotique</label>
                     <select wire:model="newAntibiotique" 
                             onclick="event.stopPropagation();"
+                            wire:key="select-antibiotique-{{ $newAntibiotique }}"
                             class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:focus:border-green-500 transition-colors">
                         <option value="">Choisir...</option>
                         @foreach($antibiotiques as $antibiotique)

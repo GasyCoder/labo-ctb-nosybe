@@ -3,20 +3,22 @@
 namespace App\Livewire\Technicien;
 
 use App\Models\Analyse;
-use App\Models\Prescription;
+use Livewire\Component;
 use App\Models\Resultat;
-use App\Models\BacterieFamille;
-use App\Models\Antibiogramme;
-use App\Models\ResultatAntibiotique;
 use Illuminate\Support\Arr;
+use App\Models\Prescription;
+use App\Models\Antibiogramme;
+use App\Models\BacterieFamille;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Livewire\Component;
+use App\Models\ResultatAntibiotique;
+use Illuminate\Support\Facades\Cache;
 
 class RecursiveResultForm extends Component
 {
     public Prescription $prescription;
     public ?int $parentId = null;
+    protected $listeners = ['syncAntibiogrammes'];
 
     /** @var \Illuminate\Support\Collection|\App\Models\Analyse[] */
     public $roots;
@@ -352,10 +354,6 @@ class RecursiveResultForm extends Component
 
         // ⛔ si une option standard est active, on ignore (sécurité back)
         if ($this->hasStandardSelected($analyseId)) {
-            \Log::info('toggleBacterieOption ignoré (standard actif)', [
-                'analyse_id' => $analyseId,
-                'bacterie_id' => $bacterieId,
-            ]);
             return;
         }
 
@@ -378,12 +376,6 @@ class RecursiveResultForm extends Component
         $this->results[$analyseId]['selectedOptions'] = $sel;
         $this->markDirty($analyseId);
 
-        \Log::info('toggleBacterieOption', [
-            'analyse_id' => $analyseId,
-            'bacterie_id' => $bacterieId,
-            'action' => $action,
-            'selectedOptions' => $sel,
-        ]);
     }
 
     public function clearGermeSelection(int $analyseId, string $path): void
@@ -395,8 +387,6 @@ class RecursiveResultForm extends Component
 
         // marquer pour sync (les ABG seront nettoyés via le bouton "Synchroniser" ou saveAll)
         $this->markDirty($analyseId);
-
-        \Log::info('clearGermeSelection', ['analyse_id' => $analyseId]);
 
         // ✅ petite notif
         $this->flashInfo('Sélection des germes réinitialisée. Cliquez sur « Synchroniser » pour mettre à jour les antibiogrammes.');
@@ -416,7 +406,6 @@ class RecursiveResultForm extends Component
      */
     public function updatedResults($value, $name): void
     {
-        Log::info('updatedResults:', ['name' => $name, 'value' => $value]);
 
         // Sélection GERME/CULTURE
         if (preg_match('/^(\d+)\.selectedOptions$/', $name, $m)) {
@@ -687,13 +676,9 @@ class RecursiveResultForm extends Component
     {
         // 🔒 Anti double-clic / re-entrance via lock distribué
         $lockKey = "sync_abg_{$this->prescription->id}_{$analyseId}";
-        $lock = \Illuminate\Support\Facades\Cache::lock($lockKey, 5);
+        $lock = Cache::lock($lockKey, 5);
 
         if (!$lock->get()) {
-            \Log::info('syncAntibiogrammes ignoré (lock actif)', [
-                'analyse_id' => $analyseId,
-                'prescription_id' => $this->prescription->id,
-            ]);
             return;
         }
 
@@ -711,14 +696,9 @@ class RecursiveResultForm extends Component
             }
             $chosen = array_values(array_unique($chosen));
 
-            \Log::info('Synchronisation des antibiogrammes', [
-                'analyse_id' => $analyseId,
-                'bacteries_selectionnees' => $chosen
-            ]);
+            DB::beginTransaction();
 
-            \Illuminate\Support\Facades\DB::beginTransaction();
-
-            $existing = \App\Models\Antibiogramme::where('prescription_id', $this->prescription->id)
+            $existing = Antibiogramme::where('prescription_id', $this->prescription->id)
                 ->where('analyse_id', $analyseId)
                 ->get();
 
@@ -730,22 +710,20 @@ class RecursiveResultForm extends Component
             foreach ($toDelete as $bid) {
                 $abg = $existing->firstWhere('bacterie_id', $bid);
                 if ($abg) {
-                    \App\Models\ResultatAntibiotique::where('antibiogramme_id', $abg->id)->delete();
+                    ResultatAntibiotique::where('antibiogramme_id', $abg->id)->delete();
                     $abg->delete();
-                    \Log::info('Antibiogramme supprimé', ['antibiogramme_id' => $abg->id, 'bacterie_id' => $bid]);
                 }
             }
 
             foreach ($toCreate as $bid) {
-                $abg = \App\Models\Antibiogramme::firstOrCreate([
+                $abg = Antibiogramme::firstOrCreate([
                     'prescription_id' => $this->prescription->id,
                     'analyse_id'      => $analyseId,
                     'bacterie_id'     => $bid,
                 ]);
-                \Log::info('Nouvel antibiogramme créé', ['antibiogramme_id' => $abg->id, 'bacterie_id' => $bid]);
             }
 
-            \Illuminate\Support\Facades\DB::commit();
+            DB::commit();
 
             unset($this->pendingSync[$analyseId]);
 
@@ -755,8 +733,7 @@ class RecursiveResultForm extends Component
             $this->flashSuccess($msg);
 
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            \Log::error('syncAntibiogrammes error', ['analyse_id' => $analyseId, 'error' => $e->getMessage()]);
+            DB::rollBack();
             $this->flashError('Erreur sync : ' . $e->getMessage());
         } finally {
             optional($lock)->release();
