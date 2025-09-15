@@ -22,14 +22,54 @@ class PrescriptionIndex extends Component
     use WithPagination, AuthorizesRequests;
 
     public ?Prescription $prescription = null;
-    public $countArchive; // Add property for archive count
+    public $countArchive;
     
-    // Nouvelles propriétés pour les statistiques détaillées
+    // Propriétés pour les statistiques détaillées
     public $countEnAttente = 0;
     public $countEnCours = 0;
     public $countTermine = 0;
     public $countValide = 0;
     public $countDeleted = 0;
+    
+    // Nouvelles propriétés pour les statistiques de paiement
+    public $countPaye = 0;
+    public $countNonPaye = 0;
+
+    /**
+     * Get count of active prescriptions (En attente + En cours + Terminé)
+     */
+    public function getCountActivesProperty()
+    {
+        return $this->countEnAttente + $this->countEnCours + $this->countTermine;
+    }
+
+    /**
+     * Get progression statistics
+     */
+    public function getProgressionStats()
+    {
+        $totalActives = $this->countActives;
+        return [
+            'totalActives' => $totalActives,
+            'termine' => $this->countTermine,
+            'tauxProgression' => $totalActives > 0 ? round(($this->countTermine / $totalActives) * 100, 1) : 0
+        ];
+    }
+
+    /**
+     * Get efficiency statistics
+     */
+    public function getEfficiencyStats()
+    {
+        $totalGlobal = $this->countActives + $this->countValide;
+        $completed = $this->countTermine + $this->countValide;
+        
+        return [
+            'totalGlobal' => $totalGlobal,
+            'completed' => $completed,
+            'tauxEfficacite' => $totalGlobal > 0 ? round(($completed / $totalGlobal) * 100, 1) : 0
+        ];
+    }
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -86,16 +126,20 @@ class PrescriptionIndex extends Component
     }
 
     /**
-     * Refresh all statistics counts
+     * Refresh all statistics counts including payment stats
      */
     public function refreshCounts()
     {
+        // Comptes par statut de prescription
         $this->countEnAttente = Prescription::where('status', 'EN_ATTENTE')->count();
         $this->countEnCours = Prescription::where('status', 'EN_COURS')->count();
         $this->countTermine = Prescription::where('status', 'TERMINE')->count();
         $this->countValide = Prescription::where('status', 'VALIDE')->count();
         $this->countArchive = Prescription::where('status', 'ARCHIVE')->count();
         $this->countDeleted = Prescription::onlyTrashed()->count();
+        
+        // Comptes pour les paiements
+        $this->refreshPaymentCounts();
         
         // Dispatch events for real-time updates if needed
         $this->dispatch('updateCounts', [
@@ -104,8 +148,45 @@ class PrescriptionIndex extends Component
             'termine' => $this->countTermine,
             'valide' => $this->countValide,
             'archive' => $this->countArchive,
-            'deleted' => $this->countDeleted
+            'deleted' => $this->countDeleted,
+            'paye' => $this->countPaye,
+            'nonPaye' => $this->countNonPaye,
         ]);
+    }
+
+    /**
+     * Refresh payment statistics
+     */
+    public function refreshPaymentCounts()
+    {
+        // Compter les paiements payés (status = 1 ou true)
+        $this->countPaye = Paiement::whereHas('prescription', function($query) {
+                $query->whereNull('deleted_at'); // Exclure les prescriptions supprimées
+            })
+            ->where('status', 1)
+            ->count();
+
+        // Compter les paiements non payés (status = 0 ou false)
+        $this->countNonPaye = Paiement::whereHas('prescription', function($query) {
+                $query->whereNull('deleted_at'); // Exclure les prescriptions supprimées
+            })
+            ->where('status', 0)
+            ->count();
+    }
+
+    /**
+     * Get payment statistics with more details
+     */
+    public function getPaymentStats()
+    {
+        return [
+            'paye' => $this->countPaye,
+            'nonPaye' => $this->countNonPaye,
+            'total' => $this->countPaye + $this->countNonPaye,
+            'tauxPaiement' => $this->countPaye + $this->countNonPaye > 0 
+                ? round(($this->countPaye / ($this->countPaye + $this->countNonPaye)) * 100, 2)
+                : 0
+        ];
     }
 
     public function refreshArchiveCount()
@@ -161,6 +242,9 @@ class PrescriptionIndex extends Component
                 : 'Paiement marqué comme non payé avec succès.';
                 
             session()->flash('success', $message);
+            
+            // Rafraîchir les comptes de paiement
+            $this->refreshPaymentCounts();
             
             // Rafraîchir la vue
             $this->dispatch('$refresh');
@@ -223,7 +307,7 @@ class PrescriptionIndex extends Component
 
             session()->flash('success', 'Prescription mise en corbeille avec succès.');
             $this->resetModal();
-            $this->refreshCounts(); // Refresh all counts
+            $this->refreshCounts(); // Refresh all counts including payment counts
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
@@ -248,7 +332,7 @@ class PrescriptionIndex extends Component
 
             session()->flash('success', 'Prescription restaurée avec succès.');
             $this->resetModal();
-            $this->refreshCounts(); // Refresh all counts
+            $this->refreshCounts(); // Refresh all counts including payment counts
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
@@ -278,7 +362,7 @@ class PrescriptionIndex extends Component
 
             session()->flash('success', 'Prescription supprimée définitivement.');
             $this->resetModal();
-            $this->refreshCounts(); // Refresh all counts
+            $this->refreshCounts(); // Refresh all counts including payment counts
             $this->dispatch('$refresh');
 
         } catch (\Exception $e) {
@@ -420,12 +504,20 @@ class PrescriptionIndex extends Component
             'validePrescriptions' => $validePrescriptions,
             'deletedPrescriptions' => $deletedPrescriptions,
             'countArchive' => $this->countArchive,
-            // Passer les nouvelles statistiques à la vue
+            // Statistiques individuelles
             'countEnAttente' => $this->countEnAttente,
             'countEnCours' => $this->countEnCours,
             'countTermine' => $this->countTermine,
             'countValide' => $this->countValide,
             'countDeleted' => $this->countDeleted,
+            // Statistiques de paiement
+            'countPaye' => $this->countPaye,
+            'countNonPaye' => $this->countNonPaye,
+            'paymentStats' => $this->getPaymentStats(),
+            // Nouvelles statistiques calculées
+            'countActives' => $this->countActives,
+            'progressionStats' => $this->getProgressionStats(),
+            'efficiencyStats' => $this->getEfficiencyStats(),
         ]);
     }
 }
