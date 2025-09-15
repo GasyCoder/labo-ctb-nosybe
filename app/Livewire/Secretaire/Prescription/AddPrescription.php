@@ -89,7 +89,7 @@ class AddPrescription extends Component
             'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'modePaiement', 'montantPaye', 
             'remise', 'total', 'monnaieRendue', 'reference', 'tubesGeneres', 'paiementStatut' // ← Ajoutez ceci
-        ];
+        ];  
     }
 
     protected function sauvegarderSession(): void

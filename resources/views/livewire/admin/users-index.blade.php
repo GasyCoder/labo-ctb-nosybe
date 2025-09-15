@@ -66,7 +66,7 @@
                             Type
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            Email
+                            Nom d'utilisateur
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Dernière connexion
@@ -138,37 +138,29 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
-                                {{ $user->email }}
+                                {{ $user->username }}
                             </td>
-<td class="px-6 py-4 whitespace-nowrap text-sm">
-    @php
-        $userStatus = $this->getUserStatus($user->id, $sessions);
-    @endphp
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @php
+                                    $userStatus = $this->getUserStatus($user->id, $sessions);
+                                @endphp
 
-    <div class="flex items-center mb-1">
-        <span class="h-2 w-2 rounded-full mr-2 bg-{{ $userStatus['color'] }}"></span>
-        <span class="{{ $userStatus['text_color'] }} text-sm">{{ $userStatus['text'] }}</span>
-    </div>
+                                <div class="flex items-center mb-1">
+                                    <span class="h-2 w-2 rounded-full mr-2 bg-{{ $userStatus['color'] }}"></span>
+                                    <span class="{{ $userStatus['text_color'] }} text-sm">{{ $userStatus['text'] }}</span>
+                                </div>
 
-    @if($userStatus['show_date'] ?? false)
-        <div class="text-xs text-gray-400 dark:text-gray-500" title="{{ $userStatus['last_activity_full'] }}">
-            {{ $userStatus['last_activity_formatted'] }}
-        </div>
-    @elseif($userStatus['status'] === 'never_connected')
-        <div class="text-xs text-gray-400 dark:text-gray-500">
-            Créé {{ $user->created_at->diffForHumans() }}
-        </div>
-    @endif
-
-    {{-- Debug info (à retirer une fois que ça marche)
-    @if(config('app.debug'))
-        <div class="text-xs text-blue-400 mt-1">
-            Debug: Status={{ $userStatus['status'] }}, 
-            LastActivity={{ $userStatus['last_activity'] ?? 'null' }}
-        </div>
-    @endif --}}
-</td>
-               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                @if($userStatus['show_date'] ?? false)
+                                    <div class="text-xs text-gray-400 dark:text-gray-500" title="{{ $userStatus['last_activity_full'] }}">
+                                        {{ $userStatus['last_activity_formatted'] }}
+                                    </div>
+                                @elseif($userStatus['status'] === 'never_connected')
+                                    <div class="text-xs text-gray-400 dark:text-gray-500">
+                                        Créé {{ $user->created_at->diffForHumans() }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 <div class="space-y-1">
                                     @if($user->type === 'admin')
                                         <div class="text-xs text-purple-600 dark:text-purple-400">• Administration</div>
@@ -261,14 +253,15 @@
                             </div>
                             
                             <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nom d'utilisateur</label>
                                 <input 
-                                    type="email" 
-                                    id="email" 
-                                    wire:model="user.email"
+                                    type="text" 
+                                    id="username" 
+                                    wire:model="user.username"
                                     class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+                                    placeholder="Ex: jdupont, marie.martin..."
                                 >
-                                @error('user.email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                @error('user.username') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                             
                             <div>

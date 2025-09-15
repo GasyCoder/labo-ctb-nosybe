@@ -21,7 +21,7 @@ class UsersIndex extends Component
 
     public $user = [
         'name' => '',
-        'email' => '',
+        'username' => '',  // ✅ Changé de 'email' à 'username'
         'type' => 'technicien',
         'password' => '',
         'password_confirmation' => ''
@@ -29,7 +29,7 @@ class UsersIndex extends Component
 
     protected $rules = [
         'user.name' => 'required|min:3',
-        'user.email' => 'required|email|unique:users,email',
+        'user.username' => 'required|string|min:3|unique:users,username',  // ✅ Changé de 'email' à 'username'
         'user.type' => 'required|in:admin,secretaire,technicien,biologiste',
         'user.password' => 'sometimes|confirmed|min:6'
     ];
@@ -153,7 +153,7 @@ class UsersIndex extends Component
     {
         $this->user = [
             'name' => '',
-            'email' => '',
+            'username' => '',  // ✅ Changé de 'email' à 'username'
             'type' => 'technicien',
             'password' => '',
             'password_confirmation' => ''
@@ -169,14 +169,14 @@ class UsersIndex extends Component
     {
         $this->validate([
             'user.name' => 'required|min:3',
-            'user.email' => 'required|email|unique:users,email',
+            'user.username' => 'required|string|min:3|unique:users,username',  // ✅ Changé de 'email' à 'username'
             'user.type' => 'required|in:admin,secretaire,technicien,biologiste',
             'user.password' => 'required|confirmed|min:6'
         ]);
 
         User::create([
             'name' => $this->user['name'],
-            'email' => $this->user['email'],
+            'username' => $this->user['username'],  // ✅ Changé de 'email' à 'username'
             'type' => $this->user['type'],
             'password' => Hash::make($this->user['password'])
         ]);
@@ -197,7 +197,7 @@ class UsersIndex extends Component
         if ($user = User::find($userId)) {
             $this->user = [
                 'name' => $user->name,
-                'email' => $user->email,
+                'username' => $user->username,  // ✅ Changé de 'email' à 'username'
                 'type' => $user->type,
                 'password' => '',
                 'password_confirmation' => ''
@@ -214,7 +214,7 @@ class UsersIndex extends Component
     {
         $rules = [
             'user.name' => 'required|min:3',
-            'user.email' => 'required|email|unique:users,email,' . $this->userIdBeingEdited,
+            'user.username' => 'required|string|min:3|unique:users,username,' . $this->userIdBeingEdited,  // ✅ Changé de 'email' à 'username'
             'user.type' => 'required|in:admin,secretaire,technicien,biologiste'
         ];
 
@@ -226,7 +226,7 @@ class UsersIndex extends Component
 
         $userData = [
             'name' => $this->user['name'],
-            'email' => $this->user['email'],
+            'username' => $this->user['username'],  // ✅ Changé de 'email' à 'username'
             'type' => $this->user['type']
         ];
 
