@@ -114,11 +114,11 @@
                                         {{ $paiement->created_at->format('d/m/Y') }}
                                     </div>
                                     <div class="font-medium text-blue-600 dark:text-blue-400">
-                                        {{ $paiement->prescription_id }}
+                                        {{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}
                                     </div>
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
                                         {{ $paiement->prescription->patient->nom ?? 'Client non défini' }} 
-                                        {{ $paiement->prescription->patient->prenoms ?? '' }}
+                                        {{ $paiement->prescription->patient->prenom ?? '' }}
                                     </div>
                                     <div class="text-right font-bold text-gray-900 dark:text-gray-100">
                                         {{ number_format($paiement->montant, 2, '.', ' ') }}

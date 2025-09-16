@@ -154,10 +154,10 @@
                 @foreach($paiementsGroupe as $paiement)
                     <tr class="data-row">
                         <td class="left">{{ $paiement->created_at->format('d/m/Y') }}</td>
-                        <td class="left">{{ $paiement->prescription_id }}</td>
+                        <td class="left">{{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}</td>
                         <td class="left">
                             {{ $paiement->prescription->patient->nom ?? 'Client non défini' }} 
-                            {{ $paiement->prescription->patient->prenoms ?? '' }}
+                            {{ $paiement->prescription->patient->prenom ?? '' }}
                         </td>
                         <td class="amount">{{ number_format($paiement->montant, 2, '.', ' ') }}</td>
                     </tr>
