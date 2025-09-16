@@ -56,11 +56,11 @@ class PaymentMethod extends Model
     }
 
     /**
-     * Relation avec les paiements (si vous avez une table paiements qui référence les méthodes)
-     * Décommentez si nécessaire
+     * Relation avec les paiements 
+     * ⚠️  CORRECTION : payment_method_id au lieu de payment_methode_id
      */
     public function paiements()
     {
-        return $this->hasMany(Paiement::class, 'payment_methode_id');
+        return $this->hasMany(Paiement::class, 'payment_method_id'); // Corrigé ici
     }
 }

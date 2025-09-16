@@ -1157,8 +1157,30 @@ class AddPrescription extends Component
         }
 
         $terme = trim(strtoupper($this->rechercheAnalyse));
+        $resultats = collect();
         
-        // 1. RECHERCHE DES PARENTS AVEC PRIX (ex: NFS avec prix)
+        // 🎯 NOUVEAU : RECHERCHE DIRECTE DES ANALYSES CHILD PAR CODE/DESIGNATION
+        // Ceci est la priorité absolue - peu importe la hiérarchie
+        // IMPORTANT: Seulement les analyses avec un prix > 0
+        $analysesChildDirectes = Analyse::where('status', true)
+                        ->whereIn('level', ['CHILD', 'NORMAL']) // Inclure CHILD et NORMAL
+                        ->where('prix', '>', 0) // ← FILTRE PRIX OBLIGATOIRE
+                        ->where(function($query) use ($terme) {
+                            $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
+                                ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
+                        })
+                        ->with('parent')
+                        ->get()
+                        ->map(function($analyse) {
+                            // Marquer ces analyses comme "trouvées directement"
+                            $analyse->recherche_directe = true;
+                            return $analyse;
+                        });
+
+        // Ajouter toutes les analyses CHILD trouvées directement
+        $resultats = $resultats->concat($analysesChildDirectes);
+        
+        // 🏥 RECHERCHE DES PARENTS PAYANTS (panels complets)
         $parentsPayants = Analyse::where('status', true)
                         ->where('level', 'PARENT')
                         ->where('prix', '>', 0) // Parents PAYANTS
@@ -1166,24 +1188,16 @@ class AddPrescription extends Component
                             $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
                                 ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
                         })
-                        ->orderByRaw("
-                            CASE 
-                                WHEN UPPER(code) = ? THEN 1
-                                WHEN UPPER(code) LIKE ? THEN 2
-                                WHEN UPPER(designation) LIKE ? THEN 3
-                                ELSE 4
-                            END
-                        ", [$terme, "{$terme}%", "%{$terme}%"])
-                        ->limit(10)
-                        ->get();
+                        ->get()
+                        ->map(function($analyse) {
+                            $analyse->recherche_directe = false;
+                            return $analyse;
+                        });
 
-        // 2. SI DES PARENTS PAYANTS TROUVÉS → LES RETOURNER UNIQUEMENT
-        if ($parentsPayants->count() > 0) {
-            $this->parentRecherche = null;
-            return $parentsPayants;
-        }
+        // Ajouter les parents payants (panels complets)
+        $resultats = $resultats->concat($parentsPayants);
 
-        // 3. RECHERCHE DES PARENTS GRATUITS (prix = 0)
+        // 📋 RECHERCHE DES PARENTS GRATUITS AVEC ENFANTS
         $parentsGratuits = Analyse::where('status', true)
                         ->where('level', 'PARENT')
                         ->where(function($query) {
@@ -1194,59 +1208,67 @@ class AddPrescription extends Component
                                 ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
                         })
                         ->with(['enfants' => function($query) {
-                            $query->where('status', true)
-                                  ->where('prix', '>', 0); // Enfants PAYANTS seulement
+                            $query->where('status', true);
                         }])
                         ->get();
 
-        // 4. SI PARENT GRATUIT TROUVÉ AVEC ENFANTS PAYANTS → RETOURNER LES ENFANTS
-        $enfantsPayants = collect();
         foreach ($parentsGratuits as $parentGratuit) {
             if ($parentGratuit->enfants->count() > 0) {
                 // Marquer le parent de recherche pour l'affichage
                 $this->parentRecherche = $parentGratuit;
-                $enfantsPayants = $enfantsPayants->concat($parentGratuit->enfants);
+                
+                $enfantsPayants = $parentGratuit->enfants
+                                ->where('status', true)
+                                ->where('prix', '>', 0) // ← FILTRE PRIX OBLIGATOIRE pour enfants
+                                ->map(function($analyse) {
+                                    $analyse->recherche_directe = false;
+                                    return $analyse;
+                                });
+                
+                $resultats = $resultats->concat($enfantsPayants);
             }
         }
 
-        if ($enfantsPayants->count() > 0) {
-            return $enfantsPayants->sortBy(function($analyse) use ($terme) {
-                // Même logique de tri que pour les parents
-                if (strtoupper($analyse->code) === $terme) return 1;
-                if (str_starts_with(strtoupper($analyse->code), $terme)) return 2;
-                if (str_contains(strtoupper($analyse->designation), $terme)) return 3;
-                return 4;
-            })->take(15);
-        }
-
-        // 5. RECHERCHE DES ANALYSES INDIVIDUELLES 
-        // (sans parent OU avec parent gratuit SANS enfants payants)
+        // 🔍 RECHERCHE DES ANALYSES INDIVIDUELLES (sans parent ou parent gratuit)
+        // IMPORTANT: Seulement les analyses avec un prix > 0
         $individuelles = Analyse::where('status', true)
-                            ->whereIn('level', ['NORMAL', 'CHILD'])
+                            ->whereIn('level', ['NORMAL'])
+                            ->where('prix', '>', 0) // ← FILTRE PRIX OBLIGATOIRE
                             ->where(function($query) use ($terme) {
                                 $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
-                                        ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
+                                    ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
                             })
                             ->with('parent')
                             ->get()
                             ->filter(function($analyse) {
-                                // Inclure si :
-                                // - Pas de parent du tout
-                                // - Parent gratuit ET l'analyse a un prix
-                                // - Parent payant mais l'analyse n'est pas dans un "panel complet"
+                                // Inclure si pas de parent ou parent gratuit
                                 return !$analyse->parent || 
-                                       ($analyse->parent && $analyse->parent->prix <= 0 && $analyse->prix > 0);
+                                    ($analyse->parent && $analyse->parent->prix <= 0);
                             })
-                            ->sortBy(function($analyse) use ($terme) {
-                                if (strtoupper($analyse->code) === $terme) return 1;
-                                if (str_starts_with(strtoupper($analyse->code), $terme)) return 2;
-                                if (str_contains(strtoupper($analyse->designation), $terme)) return 3;
-                                return 4;
-                            })
-                            ->take(15);
+                            ->map(function($analyse) {
+                                $analyse->recherche_directe = false;
+                                return $analyse;
+                            });
 
-        $this->parentRecherche = null;
-        return $individuelles;
+        $resultats = $resultats->concat($individuelles);
+
+        // 🎯 SUPPRESSION DES DOUBLONS (garder les "recherche_directe" en priorité)
+        $resultatsUniques = $resultats->unique('id')->values();
+
+        // 📊 TRIER PAR PERTINENCE
+        return $resultatsUniques->sortBy([
+            // 1. Les analyses trouvées directement en premier
+            function($analyse) {
+                return isset($analyse->recherche_directe) && $analyse->recherche_directe ? 0 : 1;
+            },
+            // 2. Puis par correspondance exacte du code
+            function($analyse) use ($terme) {
+                if (strtoupper($analyse->code) === $terme) return 1;
+                if (str_starts_with(strtoupper($analyse->code), $terme)) return 2;
+                if (str_contains(strtoupper($analyse->designation), $terme)) return 3;
+                return 4;
+            }
+        ])->take(20); // Augmenter la limite pour voir plus de résultats
     }
 
     public function getPrescripteursProperty()

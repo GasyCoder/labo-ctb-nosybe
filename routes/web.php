@@ -5,6 +5,7 @@ use App\Livewire\Dashboard;
 use App\Models\Prescription;
 use App\Livewire\Admin\Types;
 use App\Livewire\Admin\Examens;
+use App\Livewire\JournalCaisse;
 use App\Livewire\Admin\Analyses;
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Bacteries;
@@ -99,6 +100,9 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
     Route::get('patients/{patient}', PatientDetail::class)->name('patient.detail');
     Route::get('prescripteurs', Prescripteurs::class)->name('prescripteurs');
     Route::get('dashboard', Dashboard::class)->name('dashboard');
+
+    // Route pour afficher le journal de caisse
+    Route::get('/journal-caisse', JournalCaisse::class)->name('journal-caisse');
 });
 
 // ============================================ Résultats PDF prescriptions
