@@ -8,7 +8,7 @@
     "name": "world"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DDGnILZ9.css",
+    "file": "assets/app-D7NdXhGJ.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -140,7 +140,7 @@
     ]
   },
   "resources/js/scripts.js": {
-    "file": "assets/scripts-CyDm3GBo.js",
+    "file": "assets/scripts-NYGgK8mR.js",
     "name": "scripts",
     "src": "resources/js/scripts.js",
     "isEntry": true,
@@ -149,7 +149,7 @@
       "_isRTL-0_WXRM0q.js"
     ],
     "css": [
-      "assets/app-DDGnILZ9.css"
+      "assets/app-D7NdXhGJ.css"
     ],
     "assets": [
       "assets/Nioicon-81EzONOx.ttf",
