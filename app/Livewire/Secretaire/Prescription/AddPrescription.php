@@ -88,7 +88,7 @@ class AddPrescription extends Component
             'etape', 'nouveauPatient', 'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
             'analysesPanier', 'prelevementsSelectionnes', 'modePaiement', 'montantPaye', 
-            'remise', 'total', 'monnaieRendue', 'reference', 'tubesGeneres', 'paiementStatut' // ← Ajoutez ceci
+            'remise', 'total', 'monnaieRendue', 'reference', 'tubesGeneres', 'paiementStatut'
         ];  
     }
 
@@ -161,7 +161,7 @@ class AddPrescription extends Component
         $autoSaveProperties = [
             'nom', 'prenom', 'civilite', 'telephone', 'email',
             'prescripteurId', 'patientType', 'age', 'uniteAge', 'poids', 'renseignementClinique',
-            'modePaiement', 'montantPaye', 'remise', 'paiementStatut' // ← Ajoutez ceci
+            'modePaiement', 'montantPaye', 'remise', 'paiementStatut'
         ];
 
         if (in_array($property, $autoSaveProperties)) {
@@ -736,8 +736,8 @@ class AddPrescription extends Component
             
             $this->prelevementsSelectionnes[$prelevementId] = [
                 'id' => $prelevement->id,
-                'nom' => $prelevement->nom,
-                'description' => $prelevement->description ?? '',
+                'nom' => $prelevement->denomination, // CORRECTION: utiliser 'denomination'
+                'description' => $prelevement->code ?? '', // Utiliser le code comme description
                 'prix' => $prelevement->prix ?? 0,
                 'quantite' => 1,
                 'type_tube_requis' => 'SEC',
@@ -746,7 +746,7 @@ class AddPrescription extends Component
 
             $this->calculerTotaux();
             $this->sauvegarderSession(); // Auto-save
-            flash()->success("Prélèvement « {$prelevement->nom} » ajouté");
+            flash()->success("Prélèvement « {$prelevement->denomination} » ajouté");
             
         } catch (\Exception $e) {
             flash()->error('Erreur lors de l\'ajout du prélèvement');
@@ -906,7 +906,7 @@ class AddPrescription extends Component
             $this->prescription = $prescription;
             $this->reference = $prescription->reference;
             
-            // 2. Associer les analyses (SIMPLIFIÉ - sans is_payer et prix)
+            // 2. Associer les analyses
             $analyseIds = array_keys($this->analysesPanier);
             $analysesExistantes = Analyse::whereIn('id', $analyseIds)->pluck('id')->toArray();
             
@@ -917,25 +917,10 @@ class AddPrescription extends Component
             // Utiliser sync() pour associer uniquement les IDs
             $prescription->analyses()->sync($analysesExistantes);
             
-            // 3. Associer les prélèvements (SIMPLIFIÉ - sans is_payer)
-            if (!empty($this->prelevementsSelectionnes)) {
-                foreach ($this->prelevementsSelectionnes as $prelevement) {
-                    if (!Prelevement::find($prelevement['id'])) {
-                        throw new \Exception('Prélèvement ID ' . $prelevement['id'] . ' invalide');
-                    }
-
-                    $prescription->prelevements()->attach($prelevement['id'], [
-                        'prix_unitaire' => $prelevement['prix'] ?? 0,
-                        'quantite' => max(1, $prelevement['quantite'] ?? 1),
-                        'type_tube_requis' => $prelevement['type_tube_requis'] ?? 'SEC',
-                        'volume_requis_ml' => $prelevement['volume_requis_ml'] ?? 5.0,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-            }
+            // 3. Ne plus associer les prélèvements via table pivot car elle n'existe plus
+            // Les prélèvements seront gérés directement via les tubes
             
-            // 4. Enregistrer le paiement (SOURCE DE VÉRITÉ UNIQUE)
+            // 4. Enregistrer le paiement
             $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
             
             if (!$paymentMethod) {
@@ -947,12 +932,12 @@ class AddPrescription extends Component
                 'montant' => $this->total,
                 'payment_method_id' => $paymentMethod->id,
                 'recu_par' => Auth::user()->id,
-                'status' => $this->paiementStatut // true = payé, false = non payé
+                'status' => $this->paiementStatut
             ]);
             
-            // 5. Générer les tubes si prélèvements présents
+            // 5. Générer les tubes directement si prélèvements présents
             if (!empty($this->prelevementsSelectionnes)) {
-                $this->tubesGeneres = $this->genererTubesPourPrescription($prescription);
+                $this->tubesGeneres = $this->genererTubesDirectement($prescription);
                 $this->allerEtape('tubes');
             } else {
                 $this->allerEtape('confirmation');
@@ -991,42 +976,43 @@ class AddPrescription extends Component
         }
     }
 
-
-    private function genererTubesPourPrescription($prescription)
+    /**
+     * Génère les tubes directement sans passer par la table pivot prelevement_prescription
+     */
+    private function genererTubesDirectement($prescription)
     {
         $tubes = [];
         
         try {
-            foreach ($prescription->prelevements as $prelevement) {
-                $quantite = $prelevement->pivot->quantite ?? 1;
+            $compteurTube = 1;
+            
+            foreach ($this->prelevementsSelectionnes as $prelevementData) {
+                $prelevement = Prelevement::find($prelevementData['id']);
+                
+                if (!$prelevement) {
+                    Log::warning('Prélèvement introuvable', ['id' => $prelevementData['id']]);
+                    continue;
+                }
+                
+                $quantite = max(1, $prelevementData['quantite'] ?? 1);
                 
                 for ($i = 0; $i < $quantite; $i++) {
-                    $tube = new Tube([
+                    $tube = Tube::create([
                         'prescription_id' => $prescription->id,
                         'patient_id' => $prescription->patient_id,
                         'prelevement_id' => $prelevement->id,
-                        'type_tube' => $prelevement->pivot->type_tube_requis ?? 'SEC',
-                        'volume_ml' => $prelevement->pivot->volume_requis_ml ?? 5.0,
-                        'statut' => 'GENERE',
-                        'genere_at' => now(),
+                        'code_barre' => $prescription->reference . '-T' . str_pad($compteurTube, 2, '0', STR_PAD_LEFT),
                     ]);
-                    
-                    $tube->save();
-
-                    // Générer codes après sauvegarde pour avoir l'ID
-                    $tube->code_barre = 'T' . date('Y') . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
-                    $tube->numero_tube = 'T-' . date('Y') . '-' . str_pad($tube->id, 6, '0', STR_PAD_LEFT);
-                    $tube->save();
 
                     $tubes[] = [
                         'id' => $tube->id,
                         'numero_tube' => $tube->numero_tube,
                         'code_barre' => $tube->code_barre,
                         'statut' => $tube->statut,
-                        'type_tube' => $tube->type_tube,
-                        'volume_ml' => $tube->volume_ml,
-                        'prelevement_nom' => $prelevement->nom
+                        'prelevement_nom' => $prelevement->denomination
                     ];
+                    
+                    $compteurTube++;
                 }
             }
 
@@ -1035,13 +1021,13 @@ class AddPrescription extends Component
             
             flash()->success(count($tubes) . ' tube(s) généré(s) avec succès');
             
-            Log::info('Tubes générés', [
+            Log::info('Tubes générés directement', [
                 'prescription_id' => $prescription->id,
                 'tubes_count' => count($tubes)
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Erreur génération tubes', [
+            Log::error('Erreur génération tubes directement', [
                 'prescription_id' => $prescription->id,
                 'error' => $e->getMessage()
             ]);
@@ -1051,7 +1037,44 @@ class AddPrescription extends Component
         return $tubes;
     }
 
+    private function genererTubesPourPrescription($prescription)
+    {
+        $tubes = [];
+        
+        try {
+            // Utiliser la méthode statique du modèle Tube qui est déjà bien implémentée
+            $tubesGeneres = Tube::genererPourPrescription($prescription->id);
+            
+            foreach ($tubesGeneres as $tube) {
+                $tubes[] = [
+                    'id' => $tube->id,
+                    'numero_tube' => $tube->numero_tube, // Utilise l'accesseur
+                    'code_barre' => $tube->code_barre,
+                    'statut' => $tube->statut, // Utilise l'accesseur
+                    'prelevement_nom' => $tube->prelevement->denomination ?? 'N/A'
+                ];
+            }
 
+            // Mettre à jour le statut de la prescription
+            $prescription->update(['status' => 'EN_ATTENTE']);
+            
+            flash()->success(count($tubes) . ' tube(s) généré(s) avec succès');
+            
+            Log::info('Tubes générés via Livewire', [
+                'prescription_id' => $prescription->id,
+                'tubes_count' => count($tubes)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur génération tubes via Livewire', [
+                'prescription_id' => $prescription->id,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception('Erreur lors de la génération des tubes: ' . $e->getMessage());
+        }
+
+        return $tubes;
+    }
 
     // =====================================
     // 🧪 ÉTAPE 6: TUBES ET ÉTIQUETTES
@@ -1113,7 +1136,7 @@ class AddPrescription extends Component
     }
 
     // =====================================
-    // 📊 COMPUTED PROPERTIES (inchangées)
+    // 📊 COMPUTED PROPERTIES
     // =====================================
     
     public function getPatientsResultatsProperty()
@@ -1159,12 +1182,10 @@ class AddPrescription extends Component
         $terme = trim(strtoupper($this->rechercheAnalyse));
         $resultats = collect();
         
-        // 🎯 NOUVEAU : RECHERCHE DIRECTE DES ANALYSES CHILD PAR CODE/DESIGNATION
-        // Ceci est la priorité absolue - peu importe la hiérarchie
-        // IMPORTANT: Seulement les analyses avec un prix > 0
+        // 🎯 RECHERCHE DIRECTE DES ANALYSES CHILD PAR CODE/DESIGNATION
         $analysesChildDirectes = Analyse::where('status', true)
-                        ->whereIn('level', ['CHILD', 'NORMAL']) // Inclure CHILD et NORMAL
-                        ->where('prix', '>', 0) // ← FILTRE PRIX OBLIGATOIRE
+                        ->whereIn('level', ['CHILD', 'NORMAL'])
+                        ->where('prix', '>', 0)
                         ->where(function($query) use ($terme) {
                             $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
                                 ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
@@ -1172,18 +1193,16 @@ class AddPrescription extends Component
                         ->with('parent')
                         ->get()
                         ->map(function($analyse) {
-                            // Marquer ces analyses comme "trouvées directement"
                             $analyse->recherche_directe = true;
                             return $analyse;
                         });
 
-        // Ajouter toutes les analyses CHILD trouvées directement
         $resultats = $resultats->concat($analysesChildDirectes);
         
         // 🏥 RECHERCHE DES PARENTS PAYANTS (panels complets)
         $parentsPayants = Analyse::where('status', true)
                         ->where('level', 'PARENT')
-                        ->where('prix', '>', 0) // Parents PAYANTS
+                        ->where('prix', '>', 0)
                         ->where(function($query) use ($terme) {
                             $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
                                 ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
@@ -1194,7 +1213,6 @@ class AddPrescription extends Component
                             return $analyse;
                         });
 
-        // Ajouter les parents payants (panels complets)
         $resultats = $resultats->concat($parentsPayants);
 
         // 📋 RECHERCHE DES PARENTS GRATUITS AVEC ENFANTS
@@ -1214,12 +1232,11 @@ class AddPrescription extends Component
 
         foreach ($parentsGratuits as $parentGratuit) {
             if ($parentGratuit->enfants->count() > 0) {
-                // Marquer le parent de recherche pour l'affichage
                 $this->parentRecherche = $parentGratuit;
                 
                 $enfantsPayants = $parentGratuit->enfants
                                 ->where('status', true)
-                                ->where('prix', '>', 0) // ← FILTRE PRIX OBLIGATOIRE pour enfants
+                                ->where('prix', '>', 0)
                                 ->map(function($analyse) {
                                     $analyse->recherche_directe = false;
                                     return $analyse;
@@ -1229,11 +1246,10 @@ class AddPrescription extends Component
             }
         }
 
-        // 🔍 RECHERCHE DES ANALYSES INDIVIDUELLES (sans parent ou parent gratuit)
-        // IMPORTANT: Seulement les analyses avec un prix > 0
+        // 🔍 RECHERCHE DES ANALYSES INDIVIDUELLES
         $individuelles = Analyse::where('status', true)
                             ->whereIn('level', ['NORMAL'])
-                            ->where('prix', '>', 0) // ← FILTRE PRIX OBLIGATOIRE
+                            ->where('prix', '>', 0)
                             ->where(function($query) use ($terme) {
                                 $query->whereRaw('UPPER(code) LIKE ?', ["%{$terme}%"])
                                     ->orWhereRaw('UPPER(designation) LIKE ?', ["%{$terme}%"]);
@@ -1241,7 +1257,6 @@ class AddPrescription extends Component
                             ->with('parent')
                             ->get()
                             ->filter(function($analyse) {
-                                // Inclure si pas de parent ou parent gratuit
                                 return !$analyse->parent || 
                                     ($analyse->parent && $analyse->parent->prix <= 0);
                             })
@@ -1252,23 +1267,19 @@ class AddPrescription extends Component
 
         $resultats = $resultats->concat($individuelles);
 
-        // 🎯 SUPPRESSION DES DOUBLONS (garder les "recherche_directe" en priorité)
         $resultatsUniques = $resultats->unique('id')->values();
 
-        // 📊 TRIER PAR PERTINENCE
         return $resultatsUniques->sortBy([
-            // 1. Les analyses trouvées directement en premier
             function($analyse) {
                 return isset($analyse->recherche_directe) && $analyse->recherche_directe ? 0 : 1;
             },
-            // 2. Puis par correspondance exacte du code
             function($analyse) use ($terme) {
                 if (strtoupper($analyse->code) === $terme) return 1;
                 if (str_starts_with(strtoupper($analyse->code), $terme)) return 2;
                 if (str_contains(strtoupper($analyse->designation), $terme)) return 3;
                 return 4;
             }
-        ])->take(20); // Augmenter la limite pour voir plus de résultats
+        ])->take(20);
     }
 
     public function getPrescripteursProperty()
@@ -1281,7 +1292,7 @@ class AddPrescription extends Component
     public function getPrelevementsDisponiblesProperty()
     {
         return Prelevement::where('is_active', true)
-                         ->orderBy('nom')
+                         ->orderBy('denomination') // CORRECTION: utiliser 'denomination'
                          ->get();
     }
 
@@ -1293,10 +1304,10 @@ class AddPrescription extends Component
 
         return Prelevement::where('is_active', true)
                          ->where(function($query) {
-                             $query->where('nom', 'like', "%{$this->recherchePrelevement}%")
-                                   ->orWhere('description', 'like', "%{$this->recherchePrelevement}%");
+                             $query->where('denomination', 'like', "%{$this->recherchePrelevement}%") // CORRECTION
+                                   ->orWhere('code', 'like', "%{$this->recherchePrelevement}%"); // Recherche par code aussi
                          })
-                         ->orderBy('nom')
+                         ->orderBy('denomination') // CORRECTION
                          ->limit(10)
                          ->get();
     }

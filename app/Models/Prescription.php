@@ -31,13 +31,13 @@ class Prescription extends Model
         'unite_age',
         'poids',
         'renseignement_clinique',
-        'remise', // ✅ AJOUT DU CHAMP REMISE
+        'remise',
         'status',
     ];
 
     protected $casts = [
         'poids' => 'decimal:2',
-        'remise' => 'decimal:2', // ✅ CAST POUR LA REMISE
+        'remise' => 'decimal:2',
     ];
 
     // RELATIONS
@@ -60,9 +60,7 @@ class Prescription extends Model
     {
         return $this->belongsToMany(Analyse::class, 'prescription_analyse')->withTimestamps();
     }
-    
 
-    // RELATION CORRIGÉE : Résultats directement liés à la prescription
     public function resultats()
     {
         return $this->hasMany(Resultat::class);
@@ -73,11 +71,36 @@ class Prescription extends Model
         return $this->hasMany(Tube::class);
     }
 
+    /**
+     * Relation avec les prélèvements via les tubes
+     * Remplace l'ancienne relation Many-to-Many avec prelevement_prescription
+     */
     public function prelevements()
     {
-        return $this->belongsToMany(Prelevement::class, 'prelevement_prescription')
-            ->withPivot(['prix_unitaire', 'quantite', 'is_payer', 'type_tube_requis', 'volume_requis_ml', 'tubes_generes', 'tubes_generes_at'])
-            ->withTimestamps();
+        return $this->hasManyThrough(
+            Prelevement::class,
+            Tube::class,
+            'prescription_id', // Clé étrangère dans tubes
+            'id', // Clé primaire dans prelevements
+            'id', // Clé primaire dans prescriptions
+            'prelevement_id' // Clé étrangère dans tubes vers prelevements
+        );
+    }
+
+    /**
+     * Obtenir les prélèvements uniques avec leur quantité
+     */
+    public function prelevementsAvecQuantite()
+    {
+        return $this->tubes()
+                   ->join('prelevements', 'tubes.prelevement_id', '=', 'prelevements.id')
+                   ->select(
+                       'prelevements.*',
+                       DB::raw('COUNT(tubes.id) as quantite_tubes'),
+                       DB::raw('GROUP_CONCAT(tubes.code_barre) as codes_barres')
+                   )
+                   ->groupBy('prelevements.id', 'prelevements.code', 'prelevements.denomination', 'prelevements.prix')
+                   ->get();
     }
 
     public function paiements()
@@ -104,7 +127,7 @@ class Prescription extends Model
     }
 
     /**
-     * Calculer le montant des analyses avec chargement des relations
+     * Calculer le montant des analyses
      */
     public function getMontantAnalysesCalcule()
     {
@@ -114,21 +137,17 @@ class Prescription extends Model
         $parentsTraites = [];
 
         foreach ($this->analyses as $analyse) {
-            // Si analyse enfant ET parent a un prix > 0
             if ($analyse->parent_id && !in_array($analyse->parent_id, $parentsTraites)) {
                 if ($analyse->parent && $analyse->parent->prix > 0) {
                     $total += $analyse->parent->prix;
                     $parentsTraites[] = $analyse->parent_id;
                     continue;
-                }
-                // Si parent prix = 0, on prend le prix de l'enfant
-                elseif ($analyse->prix > 0) {
+                } elseif ($analyse->prix > 0) {
                     $total += $analyse->prix;
                     continue;
                 }
             }
 
-            // Analyse sans parent
             if (!$analyse->parent_id && $analyse->prix > 0) {
                 $total += $analyse->prix;
             }
@@ -137,19 +156,25 @@ class Prescription extends Model
         return $total;
     }
 
+    /**
+     * Calculer le montant des prélèvements via les tubes
+     */
+    public function getMontantPrelevementsCalcule()
+    {
+        return $this->prelevementsAvecQuantite()->sum(function($prelevement) {
+            return $prelevement->prix * $prelevement->quantite_tubes;
+        });
+    }
+
     public function getMontantTotalAttribute()
     {
         $montantAnalyses = $this->getMontantAnalysesCalcule();
-        $montantPrelevements = $this->prelevements->sum(function ($prelevement) {
-            return ($prelevement->pivot->prix_unitaire ?? 0) * ($prelevement->pivot->quantite ?? 1);
-        });
+        $montantPrelevements = $this->getMontantPrelevementsCalcule();
         
-        // ✅ SOUSTRAIRE LA REMISE DU TOTAL
         $total = $montantAnalyses + $montantPrelevements;
         return max(0, $total - ($this->remise ?? 0));
     }
 
-    // COMMISSION SIMPLIFIÉE (utilise le champ dans paiements)
     public function getCommissionPrescripteurAttribute()
     {
         return $this->paiements->sum('commission_prescripteur');
@@ -182,15 +207,12 @@ class Prescription extends Model
         $this->update(['status' => self::STATUS_VALIDE]);
     }
 
-    // MÉTHODE CORRIGÉE : Vérification des résultats validés
     public function hasValidatedResultsByBiologiste()
     {
-        // Si pas de résultats, on ne peut pas archiver
         if ($this->resultats()->count() === 0) {
             return false;
         }
 
-        // Tous les résultats doivent être validés
         return $this->resultats()->whereNull('validated_by')->count() === 0;
     }
 
@@ -234,7 +256,6 @@ class Prescription extends Model
         return $labels[$this->status] ?? $this->status;
     }
 
-    // ✅ BOOT METHOD CORRIGÉ
     protected static function boot()
     {
         parent::boot();
@@ -246,12 +267,10 @@ class Prescription extends Model
         });
     }
 
-    // ✅ GÉNÉRATION DE RÉFÉRENCE PRESCRIPTION CORRIGÉE
     public function genererReferenceUnique()
     {
         $annee = date('Y');
         
-        // Compter les prescriptions existantes pour cette année
         $compteur = static::withTrashed()
                          ->whereRaw('YEAR(created_at) = ?', [$annee])
                          ->count() + 1;
@@ -259,7 +278,6 @@ class Prescription extends Model
         $numero = str_pad($compteur, 5, '0', STR_PAD_LEFT);
         $reference = "PRE-{$annee}-{$numero}";
         
-        // ✅ VÉRIFICATION D'UNICITÉ (sécurité supplémentaire)
         while (static::withTrashed()->where('reference', $reference)->exists()) {
             $compteur++;
             $numero = str_pad($compteur, 5, '0', STR_PAD_LEFT);
@@ -269,7 +287,6 @@ class Prescription extends Model
         return $reference;
     }
 
-    // ✅ MÉTHODE UTILITAIRE POUR OBTENIR LA PROCHAINE RÉFÉRENCE (optionnel)
     public static function getNextReference()
     {
         $annee = date('Y');

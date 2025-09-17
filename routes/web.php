@@ -26,6 +26,7 @@ use App\Http\Controllers\ResultatController;
 use App\Livewire\Technicien\IndexTechnicien;
 use App\Livewire\Technicien\ShowPrescription;
 use App\Livewire\Biologiste\BiologisteAnalysisForm;
+use App\Livewire\Secretaire\Tubes\GestionEtiquettes;
 use App\Livewire\Secretaire\Prescription\AddPrescription;
 use App\Http\Controllers\BiologistePrescriptionController;
 use App\Livewire\Secretaire\Prescription\EditPrescription;
@@ -103,6 +104,7 @@ Route::middleware(['auth', 'verified', 'role:secretaire'])->prefix('secretaire')
 
     // Route pour afficher le journal de caisse
     Route::get('/journal-caisse', JournalCaisse::class)->name('journal-caisse');
+    Route::get('/secretaire/etiquettes', GestionEtiquettes::class)->name('etiquettes');  
 });
 
 // ============================================ Résultats PDF prescriptions

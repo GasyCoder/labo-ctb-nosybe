@@ -99,9 +99,9 @@
                                                     <em class="ni ni-flask text-xs"></em>
                                                 </div>
                                                 <div class="flex-1">
-                                                    <h4 class="font-medium text-slate-800 dark:text-slate-100 text-sm">{{ $prelevement->nom }}</h4>
-                                                    @if($prelevement->description)
-                                                        <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">{{ $prelevement->description }}</p>
+                                                    <h4 class="font-medium text-slate-800 dark:text-slate-100 text-sm">{{ $prelevement->denomination }}</h4>
+                                                    @if($prelevement->code)
+                                                        <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Code: {{ $prelevement->code }}</p>
                                                     @endif
                                                     <div class="flex items-center mt-1.5 space-x-3">
                                                         <span class="inline-flex items-center px-1.5 py-0.5 {{ $isEditMode ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200' }} rounded-full text-xxs font-medium">
@@ -155,9 +155,9 @@
                                                     </svg>
                                                 </div>
                                                 <div class="flex-1">
-                                                    <h4 class="font-medium text-slate-800 dark:text-slate-100 text-xs">{{ $prelevement->nom }}</h4>
-                                                    @if($prelevement->description)
-                                                        <p class="text-slate-500 dark:text-slate-400 text-xxs mt-0.5 line-clamp-2">{{ $prelevement->description }}</p>
+                                                    <h4 class="font-medium text-slate-800 dark:text-slate-100 text-xs">{{ $prelevement->denomination }}</h4>
+                                                    @if($prelevement->code)
+                                                        <p class="text-slate-500 dark:text-slate-400 text-xxs mt-0.5 line-clamp-2">Code: {{ $prelevement->code }}</p>
                                                     @endif
                                                     <div class="flex items-center justify-between mt-1">
                                                         <div class="inline-flex items-center px-1.5 py-0.5 {{ $isEditMode ? 'bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200' }} rounded-full text-xxs font-medium">

@@ -405,68 +405,45 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
- * @property string $nom Nom du prélèvement
- * @property string|null $description Description du prélèvement
- * @property string $prix Prix du prélèvement
+ * @property string $code Code du prélèvement
+ * @property string|null $denomination Dénomination du prélèvement
+ * @property int|null $type_tube_id
+ * @property numeric $prix Prix du prélèvement
  * @property int $quantite Quantité disponible
- * @property int $is_active Indique si le prélèvement est actif
+ * @property bool $is_active Indique si le prélèvement est actif
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read mixed $couleur_affichage
+ * @property-read mixed $icone
+ * @property-read mixed $libelle_complet
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prescription> $prescriptions
  * @property-read int|null $prescriptions_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tube> $tubes
+ * @property-read int|null $tubes_count
+ * @property-read \App\Models\TypeTube|null $typeTubeRecommande
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement actifs()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement ecouvillons()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement onlyTrashed()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement recherche($terme)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement sanguins()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereDenomination($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereIsActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereNom($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement wherePrix($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereQuantite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereTypeTubeId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prelevement withoutTrashed()
  */
 	class Prelevement extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property int $prescription_id
- * @property int $prelevement_id
- * @property string $prix_unitaire Prix unitaire du prélèvement dans la prescription
- * @property int $quantite Quantité commandée dans la prescription
- * @property string $type_tube_requis
- * @property string $volume_requis_ml
- * @property int $tubes_generes
- * @property string|null $tubes_generes_at
- * @property string $is_payer Statut de paiement
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Prelevement $prelevement
- * @property-read \App\Models\Prescription $prescription
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereIsPayer($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription wherePrelevementId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription wherePrescriptionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription wherePrixUnitaire($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereQuantite($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereTubesGeneres($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereTubesGeneresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereTypeTubeRequis($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PrelevementPrescription whereVolumeRequisMl($value)
- */
-	class PrelevementPrescription extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -735,96 +712,47 @@ namespace App\Models{
  * @property int $patient_id
  * @property int $prelevement_id
  * @property string|null $code_barre Code-barre unique du tube
- * @property string|null $numero_tube Numéro séquentiel lisible (ex: T-2024-001234)
- * @property string $statut
- * @property string|null $type_tube Type de tube (ex: EDTA, Héparine, Sec)
- * @property numeric|null $volume_ml Volume en ml
- * @property string|null $couleur_bouchon Couleur du bouchon
- * @property \Illuminate\Support\Carbon|null $genere_at
- * @property \Illuminate\Support\Carbon|null $preleve_at
- * @property \Illuminate\Support\Carbon|null $receptionne_at
- * @property \Illuminate\Support\Carbon|null $archive_at
- * @property int|null $preleve_par
  * @property int|null $receptionne_par
- * @property string|null $observations
- * @property array<array-key, mixed>|null $metadata Données techniques supplémentaires
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Analyse> $analyses
  * @property-read int|null $analyses_count
+ * @property-read mixed $icone
+ * @property-read mixed $libelle_complet
+ * @property-read mixed $numero_tube
+ * @property-read mixed $reference
+ * @property-read mixed $statut
  * @property-read mixed $statut_couleur
  * @property-read \App\Models\Patient $patient
  * @property-read \App\Models\Prelevement $prelevement
  * @property-read \App\Models\Prescription $prescription
+ * @property-read \App\Models\User|null $receptionnePar
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Resultat> $resultats
  * @property-read int|null $resultats_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube enAttentePrelvement()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube generes()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube nonReceptionnes()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube onlyTrashed()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube parCodeBarre($codeBarre)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube parReference($reference)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube pourPatient($patientId)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube pourPrescription($prescriptionId)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube prelevesNonReceptionnes()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube statut($statut)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereArchiveAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube receptionnes()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereCodeBarre($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereCouleurBouchon($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereDeletedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereGenereAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereMetadata($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereNumeroTube($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereObservations($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube wherePatientId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube wherePreleveAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube wherePrelevePar($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube wherePrelevementId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube wherePrescriptionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereReceptionneAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereReceptionnePar($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereStatut($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereTypeTube($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube whereVolumeMl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Tube withoutTrashed()
  */
 	class Tube extends \Eloquent {}
-}
-
-namespace App\Models{
-/**
- * @property int $id
- * @property int $tube_id
- * @property string $ancien_statut
- * @property string $nouveau_statut
- * @property int $modifie_par
- * @property string|null $commentaire
- * @property \Illuminate\Support\Carbon $modifie_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read mixed $statut_changement
- * @property-read \App\Models\Tube $tube
- * @property-read \App\Models\User $utilisateur
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut pourTube($tubeId)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut recentsPremiers()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereAncienStatut($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereCommentaire($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereModifieAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereModifiePar($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereNouveauStatut($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereTubeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TubeHistoriqueStatut whereUpdatedAt($value)
- */
-	class TubeHistoriqueStatut extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -854,6 +782,34 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Type withoutTrashed()
  */
 	class Type extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property string|null $code Code
+ * @property string|null $couleur Couleur du bouchon
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read mixed $analyses_recommandees
+ * @property-read mixed $description
+ * @property-read mixed $icone
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Prelevement> $prelevementsRecommandes
+ * @property-read int|null $prelevements_recommandes_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Tube> $tubes
+ * @property-read int|null $tubes_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube nonSanguins()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube sanguins()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube whereCouleur($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TypeTube whereUpdatedAt($value)
+ */
+	class TypeTube extends \Eloquent {}
 }
 
 namespace App\Models{

@@ -2,63 +2,94 @@
 
 namespace Database\Seeders;
 
-use App\Models\Prelevement;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class PrelevementSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
+        // 1. S'assurer que les types de tubes existent d'abord
+        $this->createTypeTubesIfNotExists();
+        
+        // 2. Récupérer les IDs des types de tubes
+        $tubeRouge = DB::table('type_tubes')->where('code', 'SEC')->first()?->id;
+        $tubeEcouvillon = DB::table('type_tubes')->where('code', 'ECOUVILLON')->first()?->id;
+
         $prelevements = [
             [
-                'nom' => 'Prélèvement sang',
-                'description' => 'Prélèvement sanguin standard avec matériel stérile',
-                'prix' => 4000.00,
+                'code' => 'PL1',
+                'denomination' => 'Prélèvement avec écouvillon stérile',
+                'prix' => 15.00,
                 'quantite' => 1,
-                'is_active' => true
+                'is_active' => true,
+                'type_tube_id' => $tubeEcouvillon, // Écouvillon pour prélèvement stérile
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'nom' => 'Prélèvement génital',
-                'description' => 'Prélèvement pour analyse microbiologique',
-                'prix' => 6000.00,
+                'code' => 'PL2',
+                'denomination' => 'Prélèvement sanguin',
+                'prix' => 25.00,
                 'quantite' => 1,
-                'is_active' => true
+                'is_active' => true,
+                'type_tube_id' => $tubeRouge, // Tube rouge SEC pour sang standard
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'nom' => 'Tube aiguille',
-                'description' => 'Kit complet avec tube et aiguille stérile',
-                'prix' => 2000.00,
+                'code' => 'PL3',
+                'denomination' => 'Prélèvement sanguin avec HGPO',
+                'prix' => 35.00,
                 'quantite' => 1,
-                'is_active' => true
+                'is_active' => true,
+                'type_tube_id' => $tubeRouge, // Tube rouge SEC pour HGPO
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'nom' => 'Flacon stérile',
-                'description' => 'Flacon stérile pour prélèvement',
-                'prix' => 2000.00,
+                'code' => 'PL4',
+                'denomination' => 'Prélèvement sanguin avec G50',
+                'prix' => 30.00,
                 'quantite' => 1,
-                'is_active' => true
+                'is_active' => true,
+                'type_tube_id' => $tubeRouge, // Tube rouge SEC pour G50
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
-            [
-                'nom' => 'Flacon non stérile',
-                'description' => 'Flacon non stérile pour prélèvement',
-                'prix' => 1200.00,
-                'quantite' => 1,
-                'is_active' => true
-            ],
-            [
-                'nom' => 'Collecteur d\'urines',
-                'description' => 'Un flacon non stérile conçu pour le prélèvement d\'échantillons d\'urine.',
-                'prix' => 2000.00,
-                'quantite' => 1,
-                'is_active' => true
-            ]
         ];
 
-        foreach ($prelevements as $prelevement) {
-            Prelevement::updateOrCreate(
-                ['nom' => $prelevement['nom']], // Condition : éviter les doublons basés sur le nom
-                $prelevement // Données à insérer ou mettre à jour
-            );
+        DB::table('prelevements')->insert($prelevements);
+        
+        $this->command->info('✅ Prélèvements créés avec types de tubes recommandés');
+        $this->command->info('PL1 → Écouvillon | PL2,PL3,PL4 → Tube Rouge (SEC)');
+    }
+    
+    /**
+     * Créer les types de tubes de base si ils n'existent pas
+     */
+    private function createTypeTubesIfNotExists()
+    {
+        $typeTubes = [
+            ['code' => 'SEC', 'couleur' => 'Rouge'],
+            ['code' => 'CITR', 'couleur' => 'Bleu'],
+            ['code' => 'EDTA', 'couleur' => 'Violet'],
+            ['code' => 'HEPA', 'couleur' => 'Vert'],
+            ['code' => 'FLACON', 'couleur' => 'Transparent'],
+            ['code' => 'ECOUVILLON', 'couleur' => 'Blanc'],
+        ];
+
+        foreach ($typeTubes as $type) {
+            DB::table('type_tubes')->insertOrIgnore([
+                'code' => $type['code'],
+                'couleur' => $type['couleur'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }

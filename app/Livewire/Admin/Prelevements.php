@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Prelevement;
+use App\Models\TypeTube;
 
 class Prelevements extends Component
 {
@@ -17,36 +18,39 @@ class Prelevements extends Component
     public $search = '';
     public $perPage = 15;
 
-    // Propriétés pour les formulaires
-    public $nom = '';
-    public $description = '';
+    // Propriétés pour les formulaires - MISES À JOUR selon le nouveau modèle
+    public $code = '';
+    public $denomination = '';
     public $prix = 0;
     public $quantite = 1;
     public $is_active = true;
+    public $type_tube_id = null;
 
     public $showDeleteModal = false;
     public $prelevementToDelete = null;
 
     protected $rules = [
-        'nom' => 'required|string|max:255',
-        'description' => 'required|string|max:1000',
+        'code' => 'required|string|max:10',
+        'denomination' => 'required|string|max:255',
         'prix' => 'required|numeric|min:0',
         'quantite' => 'required|integer|min:1',
         'is_active' => 'boolean',
+        'type_tube_id' => 'nullable|exists:type_tubes,id',
     ];
 
     protected $messages = [
-        'nom.required' => 'Le nom du prélèvement est requis.',
-        'nom.max' => 'Le nom ne peut pas dépasser 255 caractères.',
-        'nom.unique' => 'Ce nom de prélèvement existe déjà.',
-        'description.required' => 'La description est requise.',
-        'description.max' => 'La description ne peut pas dépasser 1000 caractères.',
+        'code.required' => 'Le code du prélèvement est requis.',
+        'code.max' => 'Le code ne peut pas dépasser 10 caractères.',
+        'code.unique' => 'Ce code de prélèvement existe déjà.',
+        'denomination.required' => 'La dénomination est requise.',
+        'denomination.max' => 'La dénomination ne peut pas dépasser 255 caractères.',
         'prix.required' => 'Le prix est requis.',
         'prix.numeric' => 'Le prix doit être un nombre.',
         'prix.min' => 'Le prix ne peut pas être négatif.',
         'quantite.required' => 'La quantité est requise.',
         'quantite.integer' => 'La quantité doit être un nombre entier.',
         'quantite.min' => 'La quantité doit être au minimum de 1.',
+        'type_tube_id.exists' => 'Le type de tube sélectionné n\'existe pas.',
     ];
 
     public function mount()
@@ -69,17 +73,23 @@ class Prelevements extends Component
     // Propriété computed pour les prélèvements avec pagination et recherche
     public function getPrelevementsProperty()
     {
-        $query = Prelevement::orderBy('nom');
+        $query = Prelevement::with('typeTubeRecommande')->orderBy('code');
 
         // Appliquer la recherche textuelle si présente
         if (!empty($this->search)) {
             $query->where(function ($q) {
-                $q->where('nom', 'like', '%' . $this->search . '%')
-                    ->orWhere('description', 'like', '%' . $this->search . '%');
+                $q->where('code', 'like', '%' . $this->search . '%')
+                    ->orWhere('denomination', 'like', '%' . $this->search . '%');
             });
         }
 
         return $query->paginate($this->perPage);
+    }
+
+    // Propriété pour récupérer tous les types de tubes
+    public function getTypesTubesProperty()
+    {
+        return TypeTube::orderBy('code')->get();
     }
 
     public function render()
@@ -89,7 +99,7 @@ class Prelevements extends Component
 
     public function show($id)
     {
-        $this->prelevement = Prelevement::findOrFail($id);
+        $this->prelevement = Prelevement::with('typeTubeRecommande')->findOrFail($id);
         $this->currentView = 'show';
     }
 
@@ -101,7 +111,7 @@ class Prelevements extends Component
 
     public function edit($id)
     {
-        $this->prelevement = Prelevement::findOrFail($id);
+        $this->prelevement = Prelevement::with('typeTubeRecommande')->findOrFail($id);
         $this->fillForm();
         $this->currentView = 'edit';
     }
@@ -109,15 +119,16 @@ class Prelevements extends Component
     public function store()
     {
         $this->validate(array_merge($this->rules, [
-            'nom' => 'required|string|max:255|unique:prelevements,nom',
+            'code' => 'required|string|max:10|unique:prelevements,code',
         ]));
 
         Prelevement::create([
-            'nom' => trim($this->nom),
-            'description' => trim($this->description),
+            'code' => strtoupper(trim($this->code)),
+            'denomination' => trim($this->denomination),
             'prix' => $this->prix,
             'quantite' => $this->quantite,
             'is_active' => $this->is_active,
+            'type_tube_id' => $this->type_tube_id,
         ]);
 
         session()->flash('message', 'Prélèvement créé avec succès !');
@@ -127,15 +138,16 @@ class Prelevements extends Component
     public function update()
     {
         $this->validate(array_merge($this->rules, [
-            'nom' => 'required|string|max:255|unique:prelevements,nom,' . $this->prelevement->id,
+            'code' => 'required|string|max:10|unique:prelevements,code,' . $this->prelevement->id,
         ]));
 
         $this->prelevement->update([
-            'nom' => trim($this->nom),
-            'description' => trim($this->description),
+            'code' => strtoupper(trim($this->code)),
+            'denomination' => trim($this->denomination),
             'prix' => $this->prix,
             'quantite' => $this->quantite,
             'is_active' => $this->is_active,
+            'type_tube_id' => $this->type_tube_id,
         ]);
 
         session()->flash('message', 'Prélèvement modifié avec succès !');
@@ -176,47 +188,40 @@ class Prelevements extends Component
         $this->dispatch('dark-mode-toggled', $this->darkMode);
     }
 
-    // Méthode pour dupliquer un prélèvement
-    public function duplicate($id)
+
+    // Méthode pour générer le prochain code disponible
+    private function generateNextCode($baseCode)
     {
-        $original = Prelevement::findOrFail($id);
-
-        $copy = $original->replicate();
-        $copy->nom = $original->nom . ' (Copie)';
-        $copy->save();
-
-        session()->flash('message', 'Prélèvement dupliqué avec succès !');
-    }
-
-    // Méthode pour changer le statut de plusieurs prélèvements à la fois
-    public function bulkToggleStatus($ids)
-    {
-        $prelevements = Prelevement::whereIn('id', $ids)->get();
-
-        foreach ($prelevements as $prelevement) {
-            $prelevement->update(['is_active' => !$prelevement->is_active]);
+        $counter = 1;
+        $newCode = $baseCode;
+        
+        while (Prelevement::where('code', $newCode)->exists()) {
+            $counter++;
+            $newCode = $baseCode . '_' . $counter;
         }
-
-        session()->flash('message', count($ids) . ' prélèvement(s) mis à jour !');
+        
+        return $newCode;
     }
 
     // Méthodes privées
     private function fillForm()
     {
-        $this->nom = $this->prelevement->nom;
-        $this->description = $this->prelevement->description;
+        $this->code = $this->prelevement->code;
+        $this->denomination = $this->prelevement->denomination;
         $this->prix = $this->prelevement->prix;
         $this->quantite = $this->prelevement->quantite;
         $this->is_active = $this->prelevement->is_active;
+        $this->type_tube_id = $this->prelevement->type_tube_id;
     }
 
     private function resetForm()
     {
-        $this->nom = '';
-        $this->description = '';
+        $this->code = '';
+        $this->denomination = '';
         $this->prix = 0;
         $this->quantite = 1;
         $this->is_active = true;
+        $this->type_tube_id = null;
         
         // Reset des propriétés du modal
         $this->showDeleteModal = false;
@@ -225,13 +230,15 @@ class Prelevements extends Component
         $this->resetErrorBag();
     }
     
-    // Méthodes utilitaires pour les statistiques
+    // Méthodes utilitaires pour les statistiques - MISES À JOUR
     public function getStatsProperty()
     {
         return [
             'total' => Prelevement::count(),
             'actifs' => Prelevement::where('is_active', true)->count(),
             'inactifs' => Prelevement::where('is_active', false)->count(),
+            'sanguins' => Prelevement::sanguins()->count(),
+            'ecouvillons' => Prelevement::ecouvillons()->count(),
             'prix_moyen' => Prelevement::where('is_active', true)->avg('prix'),
             'prix_total' => Prelevement::where('is_active', true)->sum('prix'),
         ];
@@ -241,27 +248,30 @@ class Prelevements extends Component
     public function getPrelevementsByPriceRange()
     {
         return [
-            'moins_2000' => Prelevement::where('prix', '<', 2000)->count(),
-            'entre_2000_5000' => Prelevement::whereBetween('prix', [2000, 5000])->count(),
-            'plus_5000' => Prelevement::where('prix', '>', 5000)->count(),
+            'moins_20' => Prelevement::where('prix', '<', 20)->count(),
+            'entre_20_50' => Prelevement::whereBetween('prix', [20, 50])->count(),
+            'plus_50' => Prelevement::where('prix', '>', 50)->count(),
         ];
+    }
+
+    // Méthode pour obtenir les prélèvements par type de tube
+    public function getPrelevementsByTypeTube()
+    {
+        return Prelevement::join('type_tubes', 'prelevements.type_tube_id', '=', 'type_tubes.id')
+                         ->selectRaw('type_tubes.code as tube_code, type_tubes.couleur, COUNT(*) as total')
+                         ->groupBy('type_tubes.code', 'type_tubes.couleur')
+                         ->orderByDesc('total')
+                         ->get();
     }
 
     // Méthode pour exporter les prélèvements (optionnelle)
     public function export()
     {
         // Logique d'export en CSV ou Excel
-        $prelevements = Prelevement::all();
+        $prelevements = Prelevement::with('typeTubeRecommande')->get();
 
         // Ici vous pouvez implémenter l'export
         session()->flash('message', 'Export en cours de développement...');
-    }
-
-    // Méthode pour importer des prélèvements depuis un fichier
-    public function showImportModal()
-    {
-        // Logique pour afficher un modal d'import
-        $this->dispatch('show-import-modal');
     }
 
     // Validation en temps réel
@@ -276,23 +286,23 @@ class Prelevements extends Component
         return $prix * (1 + $tauxTVA / 100);
     }
 
-    // Méthode pour obtenir les prélèvements les plus utilisés
+    // Méthode pour obtenir les prélèvements les plus utilisés - CORRIGÉE
     public function getPrelevementsPlusUtilises($limit = 5)
     {
-        return Prelevement::withCount('prescriptions')
-            ->orderByDesc('prescriptions_count')
-            ->where('is_active', true)
-            ->limit($limit)
-            ->get();
+        return Prelevement::lesPlusUtilises($limit);
     }
 
-    // Méthode pour recherche avancée
+    // Méthode pour recherche avancée - MISE À JOUR
     public function searchAdvanced($criteria)
     {
         $query = Prelevement::query();
 
-        if (isset($criteria['nom'])) {
-            $query->where('nom', 'like', '%' . $criteria['nom'] . '%');
+        if (isset($criteria['code'])) {
+            $query->where('code', 'like', '%' . $criteria['code'] . '%');
+        }
+
+        if (isset($criteria['denomination'])) {
+            $query->where('denomination', 'like', '%' . $criteria['denomination'] . '%');
         }
 
         if (isset($criteria['prix_min'])) {
@@ -307,13 +317,25 @@ class Prelevements extends Component
             $query->where('is_active', $criteria['is_active']);
         }
 
+        if (isset($criteria['type_tube_id'])) {
+            $query->where('type_tube_id', $criteria['type_tube_id']);
+        }
+
+        if (isset($criteria['categorie'])) {
+            if ($criteria['categorie'] === 'sanguins') {
+                $query->sanguins();
+            } elseif ($criteria['categorie'] === 'ecouvillons') {
+                $query->ecouvillons();
+            }
+        }
+
         return $query->get();
     }
 
     // Méthode pour obtenir les suggestions de prix basées sur des prélèvements similaires
-    public function getSuggestionsPrix($nom)
+    public function getSuggestionsPrix($denomination)
     {
-        $similaires = Prelevement::where('nom', 'like', '%' . $nom . '%')
+        $similaires = Prelevement::where('denomination', 'like', '%' . $denomination . '%')
             ->where('is_active', true)
             ->pluck('prix')
             ->toArray();
@@ -329,6 +351,29 @@ class Prelevements extends Component
         ];
     }
 
+    // NOUVELLES MÉTHODES pour gérer les types de tubes
+
+    // Méthode pour récupérer les informations du tube recommandé
+    public function getInfoTubeRecommande($prelevementId)
+    {
+        $prelevement = Prelevement::find($prelevementId);
+        return $prelevement ? $prelevement->getTypeTubeRecommande() : null;
+    }
+
+    // Méthode pour changer le type de tube recommandé
+    public function changerTypeTube($prelevementId, $typeTubeId)
+    {
+        $prelevement = Prelevement::findOrFail($prelevementId);
+        $prelevement->update(['type_tube_id' => $typeTubeId]);
+        
+        session()->flash('message', 'Type de tube mis à jour avec succès !');
+    }
+
+    // Méthode pour obtenir les prélèvements par catégorie
+    public function getPrelevementsParCategorie()
+    {
+        return Prelevement::parCategorie();
+    }
 
     // Ouvrir le modal de confirmation
     public function confirmDelete($id)
@@ -337,15 +382,30 @@ class Prelevements extends Component
         $this->showDeleteModal = true;
     }
 
-    // Supprimer le prélèvement (remplace votre méthode delete existante)
+    // Supprimer le prélèvement
     public function delete()
     {
         try {
-            // Vérifier s'il y a des prescriptions liées
-            if (method_exists($this->prelevementToDelete, 'prescriptions') && $this->prelevementToDelete->prescriptions()->count() > 0) {
-                session()->flash('error', 'Impossible de supprimer ce prélèvement car il est utilisé dans des prescriptions.');
-                $this->closeDeleteModal();
-                return;
+            // Vérifier s'il y a des prescriptions liées (seulement si la table pivot existe)
+            try {
+                if (method_exists($this->prelevementToDelete, 'prescriptions') && $this->prelevementToDelete->prescriptions()->count() > 0) {
+                    session()->flash('error', 'Impossible de supprimer ce prélèvement car il est utilisé dans des prescriptions.');
+                    $this->closeDeleteModal();
+                    return;
+                }
+            } catch (\Exception $e) {
+                // Table pivot n'existe pas encore, on continue
+            }
+
+            // Vérifier s'il y a des tubes liés
+            try {
+                if (method_exists($this->prelevementToDelete, 'tubes') && $this->prelevementToDelete->tubes()->count() > 0) {
+                    session()->flash('error', 'Impossible de supprimer ce prélèvement car des tubes lui sont associés.');
+                    $this->closeDeleteModal();
+                    return;
+                }
+            } catch (\Exception $e) {
+                // Table tubes n'existe pas encore ou pas de relation, on continue
             }
 
             $this->prelevementToDelete->delete();
@@ -353,7 +413,7 @@ class Prelevements extends Component
             $this->closeDeleteModal();
             
         } catch (\Exception $e) {
-            session()->flash('error', 'Erreur lors de la suppression.');
+            session()->flash('error', 'Erreur lors de la suppression: ' . $e->getMessage());
             $this->closeDeleteModal();
         }
     }

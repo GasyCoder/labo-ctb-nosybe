@@ -1,4 +1,4 @@
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl transition-colors duration-200">
                 <div class="flex justify-between items-center">
                     <h6 class="font-semibold text-gray-900 dark:text-white transition-colors duration-200">
@@ -32,8 +32,9 @@
                     <table class="w-full">
                         <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 transition-colors duration-200">
                             <tr>
-                                <th class="text-left px-6 py-4 font-medium text-gray-900 dark:text-white">Nom</th>
-                                <th class="text-left py-4 font-medium text-gray-900 dark:text-white">Description</th>
+                                <th class="text-left px-6 py-4 font-medium text-gray-900 dark:text-white">Code</th>
+                                <th class="text-left py-4 font-medium text-gray-900 dark:text-white">Dénomination</th>
+                                <th class="text-center py-4 font-medium text-gray-900 dark:text-white">Type Tube</th>
                                 <th class="text-right py-4 font-medium text-gray-900 dark:text-white">Prix</th>
                                 <th class="text-center py-4 font-medium text-gray-900 dark:text-white">Quantité</th>
                                 <th class="text-center py-4 font-medium text-gray-900 dark:text-white">Statut</th>
@@ -44,12 +45,30 @@
                             @foreach($this->prelevements as $prelevement)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
                                     <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900 dark:text-white">{{ $prelevement->nom }}</div>
+                                        <div class="flex items-center">
+                                            <span class="text-lg mr-2">{{ $prelevement->icone }}</span>
+                                            <div>
+                                                <div class="font-medium text-gray-900 dark:text-white">{{ $prelevement->code }}</div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {{ $prelevement->estSanguin() ? 'Sanguin' : ($prelevement->estEcouvillon() ? 'Écouvillon' : 'Autre') }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="py-4 pr-4">
-                                        <div class="text-gray-600 dark:text-gray-300 text-sm">
-                                            {{ Str::limit($prelevement->description, 80) }}
+                                        <div class="text-gray-900 dark:text-white font-medium">
+                                            {{ Str::limit($prelevement->denomination, 50) }}
                                         </div>
+                                    </td>
+                                    <td class="py-4 text-center">
+                                        @php $tubeInfo = $prelevement->getTypeTubeRecommande() @endphp
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                              style="background-color: {{ strtolower($tubeInfo['couleur']) === 'rouge' ? '#fee2e2' : (strtolower($tubeInfo['couleur']) === 'bleu' ? '#dbeafe' : (strtolower($tubeInfo['couleur']) === 'vert' ? '#d1fae5' : (strtolower($tubeInfo['couleur']) === 'violet' ? '#e9d5ff' : '#f3f4f6'))) }}; 
+                                                     color: {{ strtolower($tubeInfo['couleur']) === 'rouge' ? '#dc2626' : (strtolower($tubeInfo['couleur']) === 'bleu' ? '#2563eb' : (strtolower($tubeInfo['couleur']) === 'vert' ? '#059669' : (strtolower($tubeInfo['couleur']) === 'violet' ? '#7c3aed' : '#374151'))) }}">
+                                            <div class="w-2 h-2 rounded-full mr-1"
+                                                 style="background-color: {{ strtolower($tubeInfo['couleur']) === 'rouge' ? '#dc2626' : (strtolower($tubeInfo['couleur']) === 'bleu' ? '#2563eb' : (strtolower($tubeInfo['couleur']) === 'vert' ? '#059669' : (strtolower($tubeInfo['couleur']) === 'violet' ? '#7c3aed' : '#6b7280'))) }}"></div>
+                                            {{ $tubeInfo['code'] }}
+                                        </span>
                                     </td>
                                     <td class="py-4 text-right">
                                         <span class="font-medium text-emerald-600 dark:text-emerald-400">
