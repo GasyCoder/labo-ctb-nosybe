@@ -338,6 +338,7 @@ namespace App\Models{
  * @property-read mixed $latest_age
  * @property-read mixed $latest_unite_age
  * @property-read mixed $montant_total_paye
+ * @property-read mixed $nom_complet
  * @property-read mixed $statut_automatique
  * @property-read mixed $total_analyses
  * @property-read mixed $total_paiements

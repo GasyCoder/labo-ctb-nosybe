@@ -272,7 +272,6 @@ class Tube extends Model
             $compteurTube = 1;
 
             foreach ($prescription->prelevements as $prelevement) {
-                // Récupérer la quantité depuis le pivot ou défaut à 1
                 $quantite = max(1, $prelevement->pivot->quantite ?? 1);
                 
                 for ($i = 0; $i < $quantite; $i++) {
@@ -281,10 +280,11 @@ class Tube extends Model
                         'patient_id' => $prescription->patient_id,
                         'prelevement_id' => $prelevement->id,
                         'code_barre' => $prescription->reference . '-T' . str_pad($compteurTube, 2, '0', STR_PAD_LEFT),
+                        'type_tube' => $prelevement->pivot->type_tube_requis ?? 'SEC',
+                        'volume_ml' => $prelevement->pivot->volume_requis_ml ?? 5.0,
                     ]);
-
-                    $compteurTube++;
                     $tubes->push($tube);
+                    $compteurTube++;
                 }
             }
 
