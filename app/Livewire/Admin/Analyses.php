@@ -21,7 +21,7 @@ class Analyses extends Component
 
     // Filtres et pagination
     public $selectedExamen = '';
-    public $selectedLevel = 'racines'; // NOUVEAU: Filtre de niveau d'affichage
+    public $selectedLevel = 'racines';
     public $perPage = 10;
     public $search = '';
 
@@ -45,7 +45,7 @@ class Analyses extends Component
     public $showDeleteModal = false;
     public $analyseToDelete = null;
 
-    // NOUVELLE PROPRIÉTÉ pour la création en lot
+    // Propriété pour la gestion des sous-analyses
     public $sousAnalyses = [];
     public $createWithChildren = false;
 
@@ -64,15 +64,30 @@ class Analyses extends Component
         'ordre' => 'nullable|integer',
         'is_bold' => 'boolean',
         'status' => 'boolean',
-        
+
         // Règles pour sous-analyses
         'sousAnalyses.*.code' => 'required|string|max:50',
         'sousAnalyses.*.designation' => 'required|string|max:255',
         'sousAnalyses.*.prix' => 'required|numeric|min:0',
-        'sousAnalyses.*.level' => 'required|in:NORMAL,CHILD',
+        'sousAnalyses.*.level' => 'required|in:PARENT,NORMAL,CHILD',
         'sousAnalyses.*.valeur_ref' => 'nullable|string|max:255',
         'sousAnalyses.*.unite' => 'nullable|string|max:50',
         'sousAnalyses.*.ordre' => 'nullable|integer',
+        'sousAnalyses.*.is_bold' => 'boolean',
+        'sousAnalyses.*.status' => 'boolean',
+        'sousAnalyses.*.id' => 'nullable|exists:analyses,id',
+
+        // Règles pour sous-sous-analyses
+        'sousAnalyses.*.children.*.code' => 'required|string|max:50',
+        'sousAnalyses.*.children.*.designation' => 'required|string|max:255',
+        'sousAnalyses.*.children.*.prix' => 'required|numeric|min:0',
+        'sousAnalyses.*.children.*.level' => 'required|in:NORMAL,CHILD',
+        'sousAnalyses.*.children.*.valeur_ref' => 'nullable|string|max:255',
+        'sousAnalyses.*.children.*.unite' => 'nullable|string|max:50',
+        'sousAnalyses.*.children.*.ordre' => 'nullable|integer',
+        'sousAnalyses.*.children.*.is_bold' => 'boolean',
+        'sousAnalyses.*.children.*.status' => 'boolean',
+        'sousAnalyses.*.children.*.id' => 'nullable|exists:analyses,id',
     ];
 
     protected $messages = [
@@ -89,13 +104,22 @@ class Analyses extends Component
         'type_id.required' => 'Le type est requis.',
         'type_id.exists' => 'Le type sélectionné n\'existe pas.',
         'parent_id.exists' => 'Le parent sélectionné n\'existe pas.',
-        
+
         'sousAnalyses.*.code.required' => 'Le code de la sous-analyse est requis.',
         'sousAnalyses.*.code.unique' => 'Ce code de sous-analyse existe déjà.',
         'sousAnalyses.*.designation.required' => 'La désignation de la sous-analyse est requise.',
         'sousAnalyses.*.prix.required' => 'Le prix de la sous-analyse est requis.',
-        'sousAnalyses.*.prix.numeric' => 'Le prix doit être un nombre.',
+        'sousAnalyses.*.prix.numeric' => 'Le prix de la sous-analyse doit être un nombre.',
         'sousAnalyses.*.level.required' => 'Le niveau de la sous-analyse est requis.',
+        'sousAnalyses.*.level.in' => 'Le niveau de la sous-analyse doit être PARENT, NORMAL ou CHILD.',
+
+        'sousAnalyses.*.children.*.code.required' => 'Le code de la sous-sous-analyse est requis.',
+        'sousAnalyses.*.children.*.code.unique' => 'Ce code de sous-sous-analyse existe déjà.',
+        'sousAnalyses.*.children.*.designation.required' => 'La désignation de la sous-sous-analyse est requise.',
+        'sousAnalyses.*.children.*.prix.required' => 'Le prix de la sous-sous-analyse est requis.',
+        'sousAnalyses.*.children.*.prix.numeric' => 'Le prix de la sous-sous-analyse doit être un nombre.',
+        'sousAnalyses.*.children.*.level.required' => 'Le niveau de la sous-sous-analyse est requis.',
+        'sousAnalyses.*.children.*.level.in' => 'Le niveau de la sous-sous-analyse doit être NORMAL ou CHILD.',
     ];
 
     public function mount()
@@ -138,39 +162,47 @@ class Analyses extends Component
     {
         if ($this->level === 'PARENT') {
             $this->createWithChildren = true;
-            $this->addSousAnalyse();
+            if (empty($this->sousAnalyses)) {
+                $this->addSousAnalyse();
+            }
         } else {
             $this->createWithChildren = false;
             $this->sousAnalyses = [];
         }
     }
 
-    // PROPRIÉTÉ COMPUTED POUR LES ANALYSES - MODIFIÉE avec filtre de niveau
+    public function updatedSousAnalyses($value, $name)
+    {
+        if (preg_match('/(\d+)\.level/', $name, $matches)) {
+            $index = $matches[1];
+            if ($value === 'PARENT' && !isset($this->sousAnalyses[$index]['children'])) {
+                $this->sousAnalyses[$index]['children'] = [];
+                $this->addChildToSousAnalyse($index);
+            } elseif ($value !== 'PARENT') {
+                unset($this->sousAnalyses[$index]['children']);
+            }
+        }
+    }
+
     public function getAnalysesProperty()
     {
         $query = Analyse::with(['examen', 'type', 'parent', 'enfants']);
 
-        // Appliquer le filtre de niveau d'affichage
         switch ($this->selectedLevel) {
             case 'parents':
-                // Seulement les analyses Parent
                 $query->where('level', 'PARENT');
                 break;
             case 'racines':
-                // Analyses sans parent (Parent + Normal sans parent)
                 $query->whereNull('parent_id');
                 break;
             case 'normales':
-                // Seulement les analyses Normal
                 $query->where('level', 'NORMAL');
                 break;
             case 'enfants':
-                // Seulement les analyses Child
                 $query->where('level', 'CHILD');
                 break;
             case 'tous':
             default:
-                // Toutes les analyses (comportement par défaut)
                 break;
         }
 
@@ -178,24 +210,21 @@ class Analyses extends Component
               ->orderBy('ordre')
               ->orderBy('designation');
 
-        // Filtre par examen
         if (!empty($this->selectedExamen)) {
             $query->where('examen_id', $this->selectedExamen);
         }
 
-        // Filtre de recherche textuelle
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('code', 'like', '%' . $this->search . '%')
-                    ->orWhere('designation', 'like', '%' . $this->search . '%')
-                    ->orWhere('description', 'like', '%' . $this->search . '%');
+                  ->orWhere('designation', 'like', '%' . $this->search . '%')
+                  ->orWhere('description', 'like', '%' . $this->search . '%');
             });
         }
 
         return $query->paginate($this->perPage);
     }
 
-    // NOUVELLE MÉTHODE pour obtenir le nombre d'analyses par niveau
     public function getAnalysesCountByLevel()
     {
         return [
@@ -212,7 +241,6 @@ class Analyses extends Component
         return view('livewire.admin.analyses');
     }
 
-    // ACTIONS CRUD (inchangées)
     public function show($id)
     {
         $this->analyse = Analyse::with(['examen', 'type', 'parent', 'enfants'])->findOrFail($id);
@@ -227,15 +255,17 @@ class Analyses extends Component
 
     public function edit($id)
     {
-        $this->analyse = Analyse::findOrFail($id);
+        $this->analyse = Analyse::with(['enfants' => function ($query) {
+            $query->with('enfants')->orderBy('ordre');
+        }])->findOrFail($id);
         $this->fillForm();
         $this->mode = 'edit';
     }
 
-    // NOUVELLES MÉTHODES pour gestion sous-analyses (inchangées)
     public function addSousAnalyse()
     {
         $this->sousAnalyses[] = [
+            'id' => null,
             'code' => '',
             'designation' => '',
             'level' => 'CHILD',
@@ -245,14 +275,19 @@ class Analyses extends Component
             'ordre' => count($this->sousAnalyses) + 1,
             'status' => true,
             'is_bold' => false,
+            'children' => [],
         ];
     }
 
     public function removeSousAnalyse($index)
     {
-        unset($this->sousAnalyses[$index]);
+        if (isset($this->sousAnalyses[$index]['id'])) {
+            $this->sousAnalyses[$index]['_delete'] = true;
+        } else {
+            unset($this->sousAnalyses[$index]);
+        }
         $this->sousAnalyses = array_values($this->sousAnalyses);
-        
+
         foreach ($this->sousAnalyses as $key => $value) {
             $this->sousAnalyses[$key]['ordre'] = $key + 1;
         }
@@ -264,7 +299,7 @@ class Analyses extends Component
             $temp = $this->sousAnalyses[$index];
             $this->sousAnalyses[$index] = $this->sousAnalyses[$index - 1];
             $this->sousAnalyses[$index - 1] = $temp;
-            
+
             $this->sousAnalyses[$index]['ordre'] = $index + 1;
             $this->sousAnalyses[$index - 1]['ordre'] = $index;
         }
@@ -276,13 +311,70 @@ class Analyses extends Component
             $temp = $this->sousAnalyses[$index];
             $this->sousAnalyses[$index] = $this->sousAnalyses[$index + 1];
             $this->sousAnalyses[$index + 1] = $temp;
-            
+
             $this->sousAnalyses[$index]['ordre'] = $index + 1;
             $this->sousAnalyses[$index + 1]['ordre'] = $index + 2;
         }
     }
 
-    // Store et Update méthodes (inchangées de la version corrigée précédente)
+    public function addChildToSousAnalyse($parentIndex)
+    {
+        if (!isset($this->sousAnalyses[$parentIndex]['children'])) {
+            $this->sousAnalyses[$parentIndex]['children'] = [];
+        }
+
+        $this->sousAnalyses[$parentIndex]['children'][] = [
+            'id' => null,
+            'code' => '',
+            'designation' => '',
+            'level' => 'CHILD',
+            'prix' => 0,
+            'valeur_ref' => '',
+            'unite' => '',
+            'ordre' => count($this->sousAnalyses[$parentIndex]['children']) + 1,
+            'status' => true,
+            'is_bold' => false,
+        ];
+    }
+
+    public function removeChildFromSous($parentIndex, $childIndex)
+    {
+        if (isset($this->sousAnalyses[$parentIndex]['children'][$childIndex]['id'])) {
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex]['_delete'] = true;
+        } else {
+            unset($this->sousAnalyses[$parentIndex]['children'][$childIndex]);
+        }
+        $this->sousAnalyses[$parentIndex]['children'] = array_values($this->sousAnalyses[$parentIndex]['children']);
+
+        foreach ($this->sousAnalyses[$parentIndex]['children'] as $key => $value) {
+            $this->sousAnalyses[$parentIndex]['children'][$key]['ordre'] = $key + 1;
+        }
+    }
+
+    public function moveChildUp($parentIndex, $childIndex)
+    {
+        if ($childIndex > 0) {
+            $temp = $this->sousAnalyses[$parentIndex]['children'][$childIndex];
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex] = $this->sousAnalyses[$parentIndex]['children'][$childIndex - 1];
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex - 1] = $temp;
+
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex]['ordre'] = $childIndex + 1;
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex - 1]['ordre'] = $childIndex;
+        }
+    }
+
+    public function moveChildDown($parentIndex, $childIndex)
+    {
+        if ($childIndex < count($this->sousAnalyses[$parentIndex]['children']) - 1) {
+            $temp = $this->sousAnalyses[$parentIndex]['children'][$childIndex];
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex] = $this->sousAnalyses[$parentIndex]['children'][$childIndex + 1];
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex + 1] = $temp;
+
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex]['ordre'] = $childIndex + 1;
+            $this->sousAnalyses[$parentIndex]['children'][$childIndex + 1]['ordre'] = $childIndex + 2;
+        }
+    }
+
     public function store()
     {
         $rules = $this->rules;
@@ -291,12 +383,11 @@ class Analyses extends Component
         if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
             foreach ($this->sousAnalyses as $index => $sousAnalyse) {
                 $rules["sousAnalyses.{$index}.code"] = 'required|string|max:50|unique:analyses,code';
-                $rules["sousAnalyses.{$index}.designation"] = 'required|string|max:255';
-                $rules["sousAnalyses.{$index}.prix"] = 'required|numeric|min:0';
-                $rules["sousAnalyses.{$index}.level"] = 'required|in:NORMAL,CHILD';
-                $rules["sousAnalyses.{$index}.valeur_ref"] = 'nullable|string|max:255';
-                $rules["sousAnalyses.{$index}.unite"] = 'nullable|string|max:50';
-                $rules["sousAnalyses.{$index}.ordre"] = 'nullable|integer';
+                if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
+                    foreach ($sousAnalyse['children'] as $cindex => $child) {
+                        $rules["sousAnalyses.{$index}.children.{$cindex}.code"] = 'required|string|max:50|unique:analyses,code';
+                    }
+                }
             }
         }
 
@@ -323,7 +414,7 @@ class Analyses extends Component
 
             if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
                 foreach ($this->sousAnalyses as $sousAnalyse) {
-                    Analyse::create([
+                    $sousAnalyseRecord = Analyse::create([
                         'code' => $sousAnalyse['code'],
                         'level' => $sousAnalyse['level'],
                         'parent_id' => $analyseParent->id,
@@ -337,43 +428,183 @@ class Analyses extends Component
                         'ordre' => $sousAnalyse['ordre'],
                         'status' => $sousAnalyse['status'] ?? true,
                     ]);
+
+                    if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
+                        foreach ($sousAnalyse['children'] as $child) {
+                            Analyse::create([
+                                'code' => $child['code'],
+                                'level' => $child['level'],
+                                'parent_id' => $sousAnalyseRecord->id,
+                                'designation' => $child['designation'],
+                                'prix' => $child['prix'],
+                                'is_bold' => $child['is_bold'] ?? false,
+                                'examen_id' => $this->examen_id,
+                                'type_id' => $this->type_id,
+                                'valeur_ref' => $child['valeur_ref'],
+                                'unite' => $child['unite'],
+                                'ordre' => $child['ordre'],
+                                'status' => $child['status'] ?? true,
+                            ]);
+                        }
+                    }
                 }
             }
         });
 
-        $message = $this->createWithChildren && count($this->sousAnalyses) > 0 
-            ? 'Analyse parent et ' . count($this->sousAnalyses) . ' sous-analyses créées avec succès !'
+        $totalChildren = 0;
+        foreach ($this->sousAnalyses as $sousAnalyse) {
+            $totalChildren++;
+            if (isset($sousAnalyse['children'])) {
+                $totalChildren += count($sousAnalyse['children']);
+            }
+        }
+
+        $message = $this->createWithChildren && $totalChildren > 0
+            ? 'Analyse parent et ' . $totalChildren . ' sous-analyses créées avec succès !'
             : 'Analyse créée avec succès !';
-            
+
         session()->flash('message', $message);
         $this->backToList();
     }
 
     public function update()
     {
-        $this->validate(array_merge($this->rules, [
-            'code' => 'required|string|max:50|unique:analyses,code,' . $this->analyse->id,
-        ]));
+        $rules = $this->rules;
+        $rules['code'] = 'required|string|max:50|unique:analyses,code,' . $this->analyse->id;
 
-        $this->analyse->update([
-            'code' => $this->code,
-            'level' => $this->level,
-            'parent_id' => $this->parent_id ?: null,
-            'designation' => $this->designation,
-            'description' => $this->description,
-            'prix' => $this->prix,
-            'is_bold' => $this->is_bold,
-            'examen_id' => $this->examen_id,
-            'type_id' => $this->type_id,
-            'valeur_ref' => $this->valeur_ref,
-            'unite' => $this->unite,
-            'suffixe' => $this->suffixe,
-            'valeurs_predefinies' => $this->valeurs_predefinies ? json_encode($this->valeurs_predefinies) : null,
-            'ordre' => $this->ordre,
-            'status' => $this->status,
-        ]);
+        if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
+            foreach ($this->sousAnalyses as $index => $sousAnalyse) {
+                $rules["sousAnalyses.{$index}.code"] = 'required|string|max:50|unique:analyses,code,' . ($sousAnalyse['id'] ?? null);
+                if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
+                    foreach ($sousAnalyse['children'] as $cindex => $child) {
+                        $rules["sousAnalyses.{$index}.children.{$cindex}.code"] = 'required|string|max:50|unique:analyses,code,' . ($child['id'] ?? null);
+                    }
+                }
+            }
+        }
 
-        session()->flash('message', 'Analyse modifiée avec succès !');
+        $this->validate($rules);
+
+        DB::transaction(function () {
+            // Update main analyse
+            $this->analyse->update([
+                'code' => $this->code,
+                'level' => $this->level,
+                'parent_id' => $this->parent_id ?: null,
+                'designation' => $this->designation,
+                'description' => $this->description,
+                'prix' => $this->prix,
+                'is_bold' => $this->is_bold,
+                'examen_id' => $this->examen_id,
+                'type_id' => $this->type_id,
+                'valeur_ref' => $this->valeur_ref,
+                'unite' => $this->unite,
+                'suffixe' => $this->suffixe,
+                'valeurs_predefinies' => $this->valeurs_predefinies ? json_encode($this->valeurs_predefinies) : null,
+                'ordre' => $this->ordre,
+                'status' => $this->status,
+            ]);
+
+            // Handle sous-analyses
+            $existingIds = [];
+            if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
+                foreach ($this->sousAnalyses as $index => $sousAnalyse) {
+                    if (isset($sousAnalyse['_delete']) && $sousAnalyse['_delete'] && $sousAnalyse['id']) {
+                        Analyse::find($sousAnalyse['id'])->delete();
+                        continue;
+                    }
+
+                    $data = [
+                        'code' => $sousAnalyse['code'],
+                        'level' => $sousAnalyse['level'],
+                        'parent_id' => $this->analyse->id,
+                        'designation' => $sousAnalyse['designation'],
+                        'prix' => $sousAnalyse['prix'],
+                        'is_bold' => $sousAnalyse['is_bold'] ?? false,
+                        'examen_id' => $this->examen_id,
+                        'type_id' => $this->type_id,
+                        'valeur_ref' => $sousAnalyse['valeur_ref'],
+                        'unite' => $sousAnalyse['unite'],
+                        'ordre' => $sousAnalyse['ordre'],
+                        'status' => $sousAnalyse['status'] ?? true,
+                    ];
+
+                    if (isset($sousAnalyse['id']) && $sousAnalyse['id']) {
+                        $sousAnalyseRecord = Analyse::find($sousAnalyse['id']);
+                        $sousAnalyseRecord->update($data);
+                        $existingIds[] = $sousAnalyse['id'];
+                    } else {
+                        $sousAnalyseRecord = Analyse::create($data);
+                        $existingIds[] = $sousAnalyseRecord->id;
+                    }
+
+                    // Handle sous-sous-analyses
+                    $existingChildIds = [];
+                    if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
+                        foreach ($sousAnalyse['children'] as $child) {
+                            if (isset($child['_delete']) && $child['_delete'] && $child['id']) {
+                                Analyse::find($child['id'])->delete();
+                                continue;
+                            }
+
+                            $childData = [
+                                'code' => $child['code'],
+                                'level' => $child['level'],
+                                'parent_id' => $sousAnalyseRecord->id,
+                                'designation' => $child['designation'],
+                                'prix' => $child['prix'],
+                                'is_bold' => $child['is_bold'] ?? false,
+                                'examen_id' => $this->examen_id,
+                                'type_id' => $this->type_id,
+                                'valeur_ref' => $child['valeur_ref'],
+                                'unite' => $child['unite'],
+                                'ordre' => $child['ordre'],
+                                'status' => $child['status'] ?? true,
+                            ];
+
+                            if (isset($child['id']) && $child['id']) {
+                                $childRecord = Analyse::find($child['id']);
+                                $childRecord->update($childData);
+                                $existingChildIds[] = $child['id'];
+                            } else {
+                                $childRecord = Analyse::create($childData);
+                                $existingChildIds[] = $childRecord->id;
+                            }
+                        }
+                    }
+
+                    // Delete sous-sous-analyses that are no longer present
+                    Analyse::where('parent_id', $sousAnalyseRecord->id)
+                        ->whereNotIn('id', $existingChildIds)
+                        ->delete();
+                }
+            }
+
+            // Delete sous-analyses that are no longer present
+            Analyse::where('parent_id', $this->analyse->id)
+                ->whereNotIn('id', $existingIds)
+                ->delete();
+        });
+
+        $totalChildren = 0;
+        foreach ($this->sousAnalyses as $sousAnalyse) {
+            if (!isset($sousAnalyse['_delete']) || !$sousAnalyse['_delete']) {
+                $totalChildren++;
+                if (isset($sousAnalyse['children'])) {
+                    foreach ($sousAnalyse['children'] as $child) {
+                        if (!isset($child['_delete']) || !$child['_delete']) {
+                            $totalChildren++;
+                        }
+                    }
+                }
+            }
+        }
+
+        $message = $totalChildren > 0
+            ? 'Analyse et ' . $totalChildren . ' sous-analyses mises à jour avec succès !'
+            : 'Analyse mise à jour avec succès !';
+
+        session()->flash('message', $message);
         $this->backToList();
     }
 
@@ -388,7 +619,6 @@ class Analyses extends Component
             ->get();
     }
 
-    // MÉTHODES DE FILTRAGE - MODIFIÉES pour inclure le filtre de niveau
     public function resetFilters()
     {
         $this->selectedExamen = '';
@@ -403,7 +633,6 @@ class Analyses extends Component
         $this->resetPage();
     }
 
-    // MÉTHODES PRIVÉES (inchangées)
     private function fillForm()
     {
         $this->code = $this->analyse->code;
@@ -418,12 +647,49 @@ class Analyses extends Component
         $this->valeur_ref = $this->analyse->valeur_ref;
         $this->unite = $this->analyse->unite;
         $this->suffixe = $this->analyse->suffixe;
-        $this->valeurs_predefinies = $this->analyse->valeurs_predefinies ?: [];
+        $this->valeurs_predefinies = $this->analyse->valeurs_predefinies ? json_decode($this->analyse->valeurs_predefinies, true) : [];
         $this->ordre = $this->analyse->ordre;
         $this->status = $this->analyse->status;
-        
-        $this->createWithChildren = false;
+
+        $this->createWithChildren = $this->analyse->level === 'PARENT' && $this->analyse->enfants->isNotEmpty();
         $this->sousAnalyses = [];
+
+        if ($this->createWithChildren) {
+            foreach ($this->analyse->enfants as $index => $enfant) {
+                $sousAnalyse = [
+                    'id' => $enfant->id,
+                    'code' => $enfant->code,
+                    'designation' => $enfant->designation,
+                    'level' => $enfant->level,
+                    'prix' => $enfant->prix,
+                    'valeur_ref' => $enfant->valeur_ref,
+                    'unite' => $enfant->unite,
+                    'ordre' => $enfant->ordre,
+                    'status' => $enfant->status,
+                    'is_bold' => $enfant->is_bold,
+                    'children' => [],
+                ];
+
+                if ($enfant->level === 'PARENT' && $enfant->enfants->isNotEmpty()) {
+                    foreach ($enfant->enfants as $cindex => $sousEnfant) {
+                        $sousAnalyse['children'][] = [
+                            'id' => $sousEnfant->id,
+                            'code' => $sousEnfant->code,
+                            'designation' => $sousEnfant->designation,
+                            'level' => $sousEnfant->level,
+                            'prix' => $sousEnfant->prix,
+                            'valeur_ref' => $sousEnfant->valeur_ref,
+                            'unite' => $sousEnfant->unite,
+                            'ordre' => $sousEnfant->ordre,
+                            'status' => $sousEnfant->status,
+                            'is_bold' => $sousEnfant->is_bold,
+                        ];
+                    }
+                }
+
+                $this->sousAnalyses[] = $sousAnalyse;
+            }
+        }
     }
 
     private function resetForm()
@@ -448,14 +714,12 @@ class Analyses extends Component
         $this->resetErrorBag();
     }
 
-    // MÉTHODES UTILITAIRES (inchangées)
     public function toggleStatus($id)
     {
         $analyse = Analyse::find($id);
         $analyse->status = !$analyse->status;
         $analyse->save();
-        
-        // Forcer le rechargement des données paginées
+
         $this->resetPage();
     }
 
@@ -471,15 +735,12 @@ class Analyses extends Component
         session()->flash('message', 'Analyse dupliquée avec succès !');
     }
 
-
-    // Ouvrir le modal de confirmation
     public function confirmDelete($id)
     {
         $this->analyseToDelete = Analyse::findOrFail($id);
         $this->showDeleteModal = true;
     }
 
-    // Supprimer l'analyse
     public function delete()
     {
         try {
@@ -493,7 +754,6 @@ class Analyses extends Component
         }
     }
 
-    // Fermer le modal
     public function closeDeleteModal()
     {
         $this->showDeleteModal = false;
