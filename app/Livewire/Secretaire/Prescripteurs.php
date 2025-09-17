@@ -8,6 +8,7 @@ use App\Models\Setting;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf; // Add this import
 
 class Prescripteurs extends Component
 {
@@ -46,7 +47,7 @@ class Prescripteurs extends Component
     public $dateDebut;
     public $dateFin;
     public $commissionDetails = [];
-    public $commissionPourcentage = 10; 
+    public $commissionPourcentage = 10;
 
     // Propriétés pour la suppression
     public $prescripteurToDelete = null;
@@ -119,7 +120,7 @@ class Prescripteurs extends Component
     public function editPrescripteur($id)
     {
         $prescripteur = Prescripteur::findOrFail($id);
-        
+
         $this->prescripteurId = $prescripteur->id;
         $this->nom = $prescripteur->nom;
         $this->prenom = $prescripteur->prenom;
@@ -175,9 +176,8 @@ class Prescripteurs extends Component
             }
 
             $this->closePrescripteurModal();
-            
         } catch (\Exception $e) {
-             flash()->error('Une erreur s\'est produite lors de l\'enregistrement.');
+            flash()->error('Une erreur s\'est produite lors de l\'enregistrement.');
         }
     }
 
@@ -186,7 +186,7 @@ class Prescripteurs extends Component
         try {
             $prescripteur = Prescripteur::findOrFail($id);
             $prescripteur->update(['is_active' => !$prescripteur->is_active]);
-            
+
             $status = $prescripteur->is_active ? 'activé' : 'désactivé';
             flash()->success("Prescripteur {$status} avec succès.");
         } catch (\Exception $e) {
@@ -211,12 +211,12 @@ class Prescripteurs extends Component
                     $this->prescripteurToDelete->forceDelete();
                     flash()->success('Prescripteur supprimé définitivement avec succès.');
                 }
-                
+
                 $this->showDeleteModal = false;
                 $this->prescripteurToDelete = null;
             }
         } catch (\Exception $e) {
-                    flash()->error('Impossible de supprimer ce prescripteur.');
+            flash()->error('Impossible de supprimer ce prescripteur.');
         }
     }
 
@@ -242,24 +242,24 @@ class Prescripteurs extends Component
     public function showCommissions($prescripteurId)
     {
         $this->selectedPrescripteur = Prescripteur::find($prescripteurId);
-        
+
         // Vérifier si le prescripteur est BiologieSolidaire
         if ($this->selectedPrescripteur && $this->selectedPrescripteur->status === 'BiologieSolidaire') {
             flash()->info('Les prescripteurs de Biologie Solidaire ne perçoivent pas de commission.');
             return;
         }
-        
+
         $this->commissionPourcentage = Setting::getCommissionPourcentage();
-        
+
         if (!$this->dateDebut) {
             $this->dateDebut = now()->startOfYear()->format('Y-m-d');
         }
         if (!$this->dateFin) {
             $this->dateFin = now()->format('Y-m-d');
         }
-        
+
         $this->loadCommissionDetailsAll();
-        
+
         $this->showCommissionModal = true;
     }
 
@@ -286,7 +286,6 @@ class Prescripteurs extends Component
                 'data' => $commissions,
                 ...$statistiques
             ];
-
         } catch (\Exception $e) {
             $this->commissionDetails = [
                 'data' => collect([]),
@@ -331,7 +330,7 @@ class Prescripteurs extends Component
 
         try {
             $statistiques = $this->selectedPrescripteur->getStatistiquesCommissions(
-                $this->dateDebut, 
+                $this->dateDebut,
                 $this->dateFin
             );
 
@@ -345,7 +344,6 @@ class Prescripteurs extends Component
                 'data' => $commissions,
                 ...$statistiques
             ];
-
         } catch (\Exception $e) {
             $this->commissionDetails = [
                 'data' => collect([]),
@@ -360,12 +358,79 @@ class Prescripteurs extends Component
         }
     }
 
+public function generateCommissionPDF()
+{
+    if (!$this->selectedPrescripteur || $this->selectedPrescripteur->status === 'BiologieSolidaire') {
+        flash()->error('Impossible de générer une facture pour un prescripteur Biologie Solidaire.');
+        return;
+    }
+
+    try {
+        // Chemin unique du template
+        $template = 'pdf.analyses.commission-facture';
+
+        // Vérifier si le template existe
+        if (!view()->exists($template)) {
+            flash()->error("Le template PDF '$template' n'existe pas. Vérifiez le chemin du fichier.");
+            return;
+        }
+
+        // Charger les données nécessaires
+        $statistiques = $this->selectedPrescripteur->getStatistiquesCommissions(
+            $this->dateDebut,
+            $this->dateFin
+        );
+
+        $commissions = $this->selectedPrescripteur->getCommissionsParMois(
+            null,
+            $this->dateDebut,
+            $this->dateFin
+        );
+
+        $commissionDetails = [
+            'data' => $commissions,
+            ...$statistiques
+        ];
+
+        // Préparer les données pour le PDF
+        $data = [
+            'prescripteur' => $this->selectedPrescripteur,
+            'commissionDetails' => $commissionDetails,
+            'commissionPourcentage' => $this->commissionPourcentage,
+            'dateDebut' => $this->dateDebut,
+            'dateFin' => $this->dateFin,
+            'dateEmission' => now()->format('d/m/Y'),
+        ];
+
+        // Générer le PDF
+        $pdf = Pdf::loadView($template, $data);
+
+        // Nom du fichier dynamique
+        $nomFichier = 'facture_commissions_' . \Illuminate\Support\Str::slug($this->selectedPrescripteur->nom_complet) . '_' . now()->format('Ymd') . '.pdf';
+
+        // Retourner le téléchargement
+        return response()->streamDownload(
+            fn() => print($pdf->output()),
+            $nomFichier
+        );
+
+    } catch (\Exception $e) {
+        \Log::error('Erreur génération PDF: ' . $e->getMessage(), [
+            'prescripteur' => $this->selectedPrescripteur->id ?? null,
+            'dateDebut' => $this->dateDebut,
+            'dateFin' => $this->dateFin
+        ]);
+
+        flash()->error('Erreur lors de la génération du PDF : ' . $e->getMessage());
+    }
+}
+
     private function calculateGlobalStatistics()
     {
         try {
             $totalPrescripteurs = Prescripteur::count();
             $prescripteursActifs = Prescripteur::where('is_active', true)->count();
-            
+
             // Calcul uniquement pour les prescripteurs commissionnables (excluant BiologieSolidaire)
             $result = DB::table('paiements')
                 ->join('prescriptions', 'paiements.prescription_id', '=', 'prescriptions.id')
@@ -387,7 +452,6 @@ class Prescripteurs extends Component
                 'totalCommissions' => $totalCommissions,
                 'totalPrescriptionsCommissionnables' => $totalPaiements
             ];
-
         } catch (\Exception $e) {
             return [
                 'totalPrescripteurs' => Prescripteur::count(),
@@ -427,7 +491,7 @@ class Prescripteurs extends Component
             ->paginate($this->perPage);
 
         $statistiques = $this->calculateGlobalStatistics();
-        
+
         $specialites = Prescripteur::select('specialite')
             ->distinct()
             ->whereNotNull('specialite')

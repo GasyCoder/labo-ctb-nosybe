@@ -1,3 +1,4 @@
+{{-- Le modal des commissions mis à jour --}}
 @if($showCommissionModal)
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50" wire:click="$set('showCommissionModal', false)">
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -93,6 +94,54 @@
                                                     {{ number_format($detail->commission ?? 0, 0, ',', ' ') }} Ar
                                                 </td>
                                             </tr>
+                                            <!-- Sous-tableau pour les détails des prescriptions -->
+                                            @if(isset($detail->prescriptions) && $detail->prescriptions->count() > 0)
+                                                <tr>
+                                                    <td colspan="5" class="px-6 py-4">
+                                                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                                            <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Détails des prescriptions</h4>
+                                                            <div class="overflow-x-auto">
+                                                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                                                    <thead class="bg-gray-100 dark:bg-gray-600/50">
+                                                                        <tr>
+                                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Patient</th>
+                                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">N° Dossier</th>
+                                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant analyses</th>
+                                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Montant payé</th>
+                                                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Commission</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                                                        @foreach($detail->prescriptions as $prescription)
+                                                                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                                                    {{ $prescription->patient_nom_complet }}
+                                                                                </td>
+                                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                                                    {{ $prescription->patient_numero_dossier }}
+                                                                                </td>
+                                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                                                    {{ $prescription->date }}
+                                                                                </td>
+                                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                                                    {{ number_format($prescription->montant_analyses, 0, ',', ' ') }} Ar
+                                                                                </td>
+                                                                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                                                                                    {{ number_format($prescription->montant_paye, 0, ',', ' ') }} Ar
+                                                                                </td>
+                                                                                <td class="px-4 py-2 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">
+                                                                                    {{ number_format($prescription->commission, 0, ',', ' ') }} Ar
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endif
                                         @empty
                                             <tr>
                                                 <td colspan="5" class="px-6 py-12 text-center">
@@ -139,9 +188,12 @@
                     </div>
 
                     <!-- Actions du modal -->
-                    <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+                   <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
                         <button wire:click="$set('showCommissionModal', false)" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 border border-transparent rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-800 transition-colors">
                             Fermer
+                        </button>
+                        <button wire:click="generateCommissionPDF" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors">
+                            Télécharger PDF
                         </button>
                     </div>
                 </div>

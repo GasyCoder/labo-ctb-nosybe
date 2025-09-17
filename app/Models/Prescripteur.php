@@ -98,7 +98,8 @@ class Prescripteur extends Model
             $query->whereYear('created_at', $annee);
         }
 
-        $prescriptions = $query->with('paiements')->get();
+        // Charger la relation avec le patient
+        $prescriptions = $query->with(['paiements', 'patient'])->get();
         
         if ($prescriptions->isEmpty()) {
             return collect([]);
@@ -116,6 +117,18 @@ class Prescripteur extends Model
                 'montant_analyses' => $prescriptionsDuMois->sum(function($p) { return $p->getMontantAnalysesCalcule(); }),
                 'montant_paye' => $prescriptionsDuMois->sum(function($p) { return $p->paiements->sum('montant'); }),
                 'commission' => $prescriptionsDuMois->sum(function($p) { return $p->paiements->sum('commission_prescripteur'); }),
+                // Ajouter les détails des prescriptions avec les informations du patient
+                'prescriptions' => $prescriptionsDuMois->map(function($prescription) {
+                    return (object)[
+                        'id' => $prescription->id,
+                        'patient_nom_complet' => $prescription->patient ? $prescription->patient->nom_complet : 'Patient inconnu',
+                        'patient_numero_dossier' => $prescription->patient ? $prescription->patient->numero_dossier : 'N/A',
+                        'montant_analyses' => $prescription->getMontantAnalysesCalcule(),
+                        'montant_paye' => $prescription->paiements->sum('montant'),
+                        'commission' => $prescription->paiements->sum('commission_prescripteur'),
+                        'date' => $prescription->created_at->format('d/m/Y'),
+                    ];
+                }),
             ]);
         }
 

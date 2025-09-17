@@ -112,6 +112,12 @@ class Patient extends Model
         return $latestPrescription ? $latestPrescription->unite_age : 'Ans';
     }
 
+    // ✅ ACCESSEUR POUR LE NOM COMPLET
+    public function getNomCompletAttribute()
+    {
+        return trim(($this->prenom ? $this->prenom . ' ' : '') . $this->nom);
+    }
+
     // ✅ MÉTHODES UTILITAIRES OPTIMISÉES POUR LES STATISTIQUES
     public function getTotalPrescriptionsAttribute()
     {
@@ -263,3 +269,4 @@ class Patient extends Model
         return $this->delete();
     }
 }
+
