@@ -81,7 +81,7 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Général (tous paiements)</h3>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Général (paiements validés)</h3>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ number_format($totalGeneral, 2, '.', ' ') }} Ar.
                         </p>
@@ -106,7 +106,7 @@
                 </div>
             </div>
 
-            <!-- Carte Total Semaine -->
+            <!-- Carte Total Période -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30">

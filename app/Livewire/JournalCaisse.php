@@ -11,7 +11,7 @@ class JournalCaisse extends Component
 {
     public $dateDebut;
     public $dateFin;
-    public $totalGeneral; // Total de tous les paiements (sans filtre)
+    public $totalGeneral; // Total de tous les paiements payés (sans filtre)
 
     public function mount()
     {
@@ -19,8 +19,8 @@ class JournalCaisse extends Component
         $this->dateDebut = Carbon::today()->subDays(7)->format('Y-m-d'); // 7 jours avant
         $this->dateFin = Carbon::today()->format('Y-m-d'); // aujourd'hui
 
-        // Calculer le total général de tous les paiements (sans filtre)
-        $this->totalGeneral = Paiement::sum('montant');
+        // Calculer le total général de tous les paiements payés (status = 1)
+        $this->totalGeneral = Paiement::payés()->sum('montant');
     }
 
     public function updated($propertyName)
