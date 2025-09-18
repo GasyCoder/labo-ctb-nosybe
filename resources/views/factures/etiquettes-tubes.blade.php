@@ -161,7 +161,6 @@
             }
             
             .patient-section {
-                background-color: #f8f9fa !important;
                 border-left: 3px solid #007bff !important;
             }
         }
@@ -222,18 +221,18 @@
                     @endphp
                     
                     <div class="reference-header">
-                        📋 {{ $firstTube->prescription->reference ?? 'N/A' }} - {{ $firstTube->created_at->format('d/m/Y') }}
+                        {{ $firstTube->prescription->reference ?? 'N/A' }} - {{ $firstTube->created_at->format('d/m/Y') }}
                     </div>
                     
                     <div class="patient-name-header">
-                        👤 {{ strtoupper($patient->nom ?? '') }} {{ ucfirst(strtolower($patient->prenom ?? '')) }}
+                        {{ strtoupper($patient->nom ?? '') }} {{ ucfirst(strtolower($patient->prenom ?? '')) }}
                         | NIP: {{ $patient->numero_dossier ?? 'N/A' }}
                         | Âge: {{ $firstTube->prescription->age }} {{ $firstTube->prescription->unite_age }}
                     </div>
                     
                     @if(isset($firstTube->prescription->prescripteur))
                     <div style="margin-top: 1mm; font-size: 0.7rem; color: #666;">
-                        👨‍⚕️ Dr. {{ $firstTube->prescription->prescripteur->nom }}
+                        Dr. {{ $firstTube->prescription->prescripteur->nom }}
                     </div>
                     @endif
                 </div>
