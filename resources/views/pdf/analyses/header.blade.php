@@ -18,13 +18,6 @@
                 <span class="info-label">Âge :</span>
                 <span class="text-fine">{{ $prescription->age ?? 'N/A' }} {{ $prescription->unite_age ?? '' }}</span>
             </div>
-            
-            @if($prescription->patient->telephone)
-            <div class="info-value">
-                <span class="info-label">Tél :</span>
-                <span class="text-fine">{{ $prescription->patient->telephone }}</span>
-            </div>
-            @endif
         </div>
         
         <div class="patient-info-right">

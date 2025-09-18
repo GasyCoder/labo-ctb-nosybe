@@ -53,7 +53,7 @@
 
     .header-logo {
         width: 100%;
-        max-height: 165px;
+        max-height: 180px;
         object-fit: contain;
         object-position: left top;
         margin: 0;
