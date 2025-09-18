@@ -9,6 +9,7 @@ use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 
 class GestionEtiquettes extends Component
 {
@@ -25,10 +26,10 @@ class GestionEtiquettes extends Component
     public array $tubesSelectionnes = [];
     public bool $toutSelectionner = false;
 
-    // CONFIGURATION OPTIMISÉE POUR PETITES ÉTIQUETTES
-    public int $nombreColonnes = 5; // Augmenté par défaut
+    // CONFIGURATION POUR ÉTIQUETTES
+    public int $nombreColonnes = 2; // RÉDUIT pour optimiser l'espace
     public bool $inclurePatient = true;
-    public string $formatEtiquette = 'petit'; // petit, standard
+    public string $modeAffichage = 'optimise'; // 'optimise' ou 'separe'
     
     // STATISTIQUES
     public array $statistiques = [];
@@ -62,9 +63,9 @@ class GestionEtiquettes extends Component
             $this->ajusterDates();
         }
 
-        // Validation des colonnes pour petites étiquettes (2-6 colonnes)
+        // Validation des colonnes (2-4 colonnes max pour optimisation)
         if ($property === 'nombreColonnes') {
-            $this->nombreColonnes = max(2, min(6, $this->nombreColonnes));
+            $this->nombreColonnes = max(2, min(4, $this->nombreColonnes));
         }
     }
 
@@ -102,14 +103,27 @@ class GestionEtiquettes extends Component
                 'aujourd_hui' => Tube::whereDate('tubes.created_at', today())->count(),
             ];
         } catch (\Exception $e) {
-            Log::error('Erreur calcul statistiques étiquettes', ['error' => $e->getMessage()]);
-            $this->statistiques = ['total' => 0, 'non_receptionnes' => 0, 'receptionnes' => 0, 'aujourd_hui' => 0];
+            Log::error('Erreur calcul statistiques étiquettes', [
+                'error' => $e->getMessage(),
+                'user_id' => Auth::id()
+            ]);
+            $this->statistiques = [
+                'total' => 0, 
+                'non_receptionnes' => 0, 
+                'receptionnes' => 0, 
+                'aujourd_hui' => 0
+            ];
         }
     }
 
     private function getBaseQuery()
     {
-        return Tube::with(['prescription.patient', 'prescription.prescripteur', 'prelevement'])
+        return Tube::with([
+                'prescription.patient', 
+                'prescription.prescripteur', 
+                'prelevement',
+                'prelevement.typeTubeRecommande' // AJOUT pour le type de tube
+            ])
             ->when($this->recherche, function($q) {
                 $recherche = trim($this->recherche);
                 $q->where(function($query) use ($recherche) {
@@ -153,18 +167,6 @@ class GestionEtiquettes extends Component
         }
     }
 
-    public function toggleSelection($tubeId)
-    {
-        if (in_array($tubeId, $this->tubesSelectionnes)) {
-            $this->tubesSelectionnes = array_diff($this->tubesSelectionnes, [$tubeId]);
-        } else {
-            $this->tubesSelectionnes[] = $tubeId;
-        }
-
-        $totalVisible = $this->getBaseQuery()->count();
-        $this->toutSelectionner = count($this->tubesSelectionnes) === $totalVisible && $totalVisible > 0;
-    }
-
     public function viderSelection()
     {
         $this->tubesSelectionnes = [];
@@ -189,9 +191,11 @@ class GestionEtiquettes extends Component
             $tubes = Tube::with([
                     'prescription.patient', 
                     'prescription.prescripteur',
-                    'prelevement'
+                    'prelevement',
+                    'prelevement.typeTubeRecommande'
                 ])
                 ->whereIn('id', $this->tubesSelectionnes)
+                ->orderBy('prescription_id') // IMPORTANT: Grouper par prescription pour optimiser
                 ->orderBy('tubes.created_at')
                 ->get();
 
@@ -203,36 +207,76 @@ class GestionEtiquettes extends Component
                 return;
             }
 
-            // Validation du nombre de colonnes pour petites étiquettes
-            $colonnes = max(2, min(6, $this->nombreColonnes));
+            // Statistiques pour l'utilisateur
+            $groupedByPatient = $tubes->groupBy('prescription.patient.id');
+            $nombrePatients = $groupedByPatient->count();
+            $nombreTubes = $tubes->count();
 
-            // Utiliser le template optimisé pour petites étiquettes
-            $pdf = Pdf::loadView('factures.etiquettes-tubes', [
+            // Calcul estimé du nombre de pages selon le mode
+            if ($this->modeAffichage === 'optimise') {
+                $etiquettesParPage = 8; // 4 lignes x 2 colonnes
+                $lignesHeaderParPatient = 1; // Une ligne d'en-tête par patient
+                $totalLignesNecessaires = $nombreTubes + $nombrePatients; // tubes + headers patients
+                $pagesEstimees = ceil($totalLignesNecessaires / $etiquettesParPage);
+            } else {
+                $pagesEstimees = $nombrePatients; // Une page par patient (ancien mode)
+            }
+
+            // Choisir le bon template selon le mode
+            $templateView = $this->modeAffichage === 'optimise' 
+                ? 'factures.etiquettes-tubes-optimise' 
+                : 'factures.etiquettes-tubes';
+
+            $pdf = Pdf::loadView($templateView, [
                 'tubes' => $tubes,
-                'colonnes' => $colonnes,
+                'colonnes' => $this->nombreColonnes,
                 'inclurePatient' => $this->inclurePatient,
-                'formatEtiquette' => $this->formatEtiquette,
+                'modeAffichage' => $this->modeAffichage,
                 'titre' => 'Étiquettes Tubes - ' . now()->format('d/m/Y H:i'),
-                'laboratoire' => config('app.name', 'Laboratoire CTB')
+                'laboratoire' => config('app.name', 'Laboratoire CTB'),
+                'statistiques' => [
+                    'nombre_patients' => $nombrePatients,
+                    'nombre_tubes' => $nombreTubes,
+                    'pages_estimees' => $pagesEstimees
+                ]
             ])
             ->setPaper('A4', 'portrait')
             ->setOptions([
-                'dpi' => 300, // Augmenté pour petites étiquettes
+                'dpi' => 300,
                 'defaultFont' => 'Arial',
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => false,
                 'chroot' => public_path(),
+                'debugKeepTemp' => false,
+            ]);
+
+            Log::info('Génération étiquettes PDF optimisées', [
+                'user_id' => Auth::id(),
+                'tubes_count' => $nombreTubes,
+                'patients_count' => $nombrePatients,
+                'colonnes' => $this->nombreColonnes,
+                'mode_affichage' => $this->modeAffichage,
+                'pages_estimees' => $pagesEstimees
+            ]);
+
+            $filename = 'etiquettes-' . $this->modeAffichage . '-' . now()->format('Y-m-d-H-i') . '.pdf';
+
+            // Message de succès avec statistiques
+            $this->dispatch('notify', [
+                'type' => 'success',
+                'message' => "PDF généré: {$nombreTubes} étiquettes pour {$nombrePatients} patient(s) sur ~{$pagesEstimees} page(s)"
             ]);
 
             return response()->streamDownload(
                 fn () => print($pdf->output()),
-                'etiquettes-petites-' . now()->format('Y-m-d-H-i') . '.pdf',
+                $filename,
                 ['Content-Type' => 'application/pdf']
             );
 
         } catch (\Exception $e) {
-            Log::error('Erreur génération PDF étiquettes petites', [
+            Log::error('Erreur génération PDF étiquettes optimisées', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'tubes' => $this->tubesSelectionnes,
                 'user_id' => Auth::id()
             ]);
@@ -309,37 +353,63 @@ class GestionEtiquettes extends Component
     }
 
     // PROPRIÉTÉS CALCULÉES
-    public function getTubesProperty()
+    #[Computed]
+    public function tubes()
     {
         return $this->getBaseQuery()
                    ->orderByDesc('tubes.created_at')
                    ->paginate(20);
     }
 
-    public function getSelectionSummaryProperty()
+    #[Computed]
+    public function selectionSummary()
     {
         if (empty($this->tubesSelectionnes)) {
             return null;
         }
 
         $tubes = Tube::whereIn('id', $this->tubesSelectionnes)
-                    ->with('prelevement')
+                    ->with(['prelevement', 'prescription.patient'])
                     ->get();
+
+        $groupedByPatient = $tubes->groupBy('prescription.patient.id');
 
         return [
             'total' => $tubes->count(),
+            'nombre_patients' => $groupedByPatient->count(),
             'par_type' => $tubes->groupBy('prelevement.denomination')
                                ->map->count()
                                ->sortDesc()
-                               ->take(3)
+                               ->take(3),
+            'estimation_pages' => $this->estimer_pages($tubes->count(), $groupedByPatient->count())
         ];
     }
 
-    public function getFormatsDisponiblesProperty()
+    private function estimer_pages($nombreTubes, $nombrePatients)
+    {
+        if ($this->modeAffichage === 'optimise') {
+            $etiquettesParPage = 8;
+            $totalLignes = $nombreTubes + $nombrePatients; // tubes + headers
+            return ceil($totalLignes / $etiquettesParPage);
+        } else {
+            return $nombrePatients; // Une page par patient
+        }
+    }
+
+    #[Computed]
+    public function modesAffichageDisponibles()
     {
         return [
-            'petit' => 'Petit (32x20mm) - 30 étiquettes/page',
-            'standard' => 'Standard (65x40mm) - 12 étiquettes/page'
+            'optimise' => [
+                'label' => 'Optimisé (plusieurs patients/page)',
+                'description' => 'Économise le papier en regroupant les patients',
+                'avantages' => ['Moins de papier', 'Plus écologique', 'Impression rapide']
+            ],
+            'separe' => [
+                'label' => 'Séparé (un patient/page)',
+                'description' => 'Chaque patient sur une page séparée',
+                'avantages' => ['Plus lisible', 'Facilite le tri', 'Format traditionnel']
+            ]
         ];
     }
 
@@ -348,7 +418,7 @@ class GestionEtiquettes extends Component
         return view('livewire.secretaire.tubes.gestion-etiquettes', [
             'tubes' => $this->tubes,
             'selectionSummary' => $this->selectionSummary,
-            'formatsDisponibles' => $this->formatsDisponibles
+            'modesAffichageDisponibles' => $this->modesAffichageDisponibles
         ]);
     }
 }

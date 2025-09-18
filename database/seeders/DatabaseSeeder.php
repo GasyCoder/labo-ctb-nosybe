@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             ExamenSeeder::class,
             TypeTubesSeeder::class,
             PrelevementSeeder::class,
-            // TubesSeeder::class,
             BacterieFamilleSeeder::class,
             AnalysesSqlSeeder::class,
             PrescripteurSeeder::class,
