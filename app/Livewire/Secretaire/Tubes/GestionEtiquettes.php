@@ -224,7 +224,7 @@ class GestionEtiquettes extends Component
 
             // Choisir le bon template selon le mode
             $templateView = $this->modeAffichage === 'optimise' 
-                ? 'factures.etiquettes-tubes-optimise' 
+                ? 'factures.etiquettes-tubes' 
                 : 'factures.etiquettes-tubes';
 
             $pdf = Pdf::loadView($templateView, [
