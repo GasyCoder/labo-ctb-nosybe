@@ -138,9 +138,9 @@
                                 {{-- Actions pour les prescriptions validées --}}
                                 <a href="{{ route('laboratoire.prescription.pdf', $prescription->id) }}"
                                     target="_blank" rel="noopener noreferrer"
-                                    class="inline-flex items-center justify-center w-8 h-8 text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+                                    class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
                                     title="Voir PDF">
-                                    <em class="ni ni-file-pdf"></em>
+                                    <em class="text-xl ni ni-file-pdf"></em>
                                 </a>
 
                                 <button wire:click="confirmArchive({{ $prescription->id }})"
