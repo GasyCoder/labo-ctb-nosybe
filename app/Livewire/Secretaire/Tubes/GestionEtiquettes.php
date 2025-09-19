@@ -4,6 +4,7 @@ namespace App\Livewire\Secretaire\Tubes;
 
 use Carbon\Carbon;
 use App\Models\Tube;
+use App\Models\Prescription;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -21,15 +22,15 @@ class GestionEtiquettes extends Component
     public string $filtreDate = 'aujourd_hui';
     public ?string $dateDebut = null;
     public ?string $dateFin = null;
+    public string $typeAffichage = 'tous';
     
     // SÉLECTION
-    public array $tubesSelectionnes = [];
+    public array $prescriptionsSelectionnees = [];
     public bool $toutSelectionner = false;
 
-    // CONFIGURATION POUR ÉTIQUETTES
-    public int $nombreColonnes = 2; // RÉDUIT pour optimiser l'espace
+    // CONFIGURATION POUR ÉTIQUETTES - Format fixe horizontal
+    public int $nombreColonnes = 2; // Garde pour compatibilité mais pas utilisé
     public bool $inclurePatient = true;
-    public string $modeAffichage = 'optimise'; // 'optimise' ou 'separe'
     
     // STATISTIQUES
     public array $statistiques = [];
@@ -38,6 +39,7 @@ class GestionEtiquettes extends Component
         'recherche' => ['except' => ''],
         'filtreStatut' => ['except' => 'tous'],
         'filtreDate' => ['except' => 'aujourd_hui'],
+        'typeAffichage' => ['except' => 'tous'],
         'page' => ['except' => 1]
     ];
 
@@ -50,7 +52,7 @@ class GestionEtiquettes extends Component
 
     public function updated($property)
     {
-        if (in_array($property, ['recherche', 'filtreStatut', 'filtreDate', 'dateDebut', 'dateFin'])) {
+        if (in_array($property, ['recherche', 'filtreStatut', 'filtreDate', 'dateDebut', 'dateFin', 'typeAffichage'])) {
             $this->resetPage();
             $this->calculerStatistiques();
         }
@@ -61,11 +63,6 @@ class GestionEtiquettes extends Component
 
         if ($property === 'filtreDate') {
             $this->ajusterDates();
-        }
-
-        // Validation des colonnes (2-4 colonnes max pour optimisation)
-        if ($property === 'nombreColonnes') {
-            $this->nombreColonnes = max(2, min(4, $this->nombreColonnes));
         }
     }
 
@@ -97,10 +94,23 @@ class GestionEtiquettes extends Component
             $baseQuery = $this->getBaseQuery();
             
             $this->statistiques = [
-                'total' => (clone $baseQuery)->count(),
-                'non_receptionnes' => (clone $baseQuery)->whereNull('tubes.receptionne_par')->count(),
-                'receptionnes' => (clone $baseQuery)->whereNotNull('tubes.receptionne_par')->count(),
-                'aujourd_hui' => Tube::whereDate('tubes.created_at', today())->count(),
+                'total_prescriptions' => (clone $baseQuery)->count(),
+                'avec_tubes' => (clone $baseQuery)->has('tubes')->count(),
+                'sans_tubes' => (clone $baseQuery)->doesntHave('tubes')->count(),
+                'avec_analyses' => \DB::table('prescriptions')
+                    ->join('prescription_analyse', 'prescriptions.id', '=', 'prescription_analyse.prescription_id')
+                    ->whereBetween('prescriptions.created_at', [
+                        $this->dateDebut . ' 00:00:00',
+                        $this->dateFin . ' 23:59:59'
+                    ])
+                    ->distinct('prescriptions.id')
+                    ->count('prescriptions.id'),
+                'tubes_receptionnes' => Tube::whereHas('prescription', function($q) {
+                    $this->applyPrescriptionFilters($q);
+                })->whereNotNull('receptionne_par')->count(),
+                'tubes_non_receptionnes' => Tube::whereHas('prescription', function($q) {
+                    $this->applyPrescriptionFilters($q);
+                })->whereNull('receptionne_par')->count(),
             ];
         } catch (\Exception $e) {
             Log::error('Erreur calcul statistiques étiquettes', [
@@ -108,68 +118,99 @@ class GestionEtiquettes extends Component
                 'user_id' => Auth::id()
             ]);
             $this->statistiques = [
-                'total' => 0, 
-                'non_receptionnes' => 0, 
-                'receptionnes' => 0, 
-                'aujourd_hui' => 0
+                'total_prescriptions' => 0,
+                'avec_tubes' => 0,
+                'sans_tubes' => 0,
+                'avec_analyses' => 0,
+                'tubes_receptionnes' => 0,
+                'tubes_non_receptionnes' => 0,
             ];
         }
     }
 
-    private function getBaseQuery()
+    private function applyPrescriptionFilters($query)
     {
-        return Tube::with([
-                'prescription.patient', 
-                'prescription.prescripteur', 
-                'prelevement',
-                'prelevement.typeTubeRecommande' // AJOUT pour le type de tube
-            ])
-            ->when($this->recherche, function($q) {
+        return $query->when($this->recherche, function($q) {
                 $recherche = trim($this->recherche);
                 $q->where(function($query) use ($recherche) {
-                    $query->where('tubes.code_barre', 'like', "%{$recherche}%")
-                        ->orWhereHas('prescription', function($subQ) use ($recherche) {
-                            $subQ->where('reference', 'like', "%{$recherche}%");
-                        })
-                        ->orWhereHas('prescription.patient', function($subQ) use ($recherche) {
+                    $query->where('prescriptions.reference', 'like', "%{$recherche}%")
+                        ->orWhereHas('patient', function($subQ) use ($recherche) {
                             $subQ->where('nom', 'like', "%{$recherche}%")
                                  ->orWhere('prenom', 'like', "%{$recherche}%");
                         })
-                        ->orWhereHas('prelevement', function($subQ) use ($recherche) {
-                            $subQ->where('denomination', 'like', "%{$recherche}%")
-                                 ->orWhere('code', 'like', "%{$recherche}%");
+                        ->orWhereHas('prescripteur', function($subQ) use ($recherche) {
+                            $subQ->where('nom', 'like', "%{$recherche}%");
                         });
                 });
             })
-            ->when($this->filtreStatut !== 'tous', function($q) {
-                if ($this->filtreStatut === 'receptionnes') {
-                    $q->whereNotNull('tubes.receptionne_par');
-                } else {
-                    $q->whereNull('tubes.receptionne_par');
-                }
-            })
             ->when($this->dateDebut && $this->dateFin, function($q) {
-                $q->whereBetween('tubes.created_at', [
+                $q->whereBetween('prescriptions.created_at', [
                     $this->dateDebut . ' 00:00:00',
                     $this->dateFin . ' 23:59:59'
                 ]);
             });
     }
 
+    private function getBaseQuery()
+    {
+        $query = Prescription::with([
+            'patient', 
+            'prescripteur', 
+            'tubes.prelevement',
+            'tubes.prelevement.typeTubeRecommande'
+        ]);
+
+        $this->applyPrescriptionFilters($query);
+
+        // Filtres spécifiques au type d'affichage
+        if ($this->typeAffichage === 'avec_tubes') {
+            $query->has('tubes');
+        } elseif ($this->typeAffichage === 'sans_tubes') {
+            $query->doesntHave('tubes');
+        } elseif ($this->typeAffichage === 'avec_analyses') {
+            $query->whereExists(function($q) {
+                $q->select(\DB::raw(1))
+                  ->from('prescription_analyse')
+                  ->whereColumn('prescription_analyse.prescription_id', 'prescriptions.id');
+            });
+        } elseif ($this->typeAffichage === 'sans_analyses') {
+            $query->whereNotExists(function($q) {
+                $q->select(\DB::raw(1))
+                  ->from('prescription_analyse')
+                  ->whereColumn('prescription_analyse.prescription_id', 'prescriptions.id');
+            });
+        }
+
+        // Filtre statut (pour les tubes seulement si prescriptions avec tubes)
+        if ($this->filtreStatut !== 'tous') {
+            if ($this->filtreStatut === 'receptionnes') {
+                $query->whereHas('tubes', function($q) {
+                    $q->whereNotNull('receptionne_par');
+                });
+            } elseif ($this->filtreStatut === 'non_receptionnes') {
+                $query->whereHas('tubes', function($q) {
+                    $q->whereNull('receptionne_par');
+                });
+            }
+        }
+
+        return $query;
+    }
+
     public function toggleToutSelectionner()
     {
         if ($this->toutSelectionner) {
-            $this->tubesSelectionnes = $this->getBaseQuery()
-                                           ->pluck('tubes.id')
-                                           ->toArray();
+            $this->prescriptionsSelectionnees = $this->getBaseQuery()
+                                                   ->pluck('id')
+                                                   ->toArray();
         } else {
-            $this->tubesSelectionnes = [];
+            $this->prescriptionsSelectionnees = [];
         }
     }
 
     public function viderSelection()
     {
-        $this->tubesSelectionnes = [];
+        $this->prescriptionsSelectionnees = [];
         $this->toutSelectionner = false;
         $this->dispatch('notify', [
             'type' => 'info',
@@ -179,65 +220,88 @@ class GestionEtiquettes extends Component
 
     public function imprimerEtiquettes()
     {
-        if (empty($this->tubesSelectionnes)) {
+        if (empty($this->prescriptionsSelectionnees)) {
             $this->dispatch('notify', [
                 'type' => 'error',
-                'message' => 'Veuillez sélectionner au moins un tube'
+                'message' => 'Veuillez sélectionner au moins une prescription'
             ]);
             return;
         }
 
         try {
-            $tubes = Tube::with([
-                    'prescription.patient', 
-                    'prescription.prescripteur',
-                    'prelevement',
-                    'prelevement.typeTubeRecommande'
+            $prescriptions = Prescription::with([
+                    'patient', 
+                    'prescripteur',
+                    'tubes.prelevement',
+                    'tubes.prelevement.typeTubeRecommande'
                 ])
-                ->whereIn('id', $this->tubesSelectionnes)
-                ->orderBy('prescription_id') // IMPORTANT: Grouper par prescription pour optimiser
-                ->orderBy('tubes.created_at')
+                ->whereIn('id', $this->prescriptionsSelectionnees)
+                ->orderBy('created_at')
                 ->get();
 
-            if ($tubes->isEmpty()) {
+            // Charger les analyses séparément
+            foreach ($prescriptions as $prescription) {
+                $prescription->analyses_data = \DB::table('prescription_analyse')
+                    ->join('analyses', 'prescription_analyse.analyse_id', '=', 'analyses.id')
+                    ->where('prescription_analyse.prescription_id', $prescription->id)
+                    ->select('analyses.designation', 'analyses.code')
+                    ->get();
+            }
+
+            if ($prescriptions->isEmpty()) {
                 $this->dispatch('notify', [
                     'type' => 'error',
-                    'message' => 'Aucun tube trouvé pour l\'impression'
+                    'message' => 'Aucune prescription trouvée pour l\'impression'
                 ]);
                 return;
             }
 
-            // Statistiques pour l'utilisateur
-            $groupedByPatient = $tubes->groupBy('prescription.patient.id');
-            $nombrePatients = $groupedByPatient->count();
-            $nombreTubes = $tubes->count();
+            // Calcul des statistiques pour génération
+            $nombrePrescriptions = $prescriptions->count();
+            
+            // Compter les tubes réels
+            $nombreTubes = $prescriptions->sum(function($prescription) {
+                return $prescription->tubes->count();
+            });
+            
+            // Compter prescriptions sans tubes
+            $prescriptionsSanstubes = $prescriptions->filter(function($prescription) {
+                return $prescription->tubes->isEmpty();
+            })->count();
 
-            // Calcul estimé du nombre de pages selon le mode
-            if ($this->modeAffichage === 'optimise') {
-                $etiquettesParPage = 8; // 4 lignes x 2 colonnes
-                $lignesHeaderParPatient = 1; // Une ligne d'en-tête par patient
-                $totalLignesNecessaires = $nombreTubes + $nombrePatients; // tubes + headers patients
-                $pagesEstimees = ceil($totalLignesNecessaires / $etiquettesParPage);
-            } else {
-                $pagesEstimees = $nombrePatients; // Une page par patient (ancien mode)
-            }
+            // Compter prescriptions avec analyses seulement
+            $prescriptionsAvecAnalyses = $prescriptions->filter(function($prescription) {
+                $hasAnalyses = \DB::table('prescription_analyse')
+                    ->where('prescription_id', $prescription->id)
+                    ->exists();
+                return $prescription->tubes->isEmpty() && $hasAnalyses;
+            })->count();
 
-            // Choisir le bon template selon le mode
-            $templateView = $this->modeAffichage === 'optimise' 
-                ? 'factures.etiquettes-tubes' 
-                : 'factures.etiquettes-tubes';
+            // Compter prescriptions complètement vides
+            $prescriptionsVides = $prescriptions->filter(function($prescription) {
+                $hasAnalyses = \DB::table('prescription_analyse')
+                    ->where('prescription_id', $prescription->id)
+                    ->exists();
+                return $prescription->tubes->isEmpty() && !$hasAnalyses;
+            })->count();
 
-            $pdf = Pdf::loadView($templateView, [
-                'tubes' => $tubes,
-                'colonnes' => $this->nombreColonnes,
+            // CALCUL TOTAL ÉTIQUETTES selon nouvelle logique :
+            // - Chaque tube = 5 étiquettes
+            // - Chaque prescription sans tubes (avec/sans analyses) = 5 étiquettes
+            $nombreEtiquettesTotales = ($nombreTubes * 5) + ($prescriptionsSanstubes * 5);
+
+            $pdf = Pdf::loadView('factures.etiquettes-prescriptions', [
+                'prescriptions' => $prescriptions,
                 'inclurePatient' => $this->inclurePatient,
-                'modeAffichage' => $this->modeAffichage,
-                'titre' => 'Étiquettes Tubes - ' . now()->format('d/m/Y H:i'),
+                'titre' => 'Étiquettes Prescriptions - ' . now()->format('d/m/Y H:i'),
                 'laboratoire' => config('app.name', 'Laboratoire CTB'),
                 'statistiques' => [
-                    'nombre_patients' => $nombrePatients,
+                    'nombre_prescriptions' => $nombrePrescriptions,
                     'nombre_tubes' => $nombreTubes,
-                    'pages_estimees' => $pagesEstimees
+                    'prescriptions_sans_tubes' => $prescriptionsSanstubes,
+                    'prescriptions_avec_analyses' => $prescriptionsAvecAnalyses,
+                    'prescriptions_vides' => $prescriptionsVides,
+                    'nombre_etiquettes_totales' => $nombreEtiquettesTotales
                 ]
             ])
             ->setPaper('A4', 'portrait')
@@ -250,21 +314,21 @@ class GestionEtiquettes extends Component
                 'debugKeepTemp' => false,
             ]);
 
-            Log::info('Génération étiquettes PDF optimisées', [
+            Log::info('Génération étiquettes prescriptions PDF format horizontal', [
                 'user_id' => Auth::id(),
+                'prescriptions_count' => $nombrePrescriptions,
                 'tubes_count' => $nombreTubes,
-                'patients_count' => $nombrePatients,
-                'colonnes' => $this->nombreColonnes,
-                'mode_affichage' => $this->modeAffichage,
-                'pages_estimees' => $pagesEstimees
+                'sans_tubes_count' => $prescriptionsSanstubes,
+                'avec_analyses_count' => $prescriptionsAvecAnalyses,
+                'vides_count' => $prescriptionsVides,
+                'etiquettes_totales' => $nombreEtiquettesTotales
             ]);
 
-            $filename = 'etiquettes-' . $this->modeAffichage . '-' . now()->format('Y-m-d-H-i') . '.pdf';
+            $filename = 'etiquettes-prescriptions-' . now()->format('Y-m-d-H-i') . '.pdf';
 
-            // Message de succès avec statistiques
             $this->dispatch('notify', [
                 'type' => 'success',
-                'message' => "PDF généré: {$nombreTubes} étiquettes pour {$nombrePatients} patient(s) sur ~{$pagesEstimees} page(s)"
+                'message' => "PDF généré: {$nombrePrescriptions} prescription(s) → {$nombreEtiquettesTotales} étiquettes"
             ]);
 
             return response()->streamDownload(
@@ -274,10 +338,10 @@ class GestionEtiquettes extends Component
             );
 
         } catch (\Exception $e) {
-            Log::error('Erreur génération PDF étiquettes optimisées', [
+            Log::error('Erreur génération PDF étiquettes prescriptions', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'tubes' => $this->tubesSelectionnes,
+                'prescriptions' => $this->prescriptionsSelectionnees,
                 'user_id' => Auth::id()
             ]);
 
@@ -288,38 +352,52 @@ class GestionEtiquettes extends Component
         }
     }
 
-    public function marquerReceptionne($tubeId)
+    public function marquerTubesReceptionnes($prescriptionId)
     {
         try {
-            $tube = Tube::find($tubeId);
+            $prescription = Prescription::with('tubes')->find($prescriptionId);
             
-            if (!$tube) {
+            if (!$prescription) {
                 $this->dispatch('notify', [
                     'type' => 'error',
-                    'message' => 'Tube introuvable'
+                    'message' => 'Prescription introuvable'
                 ]);
                 return;
             }
-            
-            if ($tube->estReceptionne()) {
+
+            if ($prescription->tubes->isEmpty()) {
                 $this->dispatch('notify', [
                     'type' => 'info',
-                    'message' => 'Tube déjà réceptionné'
+                    'message' => 'Cette prescription n\'a pas de tubes'
                 ]);
                 return;
             }
+            
+            $tubesMarques = 0;
+            foreach ($prescription->tubes as $tube) {
+                if (!$tube->estReceptionne()) {
+                    $tube->marquerReceptionne(Auth::id());
+                    $tubesMarques++;
+                }
+            }
 
-            $tube->marquerReceptionne(Auth::id());
             $this->calculerStatistiques();
             
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => "Tube {$tube->code_barre} marqué comme réceptionné"
-            ]);
+            if ($tubesMarques > 0) {
+                $this->dispatch('notify', [
+                    'type' => 'success',
+                    'message' => "{$tubesMarques} tube(s) marqué(s) comme réceptionné(s)"
+                ]);
+            } else {
+                $this->dispatch('notify', [
+                    'type' => 'info',
+                    'message' => 'Tous les tubes sont déjà réceptionnés'
+                ]);
+            }
 
         } catch (\Exception $e) {
-            Log::error('Erreur marquage réception tube', [
-                'tube_id' => $tubeId,
+            Log::error('Erreur marquage réception tubes prescription', [
+                'prescription_id' => $prescriptionId,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
@@ -336,8 +414,9 @@ class GestionEtiquettes extends Component
         $this->reset([
             'recherche', 
             'filtreStatut', 
-            'filtreDate', 
-            'tubesSelectionnes',
+            'filtreDate',
+            'typeAffichage',
+            'prescriptionsSelectionnees',
             'toutSelectionner'
         ]);
         
@@ -354,71 +433,74 @@ class GestionEtiquettes extends Component
 
     // PROPRIÉTÉS CALCULÉES
     #[Computed]
-    public function tubes()
+    public function prescriptions()
     {
         return $this->getBaseQuery()
-                   ->orderByDesc('tubes.created_at')
-                   ->paginate(20);
+                   ->orderByDesc('created_at')
+                   ->paginate(100);
     }
 
     #[Computed]
     public function selectionSummary()
     {
-        if (empty($this->tubesSelectionnes)) {
+        if (empty($this->prescriptionsSelectionnees)) {
             return null;
         }
 
-        $tubes = Tube::whereIn('id', $this->tubesSelectionnes)
-                    ->with(['prelevement', 'prescription.patient'])
+        $prescriptions = Prescription::whereIn('id', $this->prescriptionsSelectionnees)
+                    ->with(['tubes.prelevement', 'patient'])
                     ->get();
 
-        $groupedByPatient = $tubes->groupBy('prescription.patient.id');
+        $totalTubes = $prescriptions->sum(function($prescription) {
+            return $prescription->tubes->count();
+        });
 
-        return [
-            'total' => $tubes->count(),
-            'nombre_patients' => $groupedByPatient->count(),
-            'par_type' => $tubes->groupBy('prelevement.denomination')
-                               ->map->count()
-                               ->sortDesc()
-                               ->take(3),
-            'estimation_pages' => $this->estimer_pages($tubes->count(), $groupedByPatient->count())
-        ];
-    }
+        $totalAnalyses = \DB::table('prescription_analyse')
+            ->whereIn('prescription_id', $this->prescriptionsSelectionnees)
+            ->count();
 
-    private function estimer_pages($nombreTubes, $nombrePatients)
-    {
-        if ($this->modeAffichage === 'optimise') {
-            $etiquettesParPage = 8;
-            $totalLignes = $nombreTubes + $nombrePatients; // tubes + headers
-            return ceil($totalLignes / $etiquettesParPage);
-        } else {
-            return $nombrePatients; // Une page par patient
+        $prescriptionsSanstubes = $prescriptions->filter(function($prescription) {
+            return $prescription->tubes->isEmpty();
+        })->count();
+
+        $prescriptionsAvecAnalysesSeulement = 0;
+        $prescriptionsVides = 0;
+
+        foreach ($prescriptions as $prescription) {
+            $hasAnalyses = \DB::table('prescription_analyse')
+                ->where('prescription_id', $prescription->id)
+                ->exists();
+            
+            if ($prescription->tubes->isEmpty()) {
+                if ($hasAnalyses) {
+                    $prescriptionsAvecAnalysesSeulement++;
+                } else {
+                    $prescriptionsVides++;
+                }
+            }
         }
-    }
 
-    #[Computed]
-    public function modesAffichageDisponibles()
-    {
+        // NOUVEAU CALCUL : Format horizontal fixe
+        // Chaque tube = 5 étiquettes, chaque prescription sans tubes = 5 étiquettes
+        $totalEtiquettes = ($totalTubes * 5) + ($prescriptionsSanstubes * 5);
+
         return [
-            'optimise' => [
-                'label' => 'Optimisé (plusieurs patients/page)',
-                'description' => 'Économise le papier en regroupant les patients',
-                'avantages' => ['Moins de papier', 'Plus écologique', 'Impression rapide']
-            ],
-            'separe' => [
-                'label' => 'Séparé (un patient/page)',
-                'description' => 'Chaque patient sur une page séparée',
-                'avantages' => ['Plus lisible', 'Facilite le tri', 'Format traditionnel']
-            ]
+            'total_prescriptions' => $prescriptions->count(),
+            'total_tubes' => $totalTubes,
+            'total_analyses' => $totalAnalyses,
+            'sans_tubes' => $prescriptionsSanstubes,
+            'avec_tubes' => $prescriptions->count() - $prescriptionsSanstubes,
+            'avec_analyses_seulement' => $prescriptionsAvecAnalysesSeulement,
+            'prescriptions_vides' => $prescriptionsVides,
+            'total_etiquettes' => $totalEtiquettes
         ];
     }
 
     public function render()
     {
         return view('livewire.secretaire.tubes.gestion-etiquettes', [
-            'tubes' => $this->tubes,
-            'selectionSummary' => $this->selectionSummary,
-            'modesAffichageDisponibles' => $this->modesAffichageDisponibles
+            'prescriptions' => $this->prescriptions,
+            'selectionSummary' => $this->selectionSummary
         ]);
     }
 }
