@@ -170,7 +170,7 @@
                             
                             {{-- Badge "MODIFIÉ" si la prescription a été modifiée --}}
                             @if($paiement->prescription && $paiement->prescription->created_at->ne($paiement->prescription->updated_at))
-                                 (Modifié)
+                                 (Modifié-{{ $paiement->prescription->updated_at->format('d/m/Y H:i:s') }})
                             @endif
                         </td>
                         <td class="left">

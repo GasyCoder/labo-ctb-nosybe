@@ -38,6 +38,7 @@ class Prescription extends Model
     protected $casts = [
         'poids' => 'decimal:2',
         'remise' => 'decimal:2',
+        'updated_at' => 'datetime',
     ];
 
     /**
