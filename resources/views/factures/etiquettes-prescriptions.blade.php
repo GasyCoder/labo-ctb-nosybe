@@ -66,9 +66,9 @@
         .etiquette-mini {
             display: table-cell;
             width: 35mm;
-            height: 25mm;
+            height: 18mm;
             padding: 1.5mm;
-            border: 2px solid #000;
+            border: 1px solid #000;
             background: white;
             vertical-align: top;
             font-size: 0.65rem;
@@ -106,7 +106,7 @@
         
         .patient-info-mini {
             font-size: 0.55rem;
-            line-height: 1.1;
+            line-height: 1;
             text-align: center;
             border-top: 1px solid #000;
             padding-top: 1mm;
