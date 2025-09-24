@@ -19,7 +19,10 @@ class Analyse extends Model
         'is_bold',
         'examen_id',
         'type_id',
-        'valeur_ref',
+        'valeur_ref_homme',
+        'valeur_ref_femme',
+        'valeur_ref_enfant_garcon',
+        'valeur_ref_enfant_fille',
         'unite',
         'suffixe',
         'valeurs_predefinies',
@@ -76,13 +79,40 @@ class Analyse extends Model
     public function scopeRacines($q) { return $q->whereNull('parent_id')->orWhere('level','PARENT'); }
 
     // Accessors
-    public function getValeurCompleteAttribute()
+    public function getValeurHommeCompleteAttribute()
     {
-        if ($this->valeur_ref && $this->unite) {
-            return $this->valeur_ref.' '.$this->unite;
+        if ($this->valeur_ref_homme && $this->unite) {
+            return $this->valeur_ref_homme.' '.$this->unite;
         }
-        return $this->valeur_ref;
+        return $this->valeur_ref_homme;
     }
+
+    public function getValeurFemmeCompleteAttribute()
+    {
+        if ($this->valeur_ref_femme && $this->unite) {
+            return $this->valeur_ref_femme.' '.$this->unite;
+        }
+        return $this->valeur_ref_femme;
+    }
+
+
+    public function getValeurEnfantGarconCompleteAttribute()
+    {
+        if ($this->valeur_ref_enfant_garcon && $this->unite) {
+            return $this->valeur_ref_enfant_garcon.' '.$this->unite;
+        }
+        return $this->valeur_ref_enfant_garcon;
+    }
+
+    public function getValeurEnfantFilleCompleteAttribute()
+    {
+        if ($this->valeur_ref_enfant_fille && $this->unite) {
+            return $this->valeur_ref_enfant_fille.' '.$this->unite;
+        }
+        return $this->valeur_ref_enfant_fille;
+    }
+
+
 
     public function getEstParentAttribute()
     {
@@ -107,7 +137,8 @@ class Analyse extends Model
     public function getResultDisponibleAttribute()
     {
         return [
-            'val_ref' => $this->valeur_ref,
+            'val_ref_homme' => $this->valeur_ref_homme,
+            'val_ref_femme' => $this->valeur_ref_femme,
             'unite' => $this->unite,
             'suffixe' => $this->suffixe,
         ];

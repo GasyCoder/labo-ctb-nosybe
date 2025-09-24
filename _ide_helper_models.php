@@ -39,7 +39,10 @@ namespace App\Models{
  * @property-read mixed $est_parent
  * @property-read mixed $formatted_results
  * @property-read mixed $result_disponible
- * @property-read mixed $valeur_complete
+ * @property-read mixed $valeur_enfant_fille_complete
+ * @property-read mixed $valeur_enfant_garcon_complete
+ * @property-read mixed $valeur_femme_complete
+ * @property-read mixed $valeur_homme_complete
  * @property-read Analyse|null $parent
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Resultat> $resultats
  * @property-read int|null $resultats_count

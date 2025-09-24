@@ -23,11 +23,13 @@ return new class extends Migration
             $table->unsignedBigInteger('examen_id')->nullable();
             $table->unsignedBigInteger('type_id')->nullable();
             
-            // Colonnes séparées pour les valeurs de référence (MEILLEURE APPROCHE)
-            $table->string('valeur_ref')->nullable();
+            $table->string('valeur_ref_homme')->nullable();
+            $table->string('valeur_ref_femme')->nullable();
+            $table->string('valeur_ref_enfant_garcon')->nullable();
+            $table->string('valeur_ref_enfant_fille')->nullable();
             $table->string('unite')->nullable();
             $table->string('suffixe')->nullable();
-            $table->json('valeurs_predefinies')->nullable(); // Pour les listes comme ['Molle', 'Liquide', 'Normal']
+            $table->json('valeurs_predefinies')->nullable(); 
             
             $table->unsignedInteger('ordre')->nullable();
             $table->boolean('status')->default(true);
