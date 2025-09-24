@@ -19,6 +19,8 @@ class Analyse extends Model
         'is_bold',
         'examen_id',
         'type_id',
+        'valeur_ref',
+        // Nouveaux champs pour valeurs de référence spécifiques
         'valeur_ref_homme',
         'valeur_ref_femme',
         'valeur_ref_enfant_garcon',
@@ -79,6 +81,15 @@ class Analyse extends Model
     public function scopeRacines($q) { return $q->whereNull('parent_id')->orWhere('level','PARENT'); }
 
     // Accessors
+    public function getValeurCompleteAttribute()
+    {
+        if ($this->valeur_ref && $this->unite) {
+            return $this->valeur_ref.' '.$this->unite;
+        }
+        return $this->valeur_ref;
+    }
+
+
     public function getValeurHommeCompleteAttribute()
     {
         if ($this->valeur_ref_homme && $this->unite) {
@@ -86,6 +97,7 @@ class Analyse extends Model
         }
         return $this->valeur_ref_homme;
     }
+
 
     public function getValeurFemmeCompleteAttribute()
     {

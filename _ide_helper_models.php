@@ -23,6 +23,10 @@ namespace App\Models{
  * @property bool $is_bold
  * @property int|null $examen_id
  * @property int|null $type_id
+ * @property string|null $valeur_ref_homme
+ * @property string|null $valeur_ref_femme
+ * @property string|null $valeur_ref_enfant_garcon
+ * @property string|null $valeur_ref_enfant_fille
  * @property string|null $valeur_ref
  * @property string|null $unite
  * @property string|null $suffixe
@@ -39,6 +43,7 @@ namespace App\Models{
  * @property-read mixed $est_parent
  * @property-read mixed $formatted_results
  * @property-read mixed $result_disponible
+ * @property-read mixed $valeur_complete
  * @property-read mixed $valeur_enfant_fille_complete
  * @property-read mixed $valeur_enfant_garcon_complete
  * @property-read mixed $valeur_femme_complete
@@ -74,6 +79,10 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereUnite($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereValeurRef($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereValeurRefEnfantFille($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereValeurRefEnfantGarcon($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereValeurRefFemme($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereValeurRefHomme($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse whereValeursPredefinies($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Analyse withoutTrashed()
