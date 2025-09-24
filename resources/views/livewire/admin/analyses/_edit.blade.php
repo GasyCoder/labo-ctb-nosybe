@@ -415,20 +415,7 @@
                                                    placeholder="Suffixe">
                                         </div>
 
-                                        {{-- <div>
-                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Parent alternatif
-                                            </label>
-                                            <select wire:model="sousAnalyses.{{ $index }}.parent_id" 
-                                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white">
-                                                <option value="">Hérite du parent principal</option>
-                                                @if($analysesParents)
-                                                    @foreach($analysesParents as $parent)
-                                                        <option value="{{ $parent->id }}">{{ $parent->code }}</option>
-                                                    @endforeach
-                                                @endif
-                                            </select>
-                                        </div> --}}
+                                     
                                     </div>
 
                                     {{-- Sous-section pour les sous-sous-analyses si cette sous-analyse est PARENT --}}
