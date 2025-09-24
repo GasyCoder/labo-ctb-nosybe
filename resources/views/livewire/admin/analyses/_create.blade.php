@@ -287,6 +287,7 @@
                                         </div>
                                     </div>
 
+                                    {{-- Première ligne --}}
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -344,15 +345,36 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                    {{-- Deuxième ligne --}}
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Valeurs de référence
+                                                Examen
                                             </label>
-                                            <input type="text" 
-                                                   wire:model="sousAnalyses.{{ $index }}.valeur_ref"
-                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
-                                                   placeholder="Ex: 3.89 - 6.05">
+                                            <select wire:model="sousAnalyses.{{ $index }}.examen_id" 
+                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm">
+                                                <option value="">Sélectionnez</option>
+                                                @if($examens)
+                                                    @foreach($examens as $examen)
+                                                        <option value="{{ $examen->id }}">{{ $examen->abr }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Type
+                                            </label>
+                                            <select wire:model="sousAnalyses.{{ $index }}.type_id" 
+                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm">
+                                                <option value="">Sélectionnez</option>
+                                                @if($types)
+                                                    @foreach($types as $type)
+                                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
                                         </div>
 
                                         <div>
@@ -374,6 +396,31 @@
                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
                                                    readonly>
                                         </div>
+                                    </div>
+
+                                    {{-- Troisième ligne --}}
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Valeurs de référence
+                                            </label>
+                                            <input type="text" 
+                                                   wire:model="sousAnalyses.{{ $index }}.valeur_ref"
+                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                                                   placeholder="Ex: 3.89 - 6.05">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Suffixe
+                                            </label>
+                                            <input type="text" 
+                                                   wire:model="sousAnalyses.{{ $index }}.suffixe"
+                                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white text-sm"
+                                                   placeholder="Suffixe">
+                                        </div>
+
+                                     
                                     </div>
 
                                     {{-- Sous-section pour les sous-sous-analyses si cette sous-analyse est PARENT --}}
@@ -441,6 +488,7 @@
                                                                 </div>
                                                             </div>
 
+                                                            {{-- Première ligne sous-sous --}}
                                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                                 <div>
                                                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -497,7 +545,61 @@
                                                                 </div>
                                                             </div>
 
-                                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+                                                            {{-- Deuxième ligne sous-sous --}}
+                                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mt-2">
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                        Examen
+                                                                    </label>
+                                                                    <select wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.examen_id"
+                                                                            class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-400 focus:border-purple-400 dark:bg-gray-700 dark:text-white text-xs">
+                                                                        <option value="">Sélect.</option>
+                                                                        @if($examens)
+                                                                            @foreach($examens as $examen)
+                                                                                <option value="{{ $examen->id }}">{{ $examen->abr }}</option>
+                                                                            @endforeach
+                                                                        @endif
+                                                                    </select>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                        Type
+                                                                    </label>
+                                                                    <select wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.type_id"
+                                                                            class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-400 focus:border-purple-400 dark:bg-gray-700 dark:text-white text-xs">
+                                                                        <option value="">Sélect.</option>
+                                                                        @if($types)
+                                                                            @foreach($types as $type)
+                                                                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                                                            @endforeach
+                                                                        @endif
+                                                                    </select>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                        Unité
+                                                                    </label>
+                                                                    <input type="text" 
+                                                                           wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.unite"
+                                                                           class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-400 focus:border-purple-400 dark:bg-gray-700 dark:text-white text-xs"
+                                                                           placeholder="g/l">
+                                                                </div>
+
+                                                                <div>
+                                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                        Ordre
+                                                                    </label>
+                                                                    <input type="number" 
+                                                                           wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.ordre"
+                                                                           class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-400 focus:border-purple-400 dark:bg-gray-700 dark:text-white text-xs"
+                                                                           readonly>
+                                                                </div>
+                                                            </div>
+
+                                                            {{-- Troisième ligne sous-sous --}}
+                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                                                                 <div>
                                                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                         Valeurs de référence
@@ -510,22 +612,12 @@
 
                                                                 <div>
                                                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                                        Unité
+                                                                        Suffixe
                                                                     </label>
                                                                     <input type="text" 
-                                                                           wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.unite"
+                                                                           wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.suffixe"
                                                                            class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-400 focus:border-purple-400 dark:bg-gray-700 dark:text-white text-xs"
-                                                                           placeholder="Ex: g/l">
-                                                                </div>
-
-                                                                <div>
-                                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                                        Ordre
-                                                                    </label>
-                                                                    <input type="number" 
-                                                                           wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.ordre"
-                                                                           class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-purple-400 focus:border-purple-400 dark:bg-gray-700 dark:text-white text-xs"
-                                                                           readonly>
+                                                                           placeholder="Suffixe">
                                                                 </div>
                                                             </div>
                                                         </div>
