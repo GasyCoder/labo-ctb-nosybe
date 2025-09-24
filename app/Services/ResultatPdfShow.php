@@ -45,23 +45,30 @@ class ResultatPdfShow
         // 2. Récupérer les IDs d'analyses
         $analysesIds = $validatedResultats->pluck('analyse_id')->unique();
 
+        $analysesDosageSansResultats = $prescription->analyses()
+            ->whereHas('type', function($q) {
+                $q->where('name', 'DOSAGE');
+            })
+            ->whereNotIn('analyse_id', $analysesIds)
+            ->pluck('analyse_id');
+        $analysesIds = $analysesIds->merge($analysesDosageSansResultats)->unique();
+
         // 3. Récupérer les analyses avec hiérarchie
         $analyses = Analyse::where(function($query) use ($analysesIds) {
             $query->whereIn('id', $analysesIds)
                 ->orWhereHas('children', function($q) use ($analysesIds) {
                     $q->whereIn('id', $analysesIds);
                 });
-        })
-        ->with(['enfantsRecursive' => function($query) use ($analysesIds) {
-            $query->whereIn('id', $analysesIds)
-                ->orderBy('ordre', 'asc')
-                ->with(['enfantsRecursive' => function($q) use ($analysesIds) {
-                    $q->whereIn('id', $analysesIds)
-                        ->orderBy('ordre', 'asc');
-                }]);
-        }])
-        ->orderBy('ordre', 'asc')
-        ->get();
+        })->with(['enfantsRecursive' => function($query) use ($analysesIds) {
+                $query->whereIn('id', $analysesIds)
+                    ->with('type') // ← AJOUTEZ cette ligne
+                    ->orderBy('ordre', 'asc')
+                    ->with(['enfantsRecursive' => function($q) use ($analysesIds) {
+                        $q->whereIn('id', $analysesIds)
+                            ->with('type') // ← AJOUTEZ cette ligne aussi
+                            ->orderBy('ordre', 'asc');
+                    }]);
+            }])->orderBy('ordre', 'asc')->get();
 
         // 4. Récupérer les antibiogrammes
         $antibiogrammes = Antibiogramme::where('prescription_id', $prescription->id)
@@ -76,8 +83,21 @@ class ResultatPdfShow
             ->groupBy('analyse_id');
 
         // 5. Associer les résultats aux analyses
-        $analyses = $analyses->map(function($analyse) use ($validatedResultats, $antibiogrammes) {
-            $analyse->resultats = $validatedResultats->where('analyse_id', $analyse->id);
+        $analyses = $analyses->map(function($analyse) use ($validatedResultats, $antibiogrammes, $prescription) {
+
+            $resultatsAnalyse = $validatedResultats->where('analyse_id', $analyse->id);
+            if ($resultatsAnalyse->isEmpty() && $analyse->type && $analyse->type->name === 'DOSAGE') {
+                $analyse->resultats = collect([new Resultat([
+                    'prescription_id' => $prescription->id,
+                    'analyse_id' => $analyse->id,
+                    'valeur' => null,
+                    'resultats' => null,
+                    'est_pathologique' => false,
+                    'status' => 'EN_ATTENTE'
+                ])]);
+            } else {
+                $analyse->resultats = $resultatsAnalyse;
+            }
 
             // Ajouter les antibiogrammes
             $antibiogrammesAnalyse = $antibiogrammes->get($analyse->id, collect())->map(function($antibiogramme) {
@@ -97,8 +117,21 @@ class ResultatPdfShow
             $analyse->has_antibiogrammes = $antibiogrammesAnalyse->isNotEmpty();
 
             if ($analyse->children) {
-                $analyse->children = $analyse->children->map(function($child) use ($validatedResultats, $antibiogrammes) {
-                    $child->resultats = $validatedResultats->where('analyse_id', $child->id);
+                $analyse->children = $analyse->children->map(function($child) use ($validatedResultats, $antibiogrammes, $prescription) {
+                    $resultatsEnfant = $validatedResultats->where('analyse_id', $child->id);
+                    if ($resultatsEnfant->isEmpty() && $child->type && $child->type->name === 'DOSAGE') {
+                        $child->resultats = collect([new Resultat([
+                            'prescription_id' => $prescription->id,
+                            'analyse_id' => $child->id,
+                            'valeur' => null,
+                            'resultats' => null,
+                            'est_pathologique' => false,
+                            'status' => 'EN_ATTENTE'
+                        ])]);
+                    } else {
+                        $child->resultats = $resultatsEnfant;
+                    }
+
 
                     // Antibiogrammes pour enfants
                     $antibiogrammesEnfant = $antibiogrammes->get($child->id, collect())->map(function($antibiogramme) {
@@ -118,8 +151,20 @@ class ResultatPdfShow
                     $child->has_antibiogrammes = $antibiogrammesEnfant->isNotEmpty();
 
                     if ($child->children) {
-                        $child->children = $child->children->map(function($subChild) use ($validatedResultats, $antibiogrammes) {
-                            $subChild->resultats = $validatedResultats->where('analyse_id', $subChild->id);
+                        $child->children = $child->children->map(function($subChild) use ($validatedResultats, $antibiogrammes, $prescription) {
+                            $resultatsSubChild = $validatedResultats->where('analyse_id', $subChild->id);
+                            if ($resultatsSubChild->isEmpty() && $subChild->type && $subChild->type->name === 'DOSAGE') {
+                                $subChild->resultats = collect([new Resultat([
+                                    'prescription_id' => $prescription->id,
+                                    'analyse_id' => $subChild->id,
+                                    'valeur' => null,
+                                    'resultats' => null,
+                                    'est_pathologique' => false,
+                                    'status' => 'EN_ATTENTE'
+                                ])]);
+                            } else {
+                                $subChild->resultats = $resultatsSubChild;
+                            }
 
                             // Antibiogrammes pour petits-enfants
                             $antibiogrammesSubChild = $antibiogrammes->get($subChild->id, collect())->map(function($antibiogramme) {

@@ -12,7 +12,7 @@ class Patients extends Component
 
     // Propriétés pour la recherche et les filtres
     public $search = '';
-    public $sexeFilter = '';
+    public $civiliteFilter = ''; // ✅ CHANGÉ: sexeFilter → civiliteFilter 
     public $statutFilter = '';
     public $perPage = 10;
     public $sortField = 'created_at';
@@ -34,7 +34,8 @@ class Patients extends Component
         $this->resetPage();
     }
 
-    public function updatedSexeFilter()
+    // ✅ CHANGÉ: sexeFilter → civiliteFilter
+    public function updatedCiviliteFilter()
     {
         $this->resetPage();
     }
@@ -65,7 +66,7 @@ class Patients extends Component
     public function resetFilters()
     {
         $this->search = '';
-        $this->sexeFilter = '';
+        $this->civiliteFilter = ''; // ✅ CHANGÉ: sexeFilter → civiliteFilter
         $this->statutFilter = '';
         $this->perPage = 10;
         $this->sortField = 'created_at';
@@ -107,20 +108,20 @@ class Patients extends Component
         // Construire la requête avec les filtres
         $query = Patient::query();
 
-        // Recherche globale
+        // ✅ CORRIGÉ: Recherche globale avec les bonnes colonnes
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('nom', 'like', '%' . $this->search . '%')
                   ->orWhere('prenom', 'like', '%' . $this->search . '%')
                   ->orWhere('telephone', 'like', '%' . $this->search . '%')
                   ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('reference', 'like', '%' . $this->search . '%');
+                  ->orWhere('numero_dossier', 'like', '%' . $this->search . '%'); // ✅ CHANGÉ: reference → numero_dossier
             });
         }
 
-        // Filtre par sexe
-        if ($this->sexeFilter) {
-            $query->where('sexe', $this->sexeFilter);
+        // ✅ CORRIGÉ: Filtre par civilité au lieu de sexe
+        if ($this->civiliteFilter) {
+            $query->where('civilite', $this->civiliteFilter);
         }
 
         // Filtre par statut
@@ -142,5 +143,16 @@ class Patients extends Component
         return view('livewire.secretaire.patients', [
             'patients' => $patients
         ]);
+    }
+
+    // ✅ AJOUT: Méthodes utilitaires pour les options des filtres
+    public function getCivilitesProperty()
+    {
+        return Patient::CIVILITES;
+    }
+
+    public function getStatutsProperty()
+    {
+        return ['NOUVEAU', 'FIDELE', 'VIP'];
     }
 }

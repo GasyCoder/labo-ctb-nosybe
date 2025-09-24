@@ -108,7 +108,7 @@
         margin: 15px 0;
         width: 100%;
         border-bottom: 1px solid #ddd;
-        padding-bottom: 15px;
+        padding-bottom: 5px;
         display: table;
         table-layout: fixed;
         page-break-inside: avoid;
@@ -143,7 +143,7 @@
     .info-value {
         color: #111827;
         font-size: 9pt;
-        margin-bottom: 2px;
+        margin-bottom: 0px;
     }
 
     .text-fine {
@@ -315,12 +315,12 @@
         padding-left: 40px !important;
     }
 
-    /* Signature */
     .signature {
-        margin-top: 20px;
+        margin-top: 10px;
         text-align: right;
-        padding-right: 40px;
+        padding-right: 10px;
         page-break-inside: avoid;
+        /* PAS de position: absolute ici ! */
     }
 
     /* Espacement */

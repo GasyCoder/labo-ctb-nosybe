@@ -14,7 +14,7 @@
         
         // LIMITE CORRIGÉE : Plus réaliste pour DomPDF
         $hauteurCumulee = 0;
-        $limitePage = 600; // Augmenté ! (~15cm réels)
+        $limitePage = 720; // Augmenté ! (~15cm réels)
         
         // Hauteur initiale plus précise
         $hauteurCumulee += 160; // Logo + header + patient info
@@ -75,9 +75,9 @@
                 
                 // DÉCISION plus conservative
                 $needsPageBreak = false;
-                if (!$sautEffectue && ($hauteurCumulee + $hauteurExamen) > $limitePage) {
+                if (!$sautEffectue && ($hauteurCumulee + $hauteurExamen) > ($limitePage + 50)) {
                     // Vérification supplémentaire : ne pas sauter si c'est le premier examen
-                    if ($loop->index > 0) {
+                    if ($loop->index > 0 && $hauteurCumulee > 250 && ($hauteurCumulee + $hauteurExamen) > $limitePage) {
                         $needsPageBreak = true;
                         $sautEffectue = true;
                         $hauteurCumulee = 50;
@@ -90,7 +90,7 @@
             @if($hasValidResults)
                 {{-- SAUT seulement si vraiment nécessaire --}}
                 @if($needsPageBreak)
-                    <div style="page-break-before: always; margin-top: 0; margin-bottom: 20px; text-align: center; border-bottom: 0.5px solid #0b48eeff; padding-bottom: 10px;">
+                    <div style="page-break-before: always; margin-top: 0; margin-bottom: 10px; text-align: center; border-bottom: 0.5px solid #0b48eeff; padding-bottom: 10px;">
                         <div style="font-weight: bold; font-size: 10pt; margin-bottom: 3px;">
                             Résultats de {{ $patientFullName }}
                         </div>
@@ -137,8 +137,9 @@
 
         {{-- Signature --}}
         <div class="signature">
-            <img src="{{ public_path('assets/images/signe.png') }}" alt="Signature" style="max-width: 120px;">
+            <img src="{{ public_path('assets/images/signe.png') }}" alt="Signature" style="max-width: 80px;">
         </div>
+
     </div>
 </body>
 </html>

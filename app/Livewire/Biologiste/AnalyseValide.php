@@ -17,8 +17,6 @@ class AnalyseValide extends Component
 {
     use WithPagination;
 
-    protected $paginationTheme = 'tailwind';
-
     // Propriétés principales
     public $tab = 'termine';
     public $search = '';
