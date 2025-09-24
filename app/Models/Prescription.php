@@ -40,6 +40,22 @@ class Prescription extends Model
         'remise' => 'decimal:2',
     ];
 
+    /**
+     * Vérifier si la prescription a été modifiée
+     */
+    public function isModified(): bool
+    {
+        return $this->created_at->ne($this->updated_at);
+    }
+
+    /**
+     * Accesseur pour vérifier si modifié
+     */
+    public function getIsModifiedAttribute(): bool
+    {
+        return $this->isModified();
+    }
+
     // RELATIONS
     public function secretaire()
     {

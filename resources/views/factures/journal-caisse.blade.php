@@ -109,6 +109,17 @@
             color: #666;
             font-style: italic;
         }
+        
+        /* Badge Modifié pour PDF */
+        .badge-modified {
+            display: inline-block;
+            margin-left: 5px;
+            padding: 2px 6px;
+            color: #C2410C;
+            font-size: 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -154,7 +165,14 @@
                 @foreach($paiementsGroupe as $paiement)
                     <tr class="data-row">
                         <td class="left">{{ $paiement->created_at->format('d/m/Y') }}</td>
-                        <td class="left">{{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}</td>
+                        <td class="left">
+                            {{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}
+                            
+                            {{-- Badge "MODIFIÉ" si la prescription a été modifiée --}}
+                            @if($paiement->prescription && $paiement->prescription->created_at->ne($paiement->prescription->updated_at))
+                                 (Modifié)
+                            @endif
+                        </td>
                         <td class="left">
                             {{ $paiement->prescription->patient->nom ?? 'Client non défini' }} 
                             {{ $paiement->prescription->patient->prenom ?? '' }}

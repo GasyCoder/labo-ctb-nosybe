@@ -523,6 +523,7 @@ namespace App\Models{
  * @property-read mixed $commission_prescripteur
  * @property-read mixed $est_payee
  * @property-read mixed $est_payee_completement
+ * @property-read bool $is_modified
  * @property-read mixed $montant_total
  * @property-read mixed $progres_analyses
  * @property-read mixed $status_label

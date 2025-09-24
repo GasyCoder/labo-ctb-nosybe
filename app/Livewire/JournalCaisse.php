@@ -48,6 +48,7 @@ class JournalCaisse extends Component
     {
         return Paiement::with([
             'prescription.patient',
+            'prescription', // Pour accéder à created_at et updated_at
             'paymentMethod',
             'utilisateur'
         ])
@@ -92,31 +93,6 @@ class JournalCaisse extends Component
         ];
     }
 
-    // 🔧 Méthode de débogage - à supprimer après test
-    public function debug()
-    {
-        $allPaiements = Paiement::with(['prescription.patient', 'paymentMethod'])
-            ->whereBetween('created_at', [
-                Carbon::parse($this->dateDebut)->startOfDay(),
-                Carbon::parse($this->dateFin)->endOfDay()
-            ])
-            ->get();
-
-        $totalSemaine = $this->getTotalSemaine();
-
-        dd([
-            'dateDebut' => $this->dateDebut,
-            'dateFin' => $this->dateFin,
-            'total_paiements_periode' => $allPaiements->count(),
-            'paiements_payes' => $allPaiements->where('status', true)->count(),
-            'paiements_non_payes' => $allPaiements->where('status', false)->count(),
-            'totalGeneral_sans_filtre' => $this->totalGeneral,
-            'totalSemaine' => $totalSemaine['total'],
-            'evolutionSemaine' => $totalSemaine['evolution'],
-            'details' => $allPaiements->toArray(),
-        ]);
-    }
-
     private function getTotauxParMethode($paiements)
     {
         return $paiements->groupBy('paymentMethod.label')->map(function ($group) {
@@ -125,6 +101,19 @@ class JournalCaisse extends Component
                 'count' => $group->count()
             ];
         });
+    }
+
+    /**
+     * Vérifier si une prescription a été modifiée
+     * (en comparant created_at et updated_at)
+     */
+    private function isPrescriptionModified($prescription)
+    {
+        if (!$prescription) {
+            return false;
+        }
+        
+        return $prescription->created_at->ne($prescription->updated_at);
     }
 
     public function exportPdf()

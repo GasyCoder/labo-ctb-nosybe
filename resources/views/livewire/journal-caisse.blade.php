@@ -201,8 +201,21 @@
                                     <div class="text-gray-600 dark:text-gray-400">
                                         {{ $paiement->created_at->format('d/m/Y') }}
                                     </div>
-                                    <div class="font-medium text-blue-600 dark:text-blue-400">
+                                    <div class="font-medium text-blue-600 dark:text-blue-400 flex items-center">
                                         {{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}
+                                        <div class="font-medium text-blue-600 dark:text-blue-400 flex items-center flex-wrap">
+                                            <span>{{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}</span>
+                                            
+                                            {{-- Badge "Modifié" si la prescription a été modifiée --}}
+                                            @if($paiement->prescription && $paiement->prescription->isModified())
+                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                    </svg>
+                                                    Modifié
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
                                         {{ $paiement->prescription->patient->nom ?? 'Client non défini' }} 
