@@ -21,7 +21,7 @@ class Analyses extends Component
 
     // Filtres et pagination
     public $selectedExamen = '';
-    public $selectedLevel = 'racines';
+    public $selectedLevel = 'tous';
     public $perPage = 10;
     public $search = '';
 
@@ -70,8 +70,12 @@ class Analyses extends Component
         'sousAnalyses.*.designation' => 'required|string|max:255',
         'sousAnalyses.*.prix' => 'required|numeric|min:0',
         'sousAnalyses.*.level' => 'required|in:PARENT,NORMAL,CHILD',
+        'sousAnalyses.*.examen_id' => 'nullable|exists:examens,id',
+        'sousAnalyses.*.type_id' => 'nullable|exists:types,id',
+        'sousAnalyses.*.parent_id' => 'nullable|exists:analyses,id',
         'sousAnalyses.*.valeur_ref' => 'nullable|string|max:255',
         'sousAnalyses.*.unite' => 'nullable|string|max:50',
+        'sousAnalyses.*.suffixe' => 'nullable|string|max:50',
         'sousAnalyses.*.ordre' => 'nullable|integer',
         'sousAnalyses.*.is_bold' => 'boolean',
         'sousAnalyses.*.status' => 'boolean',
@@ -82,8 +86,11 @@ class Analyses extends Component
         'sousAnalyses.*.children.*.designation' => 'required|string|max:255',
         'sousAnalyses.*.children.*.prix' => 'required|numeric|min:0',
         'sousAnalyses.*.children.*.level' => 'required|in:NORMAL,CHILD',
+        'sousAnalyses.*.children.*.examen_id' => 'nullable|exists:examens,id',
+        'sousAnalyses.*.children.*.type_id' => 'nullable|exists:types,id',
         'sousAnalyses.*.children.*.valeur_ref' => 'nullable|string|max:255',
         'sousAnalyses.*.children.*.unite' => 'nullable|string|max:50',
+        'sousAnalyses.*.children.*.suffixe' => 'nullable|string|max:50',
         'sousAnalyses.*.children.*.ordre' => 'nullable|integer',
         'sousAnalyses.*.children.*.is_bold' => 'boolean',
         'sousAnalyses.*.children.*.status' => 'boolean',
@@ -137,7 +144,6 @@ class Analyses extends Component
             ->get();
     }
 
-    // ÉVÉNEMENTS LIVEWIRE
     public function updatedSelectedExamen()
     {
         $this->resetPage();
@@ -265,17 +271,20 @@ class Analyses extends Component
     public function addSousAnalyse()
     {
         $this->sousAnalyses[] = [
-            'id' => null,
             'code' => '',
             'designation' => '',
-            'level' => 'CHILD',
             'prix' => 0,
-            'valeur_ref' => '',
+            'level' => 'CHILD',
+            'examen_id' => null,
+            'type_id' => null,
             'unite' => '',
             'ordre' => count($this->sousAnalyses) + 1,
-            'status' => true,
+            'valeur_ref' => '',
+            'suffixe' => '',
+            'parent_id' => null,
             'is_bold' => false,
-            'children' => [],
+            'status' => true,
+            'children' => []
         ];
     }
 
@@ -329,8 +338,11 @@ class Analyses extends Component
             'designation' => '',
             'level' => 'CHILD',
             'prix' => 0,
+            'examen_id' => null,
+            'type_id' => null,
             'valeur_ref' => '',
             'unite' => '',
+            'suffixe' => '',
             'ordre' => count($this->sousAnalyses[$parentIndex]['children']) + 1,
             'status' => true,
             'is_bold' => false,
@@ -417,14 +429,15 @@ class Analyses extends Component
                     $sousAnalyseRecord = Analyse::create([
                         'code' => $sousAnalyse['code'],
                         'level' => $sousAnalyse['level'],
-                        'parent_id' => $analyseParent->id,
+                        'parent_id' => $sousAnalyse['parent_id'] ?? $analyseParent->id,
                         'designation' => $sousAnalyse['designation'],
                         'prix' => $sousAnalyse['prix'],
                         'is_bold' => $sousAnalyse['is_bold'] ?? false,
-                        'examen_id' => $this->examen_id,
-                        'type_id' => $this->type_id,
+                        'examen_id' => $sousAnalyse['examen_id'] ?? $this->examen_id,
+                        'type_id' => $sousAnalyse['type_id'] ?? $this->type_id,
                         'valeur_ref' => $sousAnalyse['valeur_ref'],
                         'unite' => $sousAnalyse['unite'],
+                        'suffixe' => $sousAnalyse['suffixe'] ?? null,
                         'ordre' => $sousAnalyse['ordre'],
                         'status' => $sousAnalyse['status'] ?? true,
                     ]);
@@ -438,10 +451,11 @@ class Analyses extends Component
                                 'designation' => $child['designation'],
                                 'prix' => $child['prix'],
                                 'is_bold' => $child['is_bold'] ?? false,
-                                'examen_id' => $this->examen_id,
-                                'type_id' => $this->type_id,
+                                'examen_id' => $child['examen_id'] ?? $this->examen_id,
+                                'type_id' => $child['type_id'] ?? $this->type_id,
                                 'valeur_ref' => $child['valeur_ref'],
                                 'unite' => $child['unite'],
+                                'suffixe' => $child['suffixe'] ?? null,
                                 'ordre' => $child['ordre'],
                                 'status' => $child['status'] ?? true,
                             ]);
@@ -517,14 +531,15 @@ class Analyses extends Component
                     $data = [
                         'code' => $sousAnalyse['code'],
                         'level' => $sousAnalyse['level'],
-                        'parent_id' => $this->analyse->id,
+                        'parent_id' => $sousAnalyse['parent_id'] ?? $this->analyse->id,
                         'designation' => $sousAnalyse['designation'],
                         'prix' => $sousAnalyse['prix'],
                         'is_bold' => $sousAnalyse['is_bold'] ?? false,
-                        'examen_id' => $this->examen_id,
-                        'type_id' => $this->type_id,
+                        'examen_id' => $sousAnalyse['examen_id'] ?? $this->examen_id,
+                        'type_id' => $sousAnalyse['type_id'] ?? $this->type_id,
                         'valeur_ref' => $sousAnalyse['valeur_ref'],
                         'unite' => $sousAnalyse['unite'],
+                        'suffixe' => $sousAnalyse['suffixe'] ?? null,
                         'ordre' => $sousAnalyse['ordre'],
                         'status' => $sousAnalyse['status'] ?? true,
                     ];
@@ -554,10 +569,11 @@ class Analyses extends Component
                                 'designation' => $child['designation'],
                                 'prix' => $child['prix'],
                                 'is_bold' => $child['is_bold'] ?? false,
-                                'examen_id' => $this->examen_id,
-                                'type_id' => $this->type_id,
+                                'examen_id' => $child['examen_id'] ?? $this->examen_id,
+                                'type_id' => $child['type_id'] ?? $this->type_id,
                                 'valeur_ref' => $child['valeur_ref'],
                                 'unite' => $child['unite'],
+                                'suffixe' => $child['suffixe'] ?? null,
                                 'ordre' => $child['ordre'],
                                 'status' => $child['status'] ?? true,
                             ];
@@ -662,8 +678,12 @@ class Analyses extends Component
                     'designation' => $enfant->designation,
                     'level' => $enfant->level,
                     'prix' => $enfant->prix,
+                    'examen_id' => $enfant->examen_id,
+                    'type_id' => $enfant->type_id,
                     'valeur_ref' => $enfant->valeur_ref,
                     'unite' => $enfant->unite,
+                    'suffixe' => $enfant->suffixe,
+                    'parent_id' => $enfant->parent_id,
                     'ordre' => $enfant->ordre,
                     'status' => $enfant->status,
                     'is_bold' => $enfant->is_bold,
@@ -678,8 +698,11 @@ class Analyses extends Component
                             'designation' => $sousEnfant->designation,
                             'level' => $sousEnfant->level,
                             'prix' => $sousEnfant->prix,
+                            'examen_id' => $sousEnfant->examen_id,
+                            'type_id' => $sousEnfant->type_id,
                             'valeur_ref' => $sousEnfant->valeur_ref,
                             'unite' => $sousEnfant->unite,
+                            'suffixe' => $sousEnfant->suffixe,
                             'ordre' => $sousEnfant->ordre,
                             'status' => $sousEnfant->status,
                             'is_bold' => $sousEnfant->is_bold,

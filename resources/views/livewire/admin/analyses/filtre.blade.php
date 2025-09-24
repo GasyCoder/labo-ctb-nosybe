@@ -17,7 +17,7 @@
                     $activeFilters = 0;
                     if($search) $activeFilters++;
                     if($selectedExamen) $activeFilters++;
-                    if($selectedLevel !== 'racines') $activeFilters++;
+                    if($selectedLevel !== 'tous') $activeFilters++; 
                 @endphp
                 
                 @if($activeFilters > 0)
@@ -38,11 +38,11 @@
                         </label>
                         <select wire:model.live="selectedLevel" 
                                 class="w-full px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white transition-colors">
+                            <option value="tous">📊 Toutes ({{ $this->getAnalysesCountByLevel()['tous'] }})</option> {{-- Déplacé en premier --}}
                             <option value="racines">🌿 Racines ({{ $this->getAnalysesCountByLevel()['racines'] }})</option>
                             <option value="parents">📋 Panels ({{ $this->getAnalysesCountByLevel()['parents'] }})</option>
                             <option value="normales">🔬 Normales ({{ $this->getAnalysesCountByLevel()['normales'] }})</option>
                             <option value="enfants">🔗 Sous-analyses ({{ $this->getAnalysesCountByLevel()['enfants'] }})</option>
-                            <option value="tous">📊 Toutes ({{ $this->getAnalysesCountByLevel()['tous'] }})</option>
                         </select>
                     </div>
 
@@ -142,7 +142,7 @@
                     {{-- Actions de filtre --}}
                     <div class="flex items-center space-x-2 mt-3 sm:mt-0">
                         {{-- Bouton Reset avec style amélioré --}}
-                        @if($selectedExamen || $search || $selectedLevel !== 'racines')
+                        @if($selectedExamen || $search || $selectedLevel !== 'tous') {{-- Changé de 'racines' à 'tous' --}}
                             <button wire:click="resetFilters" 
                                     class="inline-flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,14 +168,14 @@
         </div>
 
         {{-- Filtres actifs sous forme de badges (optionnel) --}}
-        @if($selectedExamen || $search || $selectedLevel !== 'racines')
+        @if($selectedExamen || $search || $selectedLevel !== 'tous') {{-- Changé de 'racines' à 'tous' --}}
             <div class="mt-3 flex flex-wrap items-center gap-2">
                 <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Filtres actifs:</span>
                 
-                @if($selectedLevel !== 'racines')
+                @if($selectedLevel !== 'tous') {{-- Changé de 'racines' à 'tous' --}}
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
                         {{ ucfirst($selectedLevel) }}
-                        <button wire:click="$set('selectedLevel', 'racines')" class="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-full p-0.5">
+                        <button wire:click="$set('selectedLevel', 'tous')" class="ml-1 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-full p-0.5"> {{-- Changé de 'racines' à 'tous' --}}
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
