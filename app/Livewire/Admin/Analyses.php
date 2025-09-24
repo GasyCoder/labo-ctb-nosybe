@@ -36,6 +36,10 @@ class Analyses extends Component
     public $examen_id = '';
     public $type_id = '';
     public $valeur_ref = '';
+    public $valeur_ref_homme = '';
+public $valeur_ref_femme = '';
+public $valeur_ref_enfant_garcon = '';
+public $valeur_ref_enfant_fille = '';
     public $unite = '';
     public $suffixe = '';
     public $valeurs_predefinies = [];
@@ -74,6 +78,10 @@ class Analyses extends Component
         'sousAnalyses.*.type_id' => 'nullable|exists:types,id',
         'sousAnalyses.*.parent_id' => 'nullable|exists:analyses,id',
         'sousAnalyses.*.valeur_ref' => 'nullable|string|max:255',
+        'valeur_ref_homme' => 'nullable|string|max:255',
+    'valeur_ref_femme' => 'nullable|string|max:255',
+    'valeur_ref_enfant_garcon' => 'nullable|string|max:255',
+    'valeur_ref_enfant_fille' => 'nullable|string|max:255',
         'sousAnalyses.*.unite' => 'nullable|string|max:50',
         'sousAnalyses.*.suffixe' => 'nullable|string|max:50',
         'sousAnalyses.*.ordre' => 'nullable|integer',
@@ -89,6 +97,10 @@ class Analyses extends Component
         'sousAnalyses.*.children.*.examen_id' => 'nullable|exists:examens,id',
         'sousAnalyses.*.children.*.type_id' => 'nullable|exists:types,id',
         'sousAnalyses.*.children.*.valeur_ref' => 'nullable|string|max:255',
+        'valeur_ref_homme' => 'nullable|string|max:255',
+    'valeur_ref_femme' => 'nullable|string|max:255',
+    'valeur_ref_enfant_garcon' => 'nullable|string|max:255',
+    'valeur_ref_enfant_fille' => 'nullable|string|max:255',
         'sousAnalyses.*.children.*.unite' => 'nullable|string|max:50',
         'sousAnalyses.*.children.*.suffixe' => 'nullable|string|max:50',
         'sousAnalyses.*.children.*.ordre' => 'nullable|integer',
@@ -417,6 +429,10 @@ class Analyses extends Component
                 'examen_id' => $this->examen_id,
                 'type_id' => $this->type_id,
                 'valeur_ref' => $this->valeur_ref,
+                'valeur_ref_homme' => $this->valeur_ref_homme,
+'valeur_ref_femme' => $this->valeur_ref_femme,
+'valeur_ref_enfant_garcon' => $this->valeur_ref_enfant_garcon,
+'valeur_ref_enfant_fille' => $this->valeur_ref_enfant_fille,
                 'unite' => $this->unite,
                 'suffixe' => $this->suffixe,
                 'valeurs_predefinies' => $this->valeurs_predefinies ? json_encode($this->valeurs_predefinies) : null,
@@ -512,6 +528,10 @@ class Analyses extends Component
                 'examen_id' => $this->examen_id,
                 'type_id' => $this->type_id,
                 'valeur_ref' => $this->valeur_ref,
+                'valeur_ref_homme' => $this->valeur_ref_homme,
+'valeur_ref_femme' => $this->valeur_ref_femme,
+'valeur_ref_enfant_garcon' => $this->valeur_ref_enfant_garcon,
+'valeur_ref_enfant_fille' => $this->valeur_ref_enfant_fille,
                 'unite' => $this->unite,
                 'suffixe' => $this->suffixe,
                 'valeurs_predefinies' => $this->valeurs_predefinies ? json_encode($this->valeurs_predefinies) : null,
@@ -661,6 +681,10 @@ class Analyses extends Component
         $this->examen_id = $this->analyse->examen_id;
         $this->type_id = $this->analyse->type_id;
         $this->valeur_ref = $this->analyse->valeur_ref;
+        $this->valeur_ref_homme = $this->analyse->valeur_ref_homme;
+    $this->valeur_ref_femme = $this->analyse->valeur_ref_femme;
+    $this->valeur_ref_enfant_garcon = $this->analyse->valeur_ref_enfant_garcon;
+    $this->valeur_ref_enfant_fille = $this->analyse->valeur_ref_enfant_fille;
         $this->unite = $this->analyse->unite;
         $this->suffixe = $this->analyse->suffixe;
         $this->valeurs_predefinies = $this->analyse->valeurs_predefinies ? json_decode($this->analyse->valeurs_predefinies, true) : [];
