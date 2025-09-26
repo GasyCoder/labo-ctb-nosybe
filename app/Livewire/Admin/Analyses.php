@@ -37,9 +37,9 @@ class Analyses extends Component
     public $type_id = '';
     public $valeur_ref = '';
     public $valeur_ref_homme = '';
-public $valeur_ref_femme = '';
-public $valeur_ref_enfant_garcon = '';
-public $valeur_ref_enfant_fille = '';
+    public $valeur_ref_femme = '';
+    public $valeur_ref_enfant_garcon = '';
+    public $valeur_ref_enfant_fille = '';
     public $unite = '';
     public $suffixe = '';
     public $valeurs_predefinies = [];
@@ -63,6 +63,10 @@ public $valeur_ref_enfant_fille = '';
         'parent_id' => 'nullable|exists:analyses,id',
         'description' => 'nullable|string',
         'valeur_ref' => 'nullable|string|max:255',
+        'valeur_ref_homme' => 'nullable|string|max:255',
+        'valeur_ref_femme' => 'nullable|string|max:255',
+        'valeur_ref_enfant_garcon' => 'nullable|string|max:255',
+        'valeur_ref_enfant_fille' => 'nullable|string|max:255',
         'unite' => 'nullable|string|max:50',
         'suffixe' => 'nullable|string|max:50',
         'ordre' => 'nullable|integer',
@@ -78,10 +82,10 @@ public $valeur_ref_enfant_fille = '';
         'sousAnalyses.*.type_id' => 'nullable|exists:types,id',
         'sousAnalyses.*.parent_id' => 'nullable|exists:analyses,id',
         'sousAnalyses.*.valeur_ref' => 'nullable|string|max:255',
-        'valeur_ref_homme' => 'nullable|string|max:255',
-    'valeur_ref_femme' => 'nullable|string|max:255',
-    'valeur_ref_enfant_garcon' => 'nullable|string|max:255',
-    'valeur_ref_enfant_fille' => 'nullable|string|max:255',
+        'sousAnalyses.*.valeur_ref_homme' => 'nullable|string|max:255',
+        'sousAnalyses.*.valeur_ref_femme' => 'nullable|string|max:255',
+        'sousAnalyses.*.valeur_ref_enfant_garcon' => 'nullable|string|max:255',
+        'sousAnalyses.*.valeur_ref_enfant_fille' => 'nullable|string|max:255',
         'sousAnalyses.*.unite' => 'nullable|string|max:50',
         'sousAnalyses.*.suffixe' => 'nullable|string|max:50',
         'sousAnalyses.*.ordre' => 'nullable|integer',
@@ -97,10 +101,10 @@ public $valeur_ref_enfant_fille = '';
         'sousAnalyses.*.children.*.examen_id' => 'nullable|exists:examens,id',
         'sousAnalyses.*.children.*.type_id' => 'nullable|exists:types,id',
         'sousAnalyses.*.children.*.valeur_ref' => 'nullable|string|max:255',
-        'valeur_ref_homme' => 'nullable|string|max:255',
-    'valeur_ref_femme' => 'nullable|string|max:255',
-    'valeur_ref_enfant_garcon' => 'nullable|string|max:255',
-    'valeur_ref_enfant_fille' => 'nullable|string|max:255',
+        'sousAnalyses.*.children.*.valeur_ref_homme' => 'nullable|string|max:255',
+        'sousAnalyses.*.children.*.valeur_ref_femme' => 'nullable|string|max:255',
+        'sousAnalyses.*.children.*.valeur_ref_enfant_garcon' => 'nullable|string|max:255',
+        'sousAnalyses.*.children.*.valeur_ref_enfant_fille' => 'nullable|string|max:255',
         'sousAnalyses.*.children.*.unite' => 'nullable|string|max:50',
         'sousAnalyses.*.children.*.suffixe' => 'nullable|string|max:50',
         'sousAnalyses.*.children.*.ordre' => 'nullable|integer',
@@ -156,6 +160,103 @@ public $valeur_ref_enfant_fille = '';
             ->get();
     }
 
+    // MÉTHODES DE CALCUL AUTOMATIQUE DES PRIX
+    private function calculerPrixTotal($sousAnalyses)
+    {
+        $total = 0;
+        foreach ($sousAnalyses as $sousAnalyse) {
+            if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
+                $total += $this->calculerPrixTotalEnfants($sousAnalyse['children']);
+            } else {
+                $total += floatval($sousAnalyse['prix'] ?? 0);
+            }
+        }
+        return $total;
+    }
+
+    private function calculerPrixTotalEnfants($enfants)
+    {
+        $total = 0;
+        foreach ($enfants as $enfant) {
+            $total += floatval($enfant['prix'] ?? 0);
+        }
+        return $total;
+    }
+
+    public function updatedSousAnalyses($value, $name)
+    {
+        // Détecter les changements de niveau
+        if (preg_match('/(\d+)\.level/', $name, $matches)) {
+            $index = $matches[1];
+            if ($value === 'PARENT' && !isset($this->sousAnalyses[$index]['children'])) {
+                $this->sousAnalyses[$index]['children'] = [];
+                $this->addChildToSousAnalyse($index);
+            } elseif ($value !== 'PARENT') {
+                unset($this->sousAnalyses[$index]['children']);
+                $this->recalculerPrixParent();
+            }
+        }
+
+        // Détecter les changements de prix
+        if (preg_match('/sousAnalyses\.(\d+)\.prix/', $name, $matches)) {
+            $this->recalculerPrixParent();
+        }
+
+        // Détecter les changements de prix dans les enfants
+        if (preg_match('/sousAnalyses\.(\d+)\.children\.(\d+)\.prix/', $name, $matches)) {
+            $parentIndex = $matches[1];
+            $this->recalculerPrixSousAnalyse($parentIndex);
+        }
+    }
+
+    public function recalculerPrixParent()
+    {
+        if ($this->level === 'PARENT' && count($this->sousAnalyses) > 0) {
+            $total = $this->calculerPrixTotal($this->sousAnalyses);
+            $this->prix = $total;
+        }
+    }
+
+    public function recalculerPrixSousAnalyse($index)
+    {
+        if (isset($this->sousAnalyses[$index]['children']) && 
+            count($this->sousAnalyses[$index]['children']) > 0) {
+            
+            $total = $this->calculerPrixTotalEnfants($this->sousAnalyses[$index]['children']);
+            $this->sousAnalyses[$index]['prix'] = $total;
+            
+            $this->recalculerPrixParent();
+        }
+    }
+
+    public function recalculerTousLesPrix()
+    {
+        if ($this->level === 'PARENT' && count($this->sousAnalyses) > 0) {
+            foreach ($this->sousAnalyses as $index => $sousAnalyse) {
+                if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
+                    $this->recalculerPrixSousAnalyse($index);
+                }
+            }
+            $this->recalculerPrixParent();
+        }
+        
+        session()->flash('message', 'Prix recalculés avec succès !');
+    }
+
+    public function updatedLevel()
+    {
+        if ($this->level === 'PARENT') {
+            $this->createWithChildren = true;
+            if (empty($this->sousAnalyses)) {
+                $this->addSousAnalyse();
+            }
+            $this->recalculerPrixParent();
+        } else {
+            $this->createWithChildren = false;
+            $this->sousAnalyses = [];
+        }
+    }
+
     public function updatedSelectedExamen()
     {
         $this->resetPage();
@@ -174,32 +275,6 @@ public $valeur_ref_enfant_fille = '';
     public function updatedPerPage()
     {
         $this->resetPage();
-    }
-
-    public function updatedLevel()
-    {
-        if ($this->level === 'PARENT') {
-            $this->createWithChildren = true;
-            if (empty($this->sousAnalyses)) {
-                $this->addSousAnalyse();
-            }
-        } else {
-            $this->createWithChildren = false;
-            $this->sousAnalyses = [];
-        }
-    }
-
-    public function updatedSousAnalyses($value, $name)
-    {
-        if (preg_match('/(\d+)\.level/', $name, $matches)) {
-            $index = $matches[1];
-            if ($value === 'PARENT' && !isset($this->sousAnalyses[$index]['children'])) {
-                $this->sousAnalyses[$index]['children'] = [];
-                $this->addChildToSousAnalyse($index);
-            } elseif ($value !== 'PARENT') {
-                unset($this->sousAnalyses[$index]['children']);
-            }
-        }
     }
 
     public function getAnalysesProperty()
@@ -256,7 +331,10 @@ public $valeur_ref_enfant_fille = '';
 
     public function render()
     {
-        return view('livewire.admin.analyses');
+        return view('livewire.admin.analyses', [
+            'analyses' => $this->analyses,
+            'counts' => $this->getAnalysesCountByLevel(),
+        ]);
     }
 
     public function show($id)
@@ -292,12 +370,20 @@ public $valeur_ref_enfant_fille = '';
             'unite' => '',
             'ordre' => count($this->sousAnalyses) + 1,
             'valeur_ref' => '',
+            'valeur_ref_homme' => '',
+            'valeur_ref_femme' => '',
+            'valeur_ref_enfant_garcon' => '',
+            'valeur_ref_enfant_fille' => '',
             'suffixe' => '',
             'parent_id' => null,
             'is_bold' => false,
             'status' => true,
             'children' => []
         ];
+        
+        if ($this->level === 'PARENT') {
+            $this->recalculerPrixParent();
+        }
     }
 
     public function removeSousAnalyse($index)
@@ -312,6 +398,8 @@ public $valeur_ref_enfant_fille = '';
         foreach ($this->sousAnalyses as $key => $value) {
             $this->sousAnalyses[$key]['ordre'] = $key + 1;
         }
+        
+        $this->recalculerPrixParent();
     }
 
     public function moveSousAnalyseUp($index)
@@ -353,12 +441,18 @@ public $valeur_ref_enfant_fille = '';
             'examen_id' => null,
             'type_id' => null,
             'valeur_ref' => '',
+            'valeur_ref_homme' => '',
+            'valeur_ref_femme' => '',
+            'valeur_ref_enfant_garcon' => '',
+            'valeur_ref_enfant_fille' => '',
             'unite' => '',
             'suffixe' => '',
             'ordre' => count($this->sousAnalyses[$parentIndex]['children']) + 1,
             'status' => true,
             'is_bold' => false,
         ];
+        
+        $this->recalculerPrixSousAnalyse($parentIndex);
     }
 
     public function removeChildFromSous($parentIndex, $childIndex)
@@ -373,6 +467,8 @@ public $valeur_ref_enfant_fille = '';
         foreach ($this->sousAnalyses[$parentIndex]['children'] as $key => $value) {
             $this->sousAnalyses[$parentIndex]['children'][$key]['ordre'] = $key + 1;
         }
+        
+        $this->recalculerPrixSousAnalyse($parentIndex);
     }
 
     public function moveChildUp($parentIndex, $childIndex)
@@ -430,9 +526,9 @@ public $valeur_ref_enfant_fille = '';
                 'type_id' => $this->type_id,
                 'valeur_ref' => $this->valeur_ref,
                 'valeur_ref_homme' => $this->valeur_ref_homme,
-'valeur_ref_femme' => $this->valeur_ref_femme,
-'valeur_ref_enfant_garcon' => $this->valeur_ref_enfant_garcon,
-'valeur_ref_enfant_fille' => $this->valeur_ref_enfant_fille,
+                'valeur_ref_femme' => $this->valeur_ref_femme,
+                'valeur_ref_enfant_garcon' => $this->valeur_ref_enfant_garcon,
+                'valeur_ref_enfant_fille' => $this->valeur_ref_enfant_fille,
                 'unite' => $this->unite,
                 'suffixe' => $this->suffixe,
                 'valeurs_predefinies' => $this->valeurs_predefinies ? json_encode($this->valeurs_predefinies) : null,
@@ -442,6 +538,10 @@ public $valeur_ref_enfant_fille = '';
 
             if ($this->createWithChildren && count($this->sousAnalyses) > 0) {
                 foreach ($this->sousAnalyses as $sousAnalyse) {
+                    if (isset($sousAnalyse['_delete']) && $sousAnalyse['_delete']) {
+                        continue;
+                    }
+
                     $sousAnalyseRecord = Analyse::create([
                         'code' => $sousAnalyse['code'],
                         'level' => $sousAnalyse['level'],
@@ -452,6 +552,10 @@ public $valeur_ref_enfant_fille = '';
                         'examen_id' => $sousAnalyse['examen_id'] ?? $this->examen_id,
                         'type_id' => $sousAnalyse['type_id'] ?? $this->type_id,
                         'valeur_ref' => $sousAnalyse['valeur_ref'],
+                        'valeur_ref_homme' => $sousAnalyse['valeur_ref_homme'] ?? '',
+                        'valeur_ref_femme' => $sousAnalyse['valeur_ref_femme'] ?? '',
+                        'valeur_ref_enfant_garcon' => $sousAnalyse['valeur_ref_enfant_garcon'] ?? '',
+                        'valeur_ref_enfant_fille' => $sousAnalyse['valeur_ref_enfant_fille'] ?? '',
                         'unite' => $sousAnalyse['unite'],
                         'suffixe' => $sousAnalyse['suffixe'] ?? null,
                         'ordre' => $sousAnalyse['ordre'],
@@ -460,6 +564,10 @@ public $valeur_ref_enfant_fille = '';
 
                     if (isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) {
                         foreach ($sousAnalyse['children'] as $child) {
+                            if (isset($child['_delete']) && $child['_delete']) {
+                                continue;
+                            }
+
                             Analyse::create([
                                 'code' => $child['code'],
                                 'level' => $child['level'],
@@ -470,6 +578,10 @@ public $valeur_ref_enfant_fille = '';
                                 'examen_id' => $child['examen_id'] ?? $this->examen_id,
                                 'type_id' => $child['type_id'] ?? $this->type_id,
                                 'valeur_ref' => $child['valeur_ref'],
+                                'valeur_ref_homme' => $child['valeur_ref_homme'] ?? '',
+                                'valeur_ref_femme' => $child['valeur_ref_femme'] ?? '',
+                                'valeur_ref_enfant_garcon' => $child['valeur_ref_enfant_garcon'] ?? '',
+                                'valeur_ref_enfant_fille' => $child['valeur_ref_enfant_fille'] ?? '',
                                 'unite' => $child['unite'],
                                 'suffixe' => $child['suffixe'] ?? null,
                                 'ordre' => $child['ordre'],
@@ -483,9 +595,15 @@ public $valeur_ref_enfant_fille = '';
 
         $totalChildren = 0;
         foreach ($this->sousAnalyses as $sousAnalyse) {
-            $totalChildren++;
-            if (isset($sousAnalyse['children'])) {
-                $totalChildren += count($sousAnalyse['children']);
+            if (!isset($sousAnalyse['_delete']) || !$sousAnalyse['_delete']) {
+                $totalChildren++;
+                if (isset($sousAnalyse['children'])) {
+                    foreach ($sousAnalyse['children'] as $child) {
+                        if (!isset($child['_delete']) || !$child['_delete']) {
+                            $totalChildren++;
+                        }
+                    }
+                }
             }
         }
 
@@ -529,9 +647,9 @@ public $valeur_ref_enfant_fille = '';
                 'type_id' => $this->type_id,
                 'valeur_ref' => $this->valeur_ref,
                 'valeur_ref_homme' => $this->valeur_ref_homme,
-'valeur_ref_femme' => $this->valeur_ref_femme,
-'valeur_ref_enfant_garcon' => $this->valeur_ref_enfant_garcon,
-'valeur_ref_enfant_fille' => $this->valeur_ref_enfant_fille,
+                'valeur_ref_femme' => $this->valeur_ref_femme,
+                'valeur_ref_enfant_garcon' => $this->valeur_ref_enfant_garcon,
+                'valeur_ref_enfant_fille' => $this->valeur_ref_enfant_fille,
                 'unite' => $this->unite,
                 'suffixe' => $this->suffixe,
                 'valeurs_predefinies' => $this->valeurs_predefinies ? json_encode($this->valeurs_predefinies) : null,
@@ -558,6 +676,10 @@ public $valeur_ref_enfant_fille = '';
                         'examen_id' => $sousAnalyse['examen_id'] ?? $this->examen_id,
                         'type_id' => $sousAnalyse['type_id'] ?? $this->type_id,
                         'valeur_ref' => $sousAnalyse['valeur_ref'],
+                        'valeur_ref_homme' => $sousAnalyse['valeur_ref_homme'] ?? '',
+                        'valeur_ref_femme' => $sousAnalyse['valeur_ref_femme'] ?? '',
+                        'valeur_ref_enfant_garcon' => $sousAnalyse['valeur_ref_enfant_garcon'] ?? '',
+                        'valeur_ref_enfant_fille' => $sousAnalyse['valeur_ref_enfant_fille'] ?? '',
                         'unite' => $sousAnalyse['unite'],
                         'suffixe' => $sousAnalyse['suffixe'] ?? null,
                         'ordre' => $sousAnalyse['ordre'],
@@ -592,6 +714,10 @@ public $valeur_ref_enfant_fille = '';
                                 'examen_id' => $child['examen_id'] ?? $this->examen_id,
                                 'type_id' => $child['type_id'] ?? $this->type_id,
                                 'valeur_ref' => $child['valeur_ref'],
+                                'valeur_ref_homme' => $child['valeur_ref_homme'] ?? '',
+                                'valeur_ref_femme' => $child['valeur_ref_femme'] ?? '',
+                                'valeur_ref_enfant_garcon' => $child['valeur_ref_enfant_garcon'] ?? '',
+                                'valeur_ref_enfant_fille' => $child['valeur_ref_enfant_fille'] ?? '',
                                 'unite' => $child['unite'],
                                 'suffixe' => $child['suffixe'] ?? null,
                                 'ordre' => $child['ordre'],
@@ -682,9 +808,9 @@ public $valeur_ref_enfant_fille = '';
         $this->type_id = $this->analyse->type_id;
         $this->valeur_ref = $this->analyse->valeur_ref;
         $this->valeur_ref_homme = $this->analyse->valeur_ref_homme;
-    $this->valeur_ref_femme = $this->analyse->valeur_ref_femme;
-    $this->valeur_ref_enfant_garcon = $this->analyse->valeur_ref_enfant_garcon;
-    $this->valeur_ref_enfant_fille = $this->analyse->valeur_ref_enfant_fille;
+        $this->valeur_ref_femme = $this->analyse->valeur_ref_femme;
+        $this->valeur_ref_enfant_garcon = $this->analyse->valeur_ref_enfant_garcon;
+        $this->valeur_ref_enfant_fille = $this->analyse->valeur_ref_enfant_fille;
         $this->unite = $this->analyse->unite;
         $this->suffixe = $this->analyse->suffixe;
         $this->valeurs_predefinies = $this->analyse->valeurs_predefinies ? json_decode($this->analyse->valeurs_predefinies, true) : [];
@@ -705,6 +831,10 @@ public $valeur_ref_enfant_fille = '';
                     'examen_id' => $enfant->examen_id,
                     'type_id' => $enfant->type_id,
                     'valeur_ref' => $enfant->valeur_ref,
+                    'valeur_ref_homme' => $enfant->valeur_ref_homme,
+                    'valeur_ref_femme' => $enfant->valeur_ref_femme,
+                    'valeur_ref_enfant_garcon' => $enfant->valeur_ref_enfant_garcon,
+                    'valeur_ref_enfant_fille' => $enfant->valeur_ref_enfant_fille,
                     'unite' => $enfant->unite,
                     'suffixe' => $enfant->suffixe,
                     'parent_id' => $enfant->parent_id,
@@ -725,6 +855,10 @@ public $valeur_ref_enfant_fille = '';
                             'examen_id' => $sousEnfant->examen_id,
                             'type_id' => $sousEnfant->type_id,
                             'valeur_ref' => $sousEnfant->valeur_ref,
+                            'valeur_ref_homme' => $sousEnfant->valeur_ref_homme,
+                            'valeur_ref_femme' => $sousEnfant->valeur_ref_femme,
+                            'valeur_ref_enfant_garcon' => $sousEnfant->valeur_ref_enfant_garcon,
+                            'valeur_ref_enfant_fille' => $sousEnfant->valeur_ref_enfant_fille,
                             'unite' => $sousEnfant->unite,
                             'suffixe' => $sousEnfant->suffixe,
                             'ordre' => $sousEnfant->ordre,
@@ -751,6 +885,10 @@ public $valeur_ref_enfant_fille = '';
         $this->examen_id = '';
         $this->type_id = '';
         $this->valeur_ref = '';
+        $this->valeur_ref_homme = '';
+        $this->valeur_ref_femme = '';
+        $this->valeur_ref_enfant_garcon = '';
+        $this->valeur_ref_enfant_fille = '';
         $this->unite = '';
         $this->suffixe = '';
         $this->valeurs_predefinies = [];

@@ -83,21 +83,47 @@
                         @enderror
                     </div>
 
+                    {{-- SECTION PRIX CORRIGÉE AVEC CALCUL AUTOMATIQUE --}}
                     <div>
                         <label for="prix" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Prix (Ar) <span class="text-red-500">*</span>
+                            @if($level === 'PARENT' && count($sousAnalyses) > 0)
+                                <span class="text-xs text-green-600 ml-2">
+                                    (Calcul automatique: {{ number_format($prix, 0, ',', ' ') }} Ar)
+                                </span>
+                            @endif
                         </label>
                         <input type="number" 
                                step="0.01"
                                class="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 dark:bg-gray-700 dark:text-white @error('prix') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                id="prix" 
                                wire:model="prix"
+                               @if($level === 'PARENT' && count($sousAnalyses) > 0) readonly @endif
                                placeholder="0.00">
+                        @if($level === 'PARENT' && count($sousAnalyses) > 0)
+                            <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                Le prix est calculé automatiquement à partir des sous-analyses
+                            </p>
+                        @endif
                         @error('prix')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
+
+                {{-- BOUTON RECALCULER LES PRIX --}}
+                @if($level === 'PARENT' && count($sousAnalyses) > 0)
+                <div class="mt-4 flex justify-end">
+                    <button type="button" 
+                            wire:click="recalculerTousLesPrix"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors text-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Recalculer les prix
+                    </button>
+                </div>
+                @endif
 
                 <div class="mt-4 sm:mt-6">
                     <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -170,10 +196,98 @@
                     </div>
                 </div>
 
+                {{-- SECTION VALEURS DE RÉFÉRENCE PRINCIPALE --}}
+                <div class="mt-6 border border-blue-200 dark:border-blue-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                    <h3 class="text-base sm:text-lg font-medium text-blue-900 dark:text-blue-200 mb-3 sm:mb-4 flex items-center">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        Valeurs de Référence
+                    </h3>
+
+                    <div class="space-y-4 sm:grid sm:grid-cols-1 md:grid-cols-2 sm:gap-4 sm:space-y-0">
+                        {{-- Adulte --}}
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-900 dark:text-white flex items-center text-sm">
+                                <svg class="w-4 h-4 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                                Adulte
+                            </h4>
+
+                            <div>
+                                <label for="valeur_ref_homme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <svg class="w-4 h-4 inline mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    Homme
+                                </label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                       id="valeur_ref_homme" 
+                                       wire:model="valeur_ref_homme" 
+                                       placeholder="Ex: 3.89 - 6.05">
+                            </div>
+
+                            <div>
+                                <label for="valeur_ref_femme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <svg class="w-4 h-4 inline mr-1 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0 0H9"/>
+                                    </svg>
+                                    Femme
+                                </label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                       id="valeur_ref_femme" 
+                                       wire:model="valeur_ref_femme" 
+                                       placeholder="Ex: 3.89 - 6.05">
+                            </div>
+                        </div>
+
+                        {{-- Enfant --}}
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-900 dark:text-white flex items-center text-sm">
+                                <svg class="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0 0H9"/>
+                                </svg>
+                                Enfant
+                            </h4>
+
+                            <div>
+                                <label for="valeur_ref_enfant_garcon" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <svg class="w-4 h-4 inline mr-1 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0 0H9"/>
+                                    </svg>
+                                    Garçon
+                                </label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                       id="valeur_ref_enfant_garcon" 
+                                       wire:model="valeur_ref_enfant_garcon" 
+                                       placeholder="Ex: 3.5 - 5.5">
+                            </div>
+
+                            <div>
+                                <label for="valeur_ref_enfant_fille" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    <svg class="w-4 h-4 inline mr-1 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0 0H9"/>
+                                    </svg>
+                                    Fille
+                                </label>
+                                <input type="text" 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" 
+                                       id="valeur_ref_enfant_fille" 
+                                       wire:model="valeur_ref_enfant_fille" 
+                                       placeholder="Ex: 3.5 - 5.5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-4 sm:mt-6 space-y-4 sm:grid sm:grid-cols-1 md:grid-cols-2 sm:gap-4 sm:space-y-0">
                     <div>
                         <label for="valeur_ref" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Valeurs de référence
+                            Valeurs de référence générales
                         </label>
                         <input type="text" 
                                class="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 dark:bg-gray-700 dark:text-white" 
@@ -232,14 +346,26 @@
                                 </span>
                             @endif
                         </h3>
-                        <button type="button" 
-                                wire:click="addSousAnalyse" 
-                                class="mt-2 sm:mt-0 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center transition-colors text-sm sm:text-base">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                            Ajouter sous-analyse
-                        </button>
+                        <div class="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+                            <button type="button" 
+                                    wire:click="addSousAnalyse" 
+                                    class="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center transition-colors text-sm sm:text-base">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Ajouter sous-analyse
+                            </button>
+                            @if(count($sousAnalyses) > 0)
+                            <button type="button" 
+                                    wire:click="recalculerTousLesPrix"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center transition-colors text-sm sm:text-base">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Recalculer prix
+                            </button>
+                            @endif
+                        </div>
                     </div>
 
                     @if(count($sousAnalyses) > 0)
@@ -249,6 +375,11 @@
                                     <div class="flex justify-between items-center mb-3 sm:mb-4">
                                         <h4 class="font-medium text-sm sm:text-base text-gray-900 dark:text-white">
                                             Sous-analyse #{{ $index + 1 }}
+                                            @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0)
+                                                <span class="text-xs text-green-600 ml-2">
+                                                    (Total: {{ number_format($sousAnalyse['prix'] ?? 0, 0, ',', ' ') }} Ar)
+                                                </span>
+                                            @endif
                                         </h4>
                                         <div class="flex space-x-2">
                                             @if($index > 0)
@@ -310,14 +441,19 @@
                                             @enderror
                                         </div>
 
+                                        {{-- PRIX SOUS-ANALYSE AVEC CALCUL AUTOMATIQUE --}}
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 Prix (Ar) <span class="text-red-500">*</span>
+                                                @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0)
+                                                    <span class="text-xs text-blue-600 ml-1">(calcul auto)</span>
+                                                @endif
                                             </label>
                                             <input type="number" 
                                                    step="0.01"
                                                    wire:model="sousAnalyses.{{ $index }}.prix"
                                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white @error('sousAnalyses.'.$index.'.prix') border-red-500 @enderror"
+                                                   @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) readonly @endif
                                                    placeholder="0.00">
                                             @error('sousAnalyses.'.$index.'.prix')
                                                 <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -393,11 +529,82 @@
                                         </div>
                                     </div>
 
-                                    {{-- Troisième ligne --}}
-                                    <div class="mt-4 space-y-4 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-4 sm:space-y-0">
+                                    {{-- SECTION VALEURS DE RÉFÉRENCE POUR SOUS-ANALYSE --}}
+                                    <div class="mt-4 border border-blue-200 dark:border-blue-600 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                                        <h5 class="text-sm font-medium text-blue-900 dark:text-blue-200 mb-3 flex items-center">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                            </svg>
+                                            Valeurs de Référence
+                                        </h5>
+
+                                        <div class="space-y-3 sm:grid sm:grid-cols-1 md:grid-cols-2 sm:gap-3 sm:space-y-0">
+                                            {{-- Adulte --}}
+                                            <div class="space-y-2">
+                                                <h6 class="font-medium text-gray-900 dark:text-white flex items-center text-xs">
+                                                    <svg class="w-3 h-3 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                    Adulte
+                                                </h6>
+
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Homme
+                                                    </label>
+                                                    <input type="text" 
+                                                           wire:model="sousAnalyses.{{ $index }}.valeur_ref_homme"
+                                                           class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                           placeholder="Ex: 3.89 - 6.05">
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Femme
+                                                    </label>
+                                                    <input type="text" 
+                                                           wire:model="sousAnalyses.{{ $index }}.valeur_ref_femme"
+                                                           class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                           placeholder="Ex: 3.89 - 6.05">
+                                                </div>
+                                            </div>
+
+                                            {{-- Enfant --}}
+                                            <div class="space-y-2">
+                                                <h6 class="font-medium text-gray-900 dark:text-white flex items-center text-xs">
+                                                    <svg class="w-3 h-3 mr-1 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0 0H9"/>
+                                                    </svg>
+                                                    Enfant
+                                                </h6>
+
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Garçon
+                                                    </label>
+                                                    <input type="text" 
+                                                           wire:model="sousAnalyses.{{ $index }}.valeur_ref_enfant_garcon"
+                                                           class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                           placeholder="Ex: 3.5 - 5.5">
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        Fille
+                                                    </label>
+                                                    <input type="text" 
+                                                           wire:model="sousAnalyses.{{ $index }}.valeur_ref_enfant_fille"
+                                                           class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                           placeholder="Ex: 3.5 - 5.5">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 space-y-4 sm:grid sm:grid-cols-1 md:grid-cols-2 sm:gap-4 sm:space-y-0">
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Valeurs de référence
+                                                Valeurs de référence générales
                                             </label>
                                             <input type="text" 
                                                    wire:model="sousAnalyses.{{ $index }}.valeur_ref"
@@ -414,15 +621,13 @@
                                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
                                                    placeholder="Suffixe">
                                         </div>
-
-                                     
                                     </div>
 
                                     {{-- Sous-section pour les sous-sous-analyses si cette sous-analyse est PARENT --}}
                                     @if(isset($sousAnalyses[$index]['level']) && $sousAnalyses[$index]['level'] === 'PARENT')
                                         <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-purple-200 dark:border-purple-600">
                                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4">
-                                                <h5 class="text-sm sm:text-md font-medium text-purple-800 dark:text-purple-300 flex items-center">
+                                                <h5 class="text-sm font-medium text-purple-800 dark:text-purple-300 flex items-center">
                                                     <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                                                     </svg>
@@ -511,6 +716,7 @@
                                                                     @enderror
                                                                 </div>
 
+                                                                {{-- PRIX SOUS-SOUS-ANALYSE --}}
                                                                 <div>
                                                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                         Prix (Ar) <span class="text-red-500">*</span>
@@ -593,7 +799,72 @@
                                                                 </div>
                                                             </div>
 
-                                                            {{-- Troisième ligne sous-sous --}}
+                                                            {{-- SECTION VALEURS DE RÉFÉRENCE POUR SOUS-SOUS-ANALYSE --}}
+                                                            <div class="mt-2 border border-blue-200 dark:border-blue-600 rounded p-2 bg-blue-50 dark:bg-blue-900/20">
+                                                                <h6 class="text-xs font-medium text-blue-900 dark:text-blue-200 mb-2 flex items-center">
+                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                                                    </svg>
+                                                                    Valeurs de Référence
+                                                                </h6>
+
+                                                                <div class="space-y-2 sm:grid sm:grid-cols-1 md:grid-cols-2 sm:gap-2 sm:space-y-0">
+                                                                    {{-- Adulte --}}
+                                                                    <div class="space-y-1">
+                                                                        <h7 class="font-medium text-gray-900 dark:text-white flex items-center text-xs">
+                                                                            Adulte
+                                                                        </h7>
+
+                                                                        <div>
+                                                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                                Homme
+                                                                            </label>
+                                                                            <input type="text" 
+                                                                                   wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.valeur_ref_homme"
+                                                                                   class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                                                   placeholder="Ex: 3.89 - 6.05">
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                                Femme
+                                                                            </label>
+                                                                            <input type="text" 
+                                                                                   wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.valeur_ref_femme"
+                                                                                   class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                                                   placeholder="Ex: 3.89 - 6.05">
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {{-- Enfant --}}
+                                                                    <div class="space-y-1">
+                                                                        <h7 class="font-medium text-gray-900 dark:text-white flex items-center text-xs">
+                                                                            Enfant
+                                                                        </h7>
+
+                                                                        <div>
+                                                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                                Garçon
+                                                                            </label>
+                                                                            <input type="text" 
+                                                                                   wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.valeur_ref_enfant_garcon"
+                                                                                   class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                                                   placeholder="Ex: 3.5 - 5.5">
+                                                                        </div>
+
+                                                                        <div>
+                                                                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                                                Fille
+                                                                            </label>
+                                                                            <input type="text" 
+                                                                                   wire:model="sousAnalyses.{{ $index }}.children.{{ $cindex }}.valeur_ref_enfant_fille"
+                                                                                   class="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-400 focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+                                                                                   placeholder="Ex: 3.5 - 5.5">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
                                                             <div class="mt-2 space-y-2 sm:grid sm:grid-cols-1 md:grid-cols-2 sm:gap-2 sm:space-y-0">
                                                                 <div>
                                                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
