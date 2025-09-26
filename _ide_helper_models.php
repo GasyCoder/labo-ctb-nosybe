@@ -296,9 +296,11 @@ namespace App\Models{
  * @property int|null $payment_method_id
  * @property int $recu_par
  * @property bool $status
+ * @property \Illuminate\Support\Carbon|null $date_paiement
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read mixed $date_paiement_formatee
  * @property-read mixed $methode_paiement_label
  * @property-read mixed $modee_paiement
  * @property-read mixed $status_badge_class
@@ -315,6 +317,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCommissionPrescripteur($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereDatePaiement($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Paiement whereMontant($value)

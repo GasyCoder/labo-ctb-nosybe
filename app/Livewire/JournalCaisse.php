@@ -19,8 +19,10 @@ class JournalCaisse extends Component
         $this->dateDebut = Carbon::today()->subDays(7)->format('Y-m-d'); // 7 jours avant
         $this->dateFin = Carbon::today()->format('Y-m-d'); // aujourd'hui
 
-        // Calculer le total général de tous les paiements payés (status = 1)
-        $this->totalGeneral = Paiement::payés()->sum('montant');
+        // Calculer le total général de tous les paiements payés avec date_paiement
+        $this->totalGeneral = Paiement::payés()
+            ->whereNotNull('date_paiement')
+            ->sum('montant');
     }
 
     public function updated($propertyName)
@@ -44,6 +46,9 @@ class JournalCaisse extends Component
         ]);
     }
 
+    /**
+     * Récupérer les paiements selon la date de paiement (pas la date de création)
+     */
     private function getPaiements()
     {
         return Paiement::with([
@@ -52,16 +57,20 @@ class JournalCaisse extends Component
             'paymentMethod',
             'utilisateur'
         ])
-        ->whereBetween('created_at', [
+        ->whereBetween('date_paiement', [
             Carbon::parse($this->dateDebut)->startOfDay(),
             Carbon::parse($this->dateFin)->endOfDay()
         ])
         ->payés() // Seulement les paiements avec status = 1
-        ->orderBy('created_at')
+        ->whereNotNull('date_paiement') // S'assurer que date_paiement existe
+        ->orderBy('date_paiement') // Ordonner par date de paiement
         ->orderBy('payment_method_id')
         ->get();
     }
 
+    /**
+     * Calculer les totaux par période selon date_paiement
+     */
     private function getTotalSemaine()
     {
         // Calculer la période de la semaine pour la période filtrée
@@ -72,14 +81,16 @@ class JournalCaisse extends Component
         $debutSemainePrecedente = $debutPeriode->copy()->subWeek()->startOfDay();
         $finSemainePrecedente = $finPeriode->copy()->subWeek()->endOfDay();
 
-        // Total de la période filtrée
+        // Total de la période filtrée (par date de paiement)
         $totalSemaine = Paiement::payés()
-            ->whereBetween('created_at', [$debutPeriode, $finPeriode])
+            ->whereNotNull('date_paiement')
+            ->whereBetween('date_paiement', [$debutPeriode, $finPeriode])
             ->sum('montant');
 
-        // Total de la semaine précédente
+        // Total de la semaine précédente (par date de paiement)
         $totalSemainePrecedente = Paiement::payés()
-            ->whereBetween('created_at', [$debutSemainePrecedente, $finSemainePrecedente])
+            ->whereNotNull('date_paiement')
+            ->whereBetween('date_paiement', [$debutSemainePrecedente, $finSemainePrecedente])
             ->sum('montant');
 
         // Calculer l'évolution
@@ -114,6 +125,19 @@ class JournalCaisse extends Component
         }
         
         return $prescription->created_at->ne($prescription->updated_at);
+    }
+
+    /**
+     * Méthode pour obtenir les statistiques détaillées
+     */
+    public function getStatistiquesDetaillees()
+    {
+        return [
+            'total_paiements_avec_date' => Paiement::payés()->whereNotNull('date_paiement')->count(),
+            'total_paiements_sans_date' => Paiement::payés()->whereNull('date_paiement')->count(),
+            'montant_avec_date' => Paiement::payés()->whereNotNull('date_paiement')->sum('montant'),
+            'montant_sans_date' => Paiement::payés()->whereNull('date_paiement')->sum('montant'),
+        ];
     }
 
     public function exportPdf()

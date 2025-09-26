@@ -35,6 +35,12 @@ class PrescriptionIndex extends Component
     public $countPaye = 0;
     public $countNonPaye = 0;
 
+    // 💰 NOUVELLES PROPRIÉTÉS POUR CONFIRMATION PAIEMENT
+    public $showConfirmPaymentModal = false;
+    public $showConfirmUnpaymentModal = false;
+    public $selectedPrescriptionForPayment = null;
+    public $paymentAction = null; // 'pay' ou 'unpay'
+
     /**
      * Get count of active prescriptions (En attente + En cours + Terminé)
      */
@@ -202,6 +208,13 @@ class PrescriptionIndex extends Component
         $this->showPermanentDeleteModal = false;
         $this->showArchiveModal = false;
         $this->showUnarchiveModal = false;
+        
+        // Réinitialiser les modales de paiement
+        $this->showConfirmPaymentModal = false;
+        $this->showConfirmUnpaymentModal = false;
+        $this->selectedPrescriptionForPayment = null;
+        $this->paymentAction = null;
+        
         $this->selectedPrescriptionId = null;
     }
 
@@ -233,28 +246,184 @@ class PrescriptionIndex extends Component
                 return;
             }
             
-            // Inverser le statut
-            $nouveauStatut = !$paiement->status;
-            $paiement->update(['status' => $nouveauStatut]);
-            
-            $message = $nouveauStatut 
-                ? 'Paiement marqué comme payé avec succès.' 
-                : 'Paiement marqué comme non payé avec succès.';
-                
-            session()->flash('success', $message);
-            
-            // Rafraîchir les comptes de paiement
-            $this->refreshPaymentCounts();
-            
-            // Rafraîchir la vue
-            $this->dispatch('$refresh');
+            // Déterminer l'action et ouvrir la modale appropriée
+            if ($paiement->status) {
+                // Actuellement payé, demander confirmation pour marquer comme non payé
+                $this->confirmUnpayment($prescriptionId);
+            } else {
+                // Actuellement non payé, demander confirmation pour marquer comme payé
+                $this->confirmPayment($prescriptionId);
+            }
             
         } catch (\Exception $e) {
-            Log::error('Erreur modification statut paiement', [
+            Log::error('Erreur toggle paiement', [
                 'prescription_id' => $prescriptionId,
                 'error' => $e->getMessage()
             ]);
-            session()->flash('error', 'Erreur lors de la modification du statut de paiement.');
+            session()->flash('error', 'Erreur lors de la vérification du statut de paiement.');
+        }
+    }
+
+
+    /**
+     * Demander confirmation pour marquer comme payé
+     */
+    public function confirmPayment($prescriptionId)
+    {
+        $this->selectedPrescriptionForPayment = $prescriptionId;
+        $this->paymentAction = 'pay';
+        $this->showConfirmPaymentModal = true;
+    }
+
+
+    /**
+     * Exécuter le marquage comme payé après confirmation
+     */
+    public function executeMarquerCommePayé()
+    {
+        try {
+            if (!$this->selectedPrescriptionForPayment) {
+                $this->resetModal();
+                return;
+            }
+
+            $prescription = Prescription::with('paiements')->findOrFail($this->selectedPrescriptionForPayment);
+            $paiement = $prescription->paiements->first();
+            
+            if (!$paiement) {
+                session()->flash('error', 'Aucun paiement trouvé pour cette prescription.');
+                $this->resetModal();
+                return;
+            }
+            
+            $paiement->changerStatutPaiement(true);
+            
+            session()->flash('success', 'Paiement marqué comme payé avec succès. Date de paiement enregistrée automatiquement.');
+            
+            $this->refreshPaymentCounts();
+            $this->dispatch('$refresh');
+            $this->resetModal();
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur marquage paiement payé', [
+                'prescription_id' => $this->selectedPrescriptionForPayment,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            session()->flash('error', 'Erreur lors du marquage du paiement comme payé.');
+            $this->resetModal();
+        }
+    }
+
+    /**
+     * Exécuter le marquage comme non payé après confirmation
+     */
+    public function executeMarquerCommeNonPayé()
+    {
+        try {
+            if (!$this->selectedPrescriptionForPayment) {
+                $this->resetModal();
+                return;
+            }
+
+            $prescription = Prescription::with('paiements')->findOrFail($this->selectedPrescriptionForPayment);
+            $paiement = $prescription->paiements->first();
+            
+            if (!$paiement) {
+                session()->flash('error', 'Aucun paiement trouvé pour cette prescription.');
+                $this->resetModal();
+                return;
+            }
+            
+            $paiement->changerStatutPaiement(false);
+            
+            session()->flash('success', 'Paiement marqué comme non payé avec succès. Date de paiement supprimée.');
+            
+            $this->refreshPaymentCounts();
+            $this->dispatch('$refresh');
+            $this->resetModal();
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur marquage paiement non payé', [
+                'prescription_id' => $this->selectedPrescriptionForPayment,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            session()->flash('error', 'Erreur lors du marquage du paiement comme non payé.');
+            $this->resetModal();
+        }
+    }
+
+    /**
+     * Demander confirmation pour marquer comme non payé
+     */
+    public function confirmUnpayment($prescriptionId)
+    {
+        $this->selectedPrescriptionForPayment = $prescriptionId;
+        $this->paymentAction = 'unpay';
+        $this->showConfirmUnpaymentModal = true;
+    }
+
+
+    /**
+     * Marquer un paiement comme payé (avec date automatique)
+     */
+    public function marquerCommePayé($prescriptionId)
+    {
+        try {
+            $prescription = Prescription::with('paiements')->findOrFail($prescriptionId);
+            $paiement = $prescription->paiements->first();
+            
+            if (!$paiement) {
+                session()->flash('error', 'Aucun paiement trouvé pour cette prescription.');
+                return;
+            }
+            
+            $paiement->marquerCommePayé();
+            
+            session()->flash('success', 'Paiement marqué comme payé avec succès. Date de paiement enregistrée.');
+            
+            $this->refreshPaymentCounts();
+            $this->dispatch('$refresh');
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur marquage paiement payé', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Erreur lors du marquage du paiement.');
+        }
+    }
+
+    
+
+    /**
+     * Marquer un paiement comme non payé (supprime la date)
+     */
+    public function marquerCommeNonPayé($prescriptionId)
+    {
+        try {
+            $prescription = Prescription::with('paiements')->findOrFail($prescriptionId);
+            $paiement = $prescription->paiements->first();
+            
+            if (!$paiement) {
+                session()->flash('error', 'Aucun paiement trouvé pour cette prescription.');
+                return;
+            }
+            
+            $paiement->marquerCommeNonPayé();
+            
+            session()->flash('success', 'Paiement marqué comme non payé avec succès.');
+            
+            $this->refreshPaymentCounts();
+            $this->dispatch('$refresh');
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur marquage paiement non payé', [
+                'prescription_id' => $prescriptionId,
+                'error' => $e->getMessage()
+            ]);
+            session()->flash('error', 'Erreur lors du marquage du paiement.');
         }
     }
 

@@ -69,30 +69,57 @@
                             $estPaye = $paiement ? $paiement->status : false;
                         @endphp
                         @if ($paiement)
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" wire:model="paiementStatus.{{ $prescription->id }}"
-                                wire:change="togglePaiementStatus({{ $prescription->id }})" class="sr-only peer"
-                                {{ $estPaye ? 'checked' : '' }}>
-                            <div
-                                class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 
-                                peer-checked:after:translate-x-full peer-checked:after:border-white 
-                                after:content-[''] after:absolute after:top-0.5 after:left-[2px] 
-                                after:bg-white after:border-gray-300 after:border after:rounded-full 
-                                after:h-5 after:w-5 after:transition-all 
-                                peer-checked:bg-green-600">
+                            <div class="flex flex-col space-y-2">
+                                {{-- Toggle Switch avec Confirmation --}}
+                                <div class="flex items-center space-x-3">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        {{-- Toggle Switch - Le clic ouvre la modale de confirmation --}}
+                                        <input type="checkbox" 
+                                            wire:click="togglePaiementStatus({{ $prescription->id }})"
+                                            class="sr-only peer"
+                                            {{ $estPaye ? 'checked' : '' }} readonly>
+                                        <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 
+                                                    peer-checked:after:translate-x-full peer-checked:after:border-white 
+                                                    after:content-[''] after:absolute after:top-0.5 after:left-[2px] 
+                                                    after:bg-white after:border-gray-300 after:border after:rounded-full 
+                                                    after:h-5 after:w-5 after:transition-all 
+                                                    peer-checked:bg-green-600">
+                                        </div>
+                                    </label>
+                                    
+                                    {{-- Statut et Date --}}
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium 
+                                            {{ $estPaye ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                            {{ $estPaye ? 'Payé' : 'Non Payé' }}
+                                        </span>
+                                        
+                                        {{-- Date de paiement --}}
+                                        @if($estPaye && $paiement->date_paiement)
+                                            <span class="text-xs text-gray-500 dark:text-gray-400" title="Date de paiement">
+                                                {{ $paiement->date_paiement->format('d/m/Y H:i') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            
+                                {{-- Informations supplémentaires --}}
+                                @if($paiement->paymentMethod)
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"></path>
+                                        </svg>
+                                        <span title="Méthode de paiement">{{ $paiement->paymentMethod->label ?? 'N/A' }}</span>
+                                    </div>
+                                @endif
                             </div>
-                            <span class="ml-2 text-xs font-medium 
-                                {{ $estPaye ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
-                                {{ $estPaye ? 'Payé' : 'Non Payé' }}
-                            </span>
-                        </label>
-
                         @else
-                            <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
-                                <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>
-                                Aucun paiement
-                            </span>
+                            <div class="flex items-center justify-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                                    <span class="w-1.5 h-1.5 rounded-full mr-1.5 bg-gray-400"></span>
+                                    Aucun paiement
+                                </span>
+                            </div>
                         @endif
                     </td>
 

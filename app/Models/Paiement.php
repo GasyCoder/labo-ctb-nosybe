@@ -17,12 +17,14 @@ class Paiement extends Model
         'payment_method_id',
         'recu_par',
         'status',
+        'date_paiement',
     ];
 
     protected $casts = [
         'montant' => 'decimal:2',
         'commission_prescripteur' => 'decimal:2',
         'status' => 'boolean',
+        'date_paiement' => 'datetime',
     ];
 
     // Relations
@@ -62,12 +64,18 @@ class Paiement extends Model
     // ✅ Méthodes utilitaires pour le statut
     public function marquerCommePayé()
     {
-        $this->update(['status' => true]);
+        $this->update([
+            'status' => true,
+            'date_paiement' => now()
+        ]);
     }
 
     public function marquerCommeNonPayé()
     {
-        $this->update(['status' => false]);
+        $this->update([
+            'status' => false,
+            'date_paiement' => null
+        ]);
     }
 
     public function estPayé()
@@ -102,6 +110,30 @@ class Paiement extends Model
         return $this->paymentMethod?->label ?? 'Méthode inconnue';
     }
 
+    // ✅ Accesseur pour la date de paiement formatée
+    public function getDatePaiementFormateeAttribute()
+    {
+        return $this->date_paiement ? $this->date_paiement->format('d/m/Y H:i') : null;
+    }
+
+    // ✅ Méthode pour définir automatiquement la date de paiement
+    public function changerStatutPaiement($nouveauStatut)
+    {
+        $this->status = $nouveauStatut;
+        
+        if ($nouveauStatut) {
+            // Si on marque comme payé et qu'il n'y a pas encore de date
+            if (!$this->date_paiement) {
+                $this->date_paiement = now();
+            }
+        } else {
+            // Si on marque comme non payé, on supprime la date
+            $this->date_paiement = null;
+        }
+        
+        $this->save();
+    }
+
     // Auto-calcul de la commission avec exclusion BiologieSolidaire
     protected static function boot()
     {
@@ -112,6 +144,17 @@ class Paiement extends Model
         });
 
         static::updating(function ($paiement) {
+            // Gérer automatiquement la date de paiement lors des mises à jour
+            if ($paiement->isDirty('status')) {
+                if ($paiement->status && !$paiement->date_paiement) {
+                    // Si on passe à payé et qu'il n'y a pas de date, l'ajouter
+                    $paiement->date_paiement = now();
+                } elseif (!$paiement->status) {
+                    // Si on passe à non payé, supprimer la date
+                    $paiement->date_paiement = null;
+                }
+            }
+
             if ($paiement->isDirty('montant')) {
                 $paiement->commission_prescripteur = static::calculerCommission($paiement);
             }

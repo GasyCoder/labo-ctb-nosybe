@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('payment_method_id')->nullable()->constrained('payment_methods')->nullOnDelete();
             $table->foreignId('recu_par')->constrained('users')->onDelete('cascade');
             $table->boolean('status')->default(false);
+            $table->timestamp('date_paiement')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

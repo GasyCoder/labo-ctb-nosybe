@@ -4,14 +4,17 @@
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
                 <h1 class="text-3xl font-heading font-bold text-gray-900 dark:text-white">Journal de Caisse</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">LNB SITE MAITRE - Analyses Médicales - Suivi des recettes par méthode de paiement</p>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">LNB SITE MAITRE - Analyses Médicales - Suivi des recettes par date de paiement</p>
             </div>
             
             <!-- Informations période -->
             <div class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 px-4 py-3 rounded-xl border border-blue-200 dark:border-blue-700">
-                <div class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Période actuelle</div>
+                <div class="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide">Période de Paiement</div>
                 <div class="text-lg font-bold text-blue-800 dark:text-blue-300">
                     {{ Carbon\Carbon::parse($dateDebut)->format('d/m/Y') }} - {{ Carbon\Carbon::parse($dateFin)->format('d/m/Y') }}
+                </div>
+                <div class="text-xs text-blue-600 dark:text-blue-400">
+                    Basé sur les dates de paiement réelles
                 </div>
             </div>
         </div>
@@ -23,7 +26,9 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Date début -->
                 <div>
-                    <label for="dateDebut" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Date début</label>
+                    <label for="dateDebut" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Date début de paiement
+                    </label>
                     <input 
                         wire:model.live="dateDebut"
                         type="date" 
@@ -34,7 +39,9 @@
 
                 <!-- Date fin -->
                 <div>
-                    <label for="dateFin" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Date fin</label>
+                    <label for="dateFin" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        Date fin de paiement
+                    </label>
                     <input 
                         wire:model.live="dateFin"
                         type="date" 
@@ -57,11 +64,28 @@
                 </div>
             </div>
 
+            <!-- Information importante -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                            <strong>Note importante :</strong> Ce rapport est désormais basé sur les <strong>dates de paiement réelles</strong> 
+                            (quand le paiement a été effectivement marqué comme payé) et non plus sur les dates de création des paiements.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Résumé -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div class="flex items-center space-x-4">
                     <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                        {{ $paiements->count() }} paiement(s) trouvé(s)
+                        {{ $paiements->count() }} paiement(s) effectué(s) dans cette période
                     </span>
                 </div>
                 <div class="text-lg font-bold text-gray-900 dark:text-white">
@@ -81,10 +105,11 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Général (paiements validés)</h3>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Général (tous paiements payés)</h3>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ number_format($totalGeneral, 2, '.', ' ') }} Ar.
                         </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Basé sur dates de paiement</p>
                     </div>
                 </div>
             </div>
@@ -98,7 +123,7 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Transactions</h3>
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Paiements effectués</h3>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ $paiements->count() }}
                         </p>
@@ -164,8 +189,11 @@
             <!-- En-tête avec période -->
             <div class="px-6 py-4 bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
                 <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-200 text-center">
-                    CAISSE du {{ Carbon\Carbon::parse($dateDebut)->format('d/m/Y') }} au {{ Carbon\Carbon::parse($dateFin)->format('d/m/Y') }}
+                    CAISSE - PAIEMENTS du {{ Carbon\Carbon::parse($dateDebut)->format('d/m/Y') }} au {{ Carbon\Carbon::parse($dateFin)->format('d/m/Y') }}
                 </h3>
+                <p class="text-sm text-gray-600 dark:text-slate-400 text-center mt-1">
+                    Basé sur les dates de paiement effectives
+                </p>
             </div>
 
             @if($paiements->count() > 0)
@@ -186,7 +214,7 @@
                         <!-- En-tête tableau -->
                         <div class="bg-gray-100 dark:bg-slate-800">
                             <div class="grid grid-cols-4 gap-4 px-6 py-3">
-                                <div class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Date</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Date Paiement</div>
                                 <div class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Dossier</div>
                                 <div class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide">Client</div>
                                 <div class="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide text-right">Montant</div>
@@ -198,29 +226,40 @@
                         @foreach($paiementsGroupe as $paiement)
                             <div class="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-200">
                                 <div class="grid grid-cols-4 gap-4 px-6 py-3 text-sm">
-                                    <div class="text-gray-600 dark:text-gray-400">
-                                        {{ $paiement->created_at->format('d/m/Y') }}
+                                    {{-- Date de paiement --}}
+                                    <div class="text-gray-600 dark:text-gray-400 flex flex-col">
+                                        <span class="font-medium">
+                                            {{ $paiement->date_paiement ? $paiement->date_paiement->format('d/m/Y') : 'N/A' }}
+                                        </span>
+                                        @if($paiement->date_paiement)
+                                            <span class="text-xs text-gray-500">
+                                                {{ $paiement->date_paiement->format('H:i') }}
+                                            </span>
+                                        @endif
                                     </div>
-                                    <div class="font-medium text-blue-600 dark:text-blue-400 flex items-center">
-                                        {{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}
-                                        <div class="font-medium text-blue-600 dark:text-blue-400 flex items-center flex-wrap">
-                                            <span>{{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}</span>
-                                            
-                                            {{-- Badge "Modifié" si la prescription a été modifiée --}}
-                                            @if($paiement->prescription && $paiement->prescription->isModified())
-                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
-                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                                    </svg>
-                                                    Modifié-{{ $paiement->prescription->updated_at->format('d/m/Y H:i:s') }}
-                                                </span>
-                                            @endif
-                                        </div>
+                                    
+                                    {{-- Dossier --}}
+                                    <div class="font-medium text-blue-600 dark:text-blue-400 flex items-center flex-wrap">
+                                        <span>{{ $paiement->prescription->patient->numero_dossier ?? 'N/A' }}</span>
+                                        
+                                        {{-- Badge "Modifié" si la prescription a été modifiée --}}
+                                        @if($paiement->prescription && $paiement->prescription->isModified())
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                                </svg>
+                                                Modifié-{{ $paiement->prescription->updated_at->format('d/m/Y H:i:s') }}
+                                            </span>
+                                        @endif
                                     </div>
+                                    
+                                    {{-- Client --}}
                                     <div class="font-medium text-gray-900 dark:text-gray-100">
                                         {{ $paiement->prescription->patient->nom ?? 'Client non défini' }} 
                                         {{ $paiement->prescription->patient->prenom ?? '' }}
                                     </div>
+                                    
+                                    {{-- Montant --}}
                                     <div class="text-right font-bold text-gray-900 dark:text-gray-100">
                                         {{ number_format($paiement->montant, 2, '.', ' ') }}
                                     </div>
@@ -247,7 +286,7 @@
                     <div class="bg-red-100 dark:bg-red-900/30 border-t-2 border-red-300 dark:border-red-600">
                         <div class="grid grid-cols-4 gap-4 px-6 py-4">
                             <div class="col-span-3 text-right font-bold text-gray-800 dark:text-gray-200 text-lg">
-                                TOTAL GÉNÉRAL (période filtrée)
+                                TOTAL GÉNÉRAL (période de paiement filtrée)
                             </div>
                             <div class="text-right font-bold text-xl text-red-700 dark:text-red-400">
                                 {{ number_format($totalGeneralCalcule, 2, '.', ' ') }} Ar.
@@ -265,9 +304,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Aucun paiement trouvé</h3>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Aucun paiement effectué</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-                            Aucun paiement n'a été enregistré pour cette période. Vérifiez les dates sélectionnées.
+                            Aucun paiement n'a été effectué (marqué comme payé) durant cette période. Vérifiez les dates sélectionnées.
                         </p>
                     </div>
                 </div>
@@ -277,7 +316,7 @@
             @if($paiements->count() > 0)
                 <div class="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
                     <div class="text-right text-sm text-gray-500 dark:text-gray-400">
-                        Édité le {{ now()->format('d/m/Y H:i:s') }}
+                        Rapport généré le {{ now()->format('d/m/Y H:i:s') }} - Basé sur les dates de paiement effectives
                     </div>
                 </div>
             @endif

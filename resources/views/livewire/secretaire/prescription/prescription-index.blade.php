@@ -112,4 +112,5 @@
 
     {{-- Modal de confirmation de suppression --}}
     @include('livewire.secretaire.prescription.modals.action-modal-prescription')
+    @include('livewire.secretaire.prescription.modals.confirm-payment')
 </div>  
