@@ -26,6 +26,7 @@ class Analyse extends Model
         'valeur_ref_femme',
         'valeur_ref_enfant_garcon',
         'valeur_ref_enfant_fille',
+        
         'unite',
         'suffixe',
         'valeurs_predefinies',
