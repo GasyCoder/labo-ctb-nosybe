@@ -1,3 +1,4 @@
+{{-- resources/views/livewire/admin/analyses/_edit.blade.php --}}
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mx-2 sm:mx-0">
     <div class="bg-yellow-50 dark:bg-yellow-900/20 px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-600 rounded-t-xl">
         <h6 class="font-semibold text-sm sm:text-base text-yellow-900 dark:text-yellow-200 flex items-center">
@@ -83,13 +84,19 @@
                         @enderror
                     </div>
 
-                    {{-- SECTION PRIX CORRIGÉE AVEC CALCUL AUTOMATIQUE --}}
                     <div>
                         <label for="prix" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Prix (Ar) <span class="text-red-500">*</span>
-                            @if($level === 'PARENT' && count($sousAnalyses) > 0)
+                            @php
+                                $sumSubs = $this->calculerPrixTotal($sousAnalyses);
+                            @endphp
+                            @if($level === 'PARENT' && $sumSubs > 0)
                                 <span class="text-xs text-green-600 ml-2">
                                     (Calcul automatique: {{ number_format($prix, 0, ',', ' ') }} Ar)
+                                </span>
+                            @elseif($level === 'PARENT' && count($sousAnalyses) > 0)
+                                <span class="text-xs text-blue-600 ml-2">
+                                    (Prix manuel, car toutes sous-analyses à 0 Ar)
                                 </span>
                             @endif
                         </label>
@@ -98,11 +105,15 @@
                                class="w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 dark:bg-gray-700 dark:text-white @error('prix') border-red-500 focus:ring-red-500 focus:border-red-500 @enderror" 
                                id="prix" 
                                wire:model="prix"
-                               @if($level === 'PARENT' && count($sousAnalyses) > 0) readonly @endif
+                               @if($level === 'PARENT' && $sumSubs > 0) readonly @endif
                                placeholder="0.00">
                         @if($level === 'PARENT' && count($sousAnalyses) > 0)
                             <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                                Le prix est calculé automatiquement à partir des sous-analyses
+                                @if($sumSubs > 0)
+                                    Le prix est calculé automatiquement à partir des sous-analyses
+                                @else
+                                    Prix manuel car toutes les sous-analyses sont à 0 Ar
+                                @endif
                             </p>
                         @endif
                         @error('prix')
@@ -375,7 +386,10 @@
                                     <div class="flex justify-between items-center mb-3 sm:mb-4">
                                         <h4 class="font-medium text-sm sm:text-base text-gray-900 dark:text-white">
                                             Sous-analyse #{{ $index + 1 }}
-                                            @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0)
+                                            @php
+                                                $subSum = $this->calculerPrixTotalEnfants($sousAnalyse['children'] ?? []);
+                                            @endphp
+                                            @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && $subSum > 0)
                                                 <span class="text-xs text-green-600 ml-2">
                                                     (Total: {{ number_format($sousAnalyse['prix'] ?? 0, 0, ',', ' ') }} Ar)
                                                 </span>
@@ -441,20 +455,37 @@
                                             @enderror
                                         </div>
 
-                                        {{-- PRIX SOUS-ANALYSE AVEC CALCUL AUTOMATIQUE --}}
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 Prix (Ar) <span class="text-red-500">*</span>
-                                                @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0)
-                                                    <span class="text-xs text-blue-600 ml-1">(calcul auto)</span>
+                                                @php
+                                                    $subSum = $this->calculerPrixTotalEnfants($sousAnalyse['children'] ?? []);
+                                                @endphp
+                                                @if($sousAnalyse['level'] === 'PARENT' && $subSum > 0)
+                                                    <span class="text-xs text-green-600 ml-2">
+                                                        (Calcul automatique: {{ number_format($subSum, 0, ',', ' ') }} Ar)
+                                                    </span>
+                                                @elseif($sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0)
+                                                    <span class="text-xs text-blue-600 ml-2">
+                                                        (Prix manuel, car enfants à 0 Ar)
+                                                    </span>
                                                 @endif
                                             </label>
                                             <input type="number" 
                                                    step="0.01"
                                                    wire:model="sousAnalyses.{{ $index }}.prix"
                                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white @error('sousAnalyses.'.$index.'.prix') border-red-500 @enderror"
-                                                   @if(isset($sousAnalyse['level']) && $sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0) readonly @endif
+                                                   @if($sousAnalyse['level'] === 'PARENT' && $subSum > 0) readonly @endif
                                                    placeholder="0.00">
+                                            @if($sousAnalyse['level'] === 'PARENT' && isset($sousAnalyse['children']) && count($sousAnalyse['children']) > 0)
+                                                <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                                    @if($subSum > 0)
+                                                        Le prix est calculé automatiquement à partir des enfants
+                                                    @else
+                                                        Prix manuel car tous les enfants sont à 0 Ar
+                                                    @endif
+                                                </p>
+                                            @endif
                                             @error('sousAnalyses.'.$index.'.prix')
                                                 <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                             @enderror
@@ -716,7 +747,6 @@
                                                                     @enderror
                                                                 </div>
 
-                                                                {{-- PRIX SOUS-SOUS-ANALYSE --}}
                                                                 <div>
                                                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                                         Prix (Ar) <span class="text-red-500">*</span>
