@@ -207,15 +207,23 @@
         $formatArgent = $settings->format_unite_argent ?? 'Ar';
 
         $paiement = $prescription->paiements->first();
-        $montantPaye = $paiement->montant ?? 0;
+        
+        // ✅ CORRECTION CRITIQUE : Vérifier le status du paiement
+        $paiementEffectue = $paiement && (bool) $paiement->status; // true seulement si status = 1
+        
+        // ✅ CORRECTION : Montant payé seulement si vraiment payé
+        $montantPaye = $paiementEffectue ? ($paiement->montant ?? 0) : 0;
+        
         $totalAnalyses = $prescription->analyses->sum('prix');
         $totalPrelevements = $prescription->prelevements->sum(fn($p) => ($p->prix ?? 0) * ($p->quantite ?? 1));
         $remise = $prescription->remise ?? 0;
         $sousTotal = $totalAnalyses + $totalPrelevements;
         $total = max(0, $sousTotal - $remise);
-        $solde = max(0, $total - $montantPaye);
+        
+        // ✅ CORRECTION : Solde basé sur le vrai statut de paiement
+        $solde = $paiementEffectue ? max(0, $total - $montantPaye) : $total;
 
-        // Fonction pour convertir les nombres en lettres
+        // ✅ FONCTIONS COMPLÈTES POUR CONVERSION EN LETTRES
         function nombreEnLettres($nombre)
         {
             $unites = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf'];
@@ -469,7 +477,7 @@
         {{-- TOTAUX --}}
         <table class="totaux-table">
             <div colspan="6" style=" padding: 8px; text-align: left; font-style: italic; background-color: #f9f9f9;">
-               <strong>Montant total en lettres :</strong> 
+            <strong>Montant total en lettres :</strong> 
                 <span>{{ ucfirst(mb_strtolower(montantEnLettres($total, 'ariary'))) }}</span>
             </div>
             <tr>
@@ -494,6 +502,7 @@
             </tr>
         </table>
 
+
         {{-- PAIEMENT --}}
         <div class="paiement-header">Informations de paiement</div>
         <table class="paiement-table">
@@ -503,23 +512,41 @@
                 <td>Montant</td>
                 <td>Mode paiement</td>
                 <td>Collecté par</td>
+                <td>Statut</td>
             </tr>
             <tr>
-                <td>{{ $paiement?->created_at?->format('d/m/Y H:i') }}</td>
-                <td>{{ $paiement->id ?? '' }}</td>
-                <td>{{ number_format($montantPaye, 2) }}</td>
-                <td>{{ $paiement->paymentMethod->label ?? 'ESPÈCES' }}</td>
-                <td>{{ $paiement->utilisateur->name ?? '' }}</td>
+                @if($paiement)
+                    {{-- ✅ Date selon le status et date_paiement --}}
+                    <td>
+                        @if($paiementEffectue && $paiement->date_paiement)
+                            {{ $paiement->date_paiement->format('d/m/Y H:i') }}
+                        @elseif($paiementEffectue)
+                            {{ $paiement->created_at->format('d/m/Y H:i') }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>{{ $paiement->id ?? '' }}</td>
+                    {{-- ✅ Montant affiché seulement si vraiment payé --}}
+                    <td>{{ $paiementEffectue ? number_format($paiement->montant, 2) : '0.00' }}</td>
+                    <td>{{ $paiementEffectue ? ($paiement->paymentMethod->label ?? 'ESPÈCES') : '-' }}</td>
+                    <td>{{ $paiementEffectue ? ($paiement->utilisateur->name ?? '') : '-' }}</td>
+                    {{-- ✅ Status basé sur le champ status de la DB --}}
+                    <td style="font-weight: bold; color: {{ $paiementEffectue ? 'green' : 'red' }}">
+                        {{ $paiementEffectue ? 'PAYÉ' : 'NON PAYÉ' }}
+                    </td>
+                @else
+                    <td colspan="6" style="text-align: center; color: red; font-weight: bold;">
+                        AUCUN PAIEMENT ENREGISTRÉ
+                    </td>
+                @endif
             </tr>
         </table>
-
         {{-- RESUME --}}
         <div class="resume-section">
             <div class="resume-left">
                 <div><strong>Total :</strong> {{ number_format($total, 2) }} {{ $formatArgent }}</div>
                 <div><strong>Payé :</strong> {{ number_format($montantPaye, 2) }} {{ $formatArgent }}</div>
-                @if ($montantPaye > 0)
-                @endif
                 <div><strong>Solde :</strong> {{ number_format($solde, 2) }} {{ $formatArgent }}</div>
                 @if ($solde > 0)
                     <div class="montant-lettres">{{ montantEnLettres($solde, 'ariary') }}</div>
@@ -527,7 +554,19 @@
                 <div><strong>Préparé par :</strong> {{ $prescription->secretaire->name ?? 'SECRETAIRE' }}</div>
             </div>
             <div class="resume-right">
-                <div class="cachet-paye {{ $solde == 0 ? 'paye' : 'non-paye' }}">{{ $solde == 0 ? 'PAYÉ' : 'NON PAYÉ' }}</div>
+                {{-- ✅ CORRECTION PRINCIPALE : Cachet basé sur le vrai status --}}
+                <div class="cachet-paye {{ $paiementEffectue ? 'paye' : 'non-paye' }}">
+                    {{ $paiementEffectue ? 'PAYÉ' : 'NON PAYÉ' }}
+                </div>
+                
+                {{-- Informations additionnelles --}}
+                @if($paiement)
+                    <div style="font-size: 7pt; text-align: center; margin-top: 5px;">
+                        @if($paiementEffectue && $paiement->date_paiement)
+                            <br>{{ $paiement->date_paiement->format('d/m/Y H:i') }}
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -541,8 +580,8 @@
                         - STAT:{{ $statutEntreprise }}
                     @endif
             </div>
-            <div>Siège: Antananarivo - Tél: +261 34 XX XXX XX - Email: contact@laboratoire.mg</div>
-            <div>Comptes: MCB: 00000 00000 000000 - BNI: 00000 021579201023</div>
+            <div>Siège: Lot 25A Antanetibe Antehiroka Antananarivo 101 - Tél: 020 78 450 61 - 032 11 450 61 - Email: info@c-care.mg</div>
+            <div>Comptes: MCB TANA: 00006 00003 00000845663 49 - BMOI TANA: 00004 00001 02157920101 23</div>
         </div>
     </div>
 </body>

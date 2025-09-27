@@ -7,6 +7,7 @@ use Livewire\Component;
 use Livewire\Attributes\On;
 use App\Models\Prescription;
 use Illuminate\Support\Facades\DB;
+use App\Models\AnalysePrescription;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
@@ -271,18 +272,49 @@ class AnalysesSidebar extends Component
         // Si toutes les analyses sont terminées, marquer la prescription comme terminée
         if ($this->canFinalizePrescription()) {
             $prescription->update(['status' => 'TERMINE']);
+            
             Log::info('Prescription automatiquement marquée comme terminée', [
                 'prescription_id' => $this->prescriptionId,
                 'user_id' => Auth::id(),
             ]);
         }
         // Si au moins une analyse est en cours, marquer la prescription comme en cours
-        elseif ($prescription->status === 'EN_ATTENTE' && $this->hasAnalysesInProgress()) {
-            $prescription->update(['status' => 'EN_COURS']);
-            Log::info('Prescription marquée comme en cours', [
-                'prescription_id' => $this->prescriptionId,
-                'user_id' => Auth::id(),
-            ]);
+            elseif ($prescription->status === 'EN_ATTENTE' && $this->hasAnalysesInProgress()) {
+                $prescription->update(['status' => 'EN_COURS']);
+                DB::table('prescription_analyse')->where('prescription_id', $prescription->id)->update(['status' => 'EN_COURS', 'updated_at' => now()]);
+                
+                // ✅ NOUVEAU : Mettre à jour la table pivot vers EN_COURS pour les analyses qui ont des résultats
+                $this->updatePivotStatusToEnCours();
+        }
+    }
+
+    private function updatePivotStatusToEnCours(): void
+    {
+        // Récupérer les analyses principales qui ont des résultats
+        $analysesWithResults = DB::table('resultats')
+            ->where('prescription_id', $this->prescriptionId)
+            ->whereNull('deleted_at')
+            ->pluck('analyse_id')
+            ->unique()
+            ->toArray();
+
+        $principalAnalyseIds = DB::table('prescription_analyse')
+            ->where('prescription_id', $this->prescriptionId)
+            ->pluck('analyse_id')
+            ->toArray();
+
+        // Analyses principales qui ont des résultats
+        $pivotToUpdate = array_intersect($principalAnalyseIds, $analysesWithResults);
+
+        if (!empty($pivotToUpdate)) {
+            $pivotUpdatedCount = DB::table('prescription_analyse')
+                ->where('prescription_id', $this->prescriptionId)
+                ->whereIn('analyse_id', $pivotToUpdate)
+                ->where('status', '!=', AnalysePrescription::STATUS_TERMINE) // Ne pas écraser les terminés
+                ->update([
+                    'status' => AnalysePrescription::STATUS_EN_COURS,
+                    'updated_at' => now()
+                ]);
         }
     }
 
@@ -347,15 +379,25 @@ class AnalysesSidebar extends Component
                 ->whereIn('analyse_id', $enfants)
                 ->update(['status' => 'TERMINE']);
 
-            if ($updated > 0) {
-                Log::info('Analyse marquée comme terminée', [
-                    'prescription_id' => $this->prescriptionId,
-                    'parent_id' => $parentId,
-                    'enfants_updated' => $updated,
-                    'user_id' => Auth::id(),
-                ]);
+            // ✅ NOUVEAU : Mettre à jour la table pivot pour l'analyse principale
+            $principalAnalyseIds = DB::table('prescription_analyse')
+                ->where('prescription_id', $this->prescriptionId)
+                ->pluck('analyse_id')
+                ->toArray();
 
-                // ✅ NOUVEAU : Vérifier et mettre à jour le statut de la prescription
+            if (in_array($parentId, $principalAnalyseIds)) {
+                $pivotUpdated = DB::table('prescription_analyse')
+                    ->where('prescription_id', $this->prescriptionId)
+                    ->where('analyse_id', $parentId)
+                    ->update([
+                        'status' => \App\Models\AnalysePrescription::STATUS_TERMINE,
+                        'updated_at' => now()
+                    ]);
+            }
+
+            if ($updated > 0) {
+
+                // Vérifier et mettre à jour le statut de la prescription
                 $this->updatePrescriptionStatusIfNeeded();
 
                 DB::commit();
@@ -402,15 +444,24 @@ class AnalysesSidebar extends Component
             // Marquer tous les résultats comme terminés
             $prescription->resultats()->update(['status' => 'TERMINE']);
 
+            // ✅ NOUVEAU : Mettre à jour TOUTES les analyses principales dans la table pivot
+            $principalAnalyseIds = DB::table('prescription_analyse')
+                ->where('prescription_id', $this->prescriptionId)
+                ->pluck('analyse_id')
+                ->toArray();
+
+            if (!empty($principalAnalyseIds)) {
+                $pivotUpdatedCount = DB::table('prescription_analyse')
+                    ->where('prescription_id', $this->prescriptionId)
+                    ->whereIn('analyse_id', $principalAnalyseIds)
+                    ->update([
+                        'status' => \App\Models\AnalysePrescription::STATUS_TERMINE,
+                        'updated_at' => now()
+                    ]);
+            }
+
             // Marquer la prescription comme terminée
             $prescription->update(['status' => 'TERMINE']);
-
-            Log::info('Prescription marquée comme terminée', [
-                'prescription_id' => $this->prescriptionId,
-                'reference' => $prescription->reference,
-                'total_analyses' => count($this->analysesParents),
-                'user_id' => Auth::id(),
-            ]);
 
             DB::commit();
 
@@ -433,6 +484,7 @@ class AnalysesSidebar extends Component
             $this->flashError('Erreur lors de la finalisation : ' . $e->getMessage());
         }
     }
+
 
     public function render()
     {

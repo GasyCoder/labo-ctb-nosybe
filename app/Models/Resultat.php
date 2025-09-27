@@ -25,6 +25,10 @@ class Resultat extends Model
         'validated_at',
         'famille_id',
         'bacterie_id',
+
+        'anteriorite',
+        'anteriorite_date',
+        'anteriorite_prescription_id',
     ];
 
     /**
@@ -32,6 +36,7 @@ class Resultat extends Model
      */
     protected $casts = [
         'validated_at' => 'datetime',
+        'anteriorite_date' => 'date', // NOUVEAU
     ];
 
     // ============================================
@@ -274,75 +279,129 @@ class Resultat extends Model
     /**
      * Obtenir la valeur d'affichage complète pour PDF
      */
-    public function getDisplayValuePdfAttribute()
-    {
-        $displayValue = '';
-
-        if ($this->isGermeType()) {
-            $germeData = $this->germe_data;
-            if ($germeData && isset($germeData['options_speciales'])) {
-                $displayValue = implode(', ', array_map('ucfirst', $germeData['options_speciales']));
-            }
-            // Afficher les bactéries
-            if ($germeData && isset($germeData['bacteries'])) {
-                foreach ($germeData['bacteries'] as $bacteriaName => $bacteriaData) {
-                    $displayValue = '<i>' . $bacteriaName . '</i>';
-                    break; // Premier seulement
-                }
-            }
-        } elseif ($this->isLeucocytesType()) {
-            $leucoData = $this->leucocytes_data;
-            if ($leucoData && isset($leucoData['valeur'])) {
-                $displayValue = $leucoData['valeur'] . ' /mm³';
-            }
-        } else {
-            $displayValue = $this->valeur_pdf ?: $this->resultats_pdf;
-            
-            // Cas spéciaux selon le type d'analyse
-            if ($this->analyse && $this->analyse->type) {
-                switch($this->analyse->type->name) {
-                    case 'SELECT_MULTIPLE':
-                        $resultatsArray = $this->resultats_pdf;
-                        if (is_array($resultatsArray)) {
-                            $displayValue = implode(', ', $resultatsArray);
-                        }
-                        break;
-                        
-                    case 'NEGATIF_POSITIF_3':
-                        if ($this->resultats === 'Positif' && $this->valeur) {
-                            $displayValue = $this->resultats;
-                            $values = is_array($this->valeur) ? 
-                                implode(', ', $this->valeur) : 
-                                $this->valeur;
-                            $displayValue .= ' (' . $values . ')';
-                        } else {
-                            $displayValue = $this->resultats ?: $this->valeur;
-                        }
-                        break;
-                        
-                    case 'FV':
-                        if ($this->resultats) {
-                            $displayValue = $this->resultats;
-                            if ($this->valeur && in_array($this->resultats, [
-                                'Flore vaginale équilibrée',
-                                'Flore vaginale intermédiaire', 
-                                'Flore vaginale déséquilibrée'
-                            ])) {
-                                $displayValue .= ' (Score de Nugent: ' . $this->valeur . ')';
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-        // Formater en gras si pathologique
-        if ($this->est_pathologique && $displayValue) {
-            $displayValue = '<strong>' . $displayValue . '</strong>';
-        }
-
-        return $displayValue;
+public function getDisplayValuePdfAttribute()
+{
+    if (!$this->valeur && !$this->resultats) {
+        return '';
     }
+
+    $displayValue = '';
+
+    // Gestion des types GERME et CULTURE
+    if ($this->isGermeType() || $this->isCultureType()) {
+        $selectedOptions = $this->resultats_pdf ?? $this->resultats;
+        $autreValeur = $this->valeur;
+
+        if (is_array($selectedOptions)) {
+            $formattedOptions = array_map(function($option) use ($autreValeur) {
+                if ($option === 'Autre' && $autreValeur) {
+                    return '<i>' . e($autreValeur) . '</i>';
+                }
+                return ucfirst(str_replace('-', ' ', $option));
+            }, $selectedOptions);
+            $displayValue = implode(', ', $formattedOptions);
+        } elseif ($selectedOptions) {
+            $displayValue = e($selectedOptions);
+        } elseif ($autreValeur) {
+            $displayValue = '<i>' . e($autreValeur) . '</i>';
+        }
+    }
+    // Gestion des LEUCOCYTES
+    elseif ($this->isLeucocytesType()) {
+        $leucoData = $this->leucocytes_data;
+        if ($leucoData && isset($leucoData['valeur'])) {
+            $displayValue = $leucoData['valeur'] . ' /mm³';
+        }
+    }
+    // Gestion des autres types
+    else {
+        $analyseType = $this->analyse->type->name ?? '';
+
+        switch ($analyseType) {
+            case 'INPUT':
+            case 'DOSAGE':
+            case 'COMPTAGE':
+            case 'INPUT_SUFFIXE':
+                $displayValue = $this->valeur ?? '';
+                break;
+
+            case 'SELECT':
+            case 'TEST':
+                $displayValue = $this->resultats ?? $this->valeur ?? '';
+                break;
+
+            case 'SELECT_MULTIPLE':
+                $resultatsArray = $this->resultats_pdf ?? $this->resultats;
+                $displayValue = is_array($resultatsArray) ? implode(', ', $resultatsArray) : ($resultatsArray ?? '');
+                break;
+
+            case 'NEGATIF_POSITIF_1':
+                $displayValue = $this->valeur ?? '';
+                break;
+
+            case 'NEGATIF_POSITIF_2':
+                $displayValue = $this->valeur ?? '';
+                if ($this->valeur === 'POSITIF' && $this->resultats) {
+                    $displayValue .= ' (' . (is_array($this->resultats) ? implode(', ', $this->resultats) : $this->resultats) . ')';
+                }
+                break;
+
+            case 'NEGATIF_POSITIF_3':
+                $displayValue = $this->valeur ?? '';
+                if ($this->resultats) {
+                    $resultatsStr = is_array($this->resultats) ? implode(', ', $this->resultats) : $this->resultats;
+                    $displayValue .= ' (' . $resultatsStr . ')';
+                }
+                break;
+
+            case 'ABSENCE_PRESENCE_2':
+                $displayValue = $this->valeur ?? '';
+                if ($this->resultats) {
+                    $displayValue .= ' (' . (is_array($this->resultats) ? implode(', ', $this->resultats) : $this->resultats) . ')';
+                }
+                break;
+
+            case 'FV':
+                $displayValue = $this->resultats ?? '';
+                if ($this->valeur && in_array($this->resultats, [
+                    'Flore vaginale équilibrée',
+                    'Flore vaginale intermédiaire',
+                    'Flore vaginale déséquilibrée'
+                ])) {
+                    $displayValue .= ' (Score de Nugent: ' . $this->valeur . ')';
+                } elseif ($this->resultats === 'Autre' && $this->valeur) {
+                    $displayValue = $this->valeur;
+                }
+                break;
+
+            case 'LABEL':
+                $displayValue = '';
+                break;
+
+            default:
+                $displayValue = is_array($this->resultats) ? implode(', ', $this->resultats) : ($this->resultats ?? $this->valeur ?? '');
+                if ($this->resultats === 'Autre' && $this->valeur) {
+                    $displayValue = $this->valeur;
+                }
+                break;
+        }
+
+        // Ajout des unités et suffixes
+        if ($displayValue && $this->analyse && $this->analyse->unite && !str_contains($displayValue, $this->analyse->unite)) {
+            $displayValue .= ' ' . $this->analyse->unite;
+        }
+        if ($displayValue && $this->analyse && $this->analyse->suffixe && !str_contains($displayValue, $this->analyse->suffixe)) {
+            $displayValue .= ' ' . $this->analyse->suffixe;
+        }
+    }
+
+    // Formatage pour les résultats pathologiques
+    if ($this->est_pathologique && $displayValue) {
+        $displayValue = '<strong>' . $displayValue . '</strong>';
+    }
+
+    return $displayValue;
+}
 
     // ============================================
     // MÉTHODES DE VÉRIFICATION TYPE
@@ -492,5 +551,95 @@ class Resultat extends Model
             ->with(['analyse', 'validatedBy'])
             ->orderBy('created_at')
             ->get();
+    }
+
+
+
+    // NOUVELLES RELATIONS
+    public function anteriorite_prescription()
+    {
+        return $this->belongsTo(Prescription::class, 'anteriorite_prescription_id');
+    }
+
+    // NOUVEAUX ACCESSORS
+    public function getAAnterioriteAttribute(): bool
+    {
+        return !empty($this->anteriorite);
+    }
+
+    public function getAnterioriteFormatteeAttribute(): ?string
+    {
+        if (!$this->anteriorite) {
+            return null;
+        }
+        
+        $texte = $this->anteriorite;
+        if ($this->anteriorite_date) {
+            $texte .= ' (' . $this->anteriorite_date->format('d/m/Y') . ')';
+        }
+        
+        return $texte;
+    }
+
+    public function getAnterioriteComparaisonAttribute(): ?array
+    {
+        if (!$this->anteriorite || !$this->valeur) {
+            return null;
+        }
+        
+        // Tentative de comparaison numérique
+        $valeurActuelle = $this->extraireValeurNumerique($this->valeur);
+        $valeurAncienne = $this->extraireValeurNumerique($this->anteriorite);
+        
+        if ($valeurActuelle !== null && $valeurAncienne !== null) {
+            $difference = $valeurActuelle - $valeurAncienne;
+            $pourcentage = $valeurAncienne != 0 ? ($difference / $valeurAncienne) * 100 : 0;
+            
+            return [
+                'valeur_actuelle' => $valeurActuelle,
+                'valeur_ancienne' => $valeurAncienne,
+                'difference' => $difference,
+                'pourcentage' => round($pourcentage, 1),
+                'tendance' => $difference > 0 ? 'hausse' : ($difference < 0 ? 'baisse' : 'stable')
+            ];
+        }
+        
+        return null;
+    }
+
+    /**
+     * Extraire une valeur numérique d'une chaîne
+     */
+    private function extraireValeurNumerique(?string $valeur): ?float
+    {
+        if (!$valeur) return null;
+        
+        // Nettoyer la chaîne et extraire le premier nombre
+        $pattern = '/(\d+(?:[.,]\d+)?)/';
+        if (preg_match($pattern, str_replace(',', '.', $valeur), $matches)) {
+            return (float) $matches[1];
+        }
+        
+        return null;
+    }
+
+    // NOUVELLE MÉTHODE POUR FORMATER L'AFFICHAGE AVEC ANTÉRIORITÉ
+    public function getDisplayValueWithAnterioriteAttribute(): string
+    {
+        $display = $this->getDisplayValuePdfAttribute();
+        
+        if ($this->a_anteriorite) {
+            $comparaison = $this->anteriorite_comparaison;
+            if ($comparaison) {
+                $icone = match($comparaison['tendance']) {
+                    'hausse' => '↗',
+                    'baisse' => '↘', 
+                    default => '→'
+                };
+                $display .= " {$icone}";
+            }
+        }
+        
+        return $display;
     }
 }

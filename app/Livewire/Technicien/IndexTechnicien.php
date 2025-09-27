@@ -95,7 +95,6 @@ class IndexTechnicien extends Component
             
             $prescription = Prescription::findOrFail($prescriptionId);
             
-            // Vérifier que la prescription est bien en attente
             if ($prescription->status !== 'EN_ATTENTE') {
                 session()->flash('error', 'Cette prescription ne peut pas être traitée.');
                 DB::rollBack();
@@ -105,9 +104,14 @@ class IndexTechnicien extends Component
             // Changer le statut à EN_COURS
             $prescription->update([
                 'status' => 'EN_COURS',
-                'technicien_id' => auth()->id(),
+                'technicien_id' => Auth::id(),
                 'date_debut_traitement' => now()
             ]);
+            
+            // ✅ AJOUTEZ CETTE LIGNE
+            DB::table('prescription_analyse')
+                ->where('prescription_id', $prescriptionId)
+                ->update(['status' => 'EN_COURS', 'updated_at' => now()]);
             
             Log::info('Prescription passée en cours', [
                 'prescription_id' => $prescriptionId,
@@ -160,11 +164,6 @@ class IndexTechnicien extends Component
         }
     }
 
-    public function viewResults($prescriptionId)
-    {
-        return redirect()->route('technicien.voir-resultats', $prescriptionId);
-    }
-
     public function redoAnalysis($prescriptionId)
     {
         try {
@@ -172,19 +171,18 @@ class IndexTechnicien extends Component
 
             $prescription = Prescription::findOrFail($prescriptionId);
 
-            if (!$prescription) {
-                session()->flash('error', 'Prescription introuvable.');
-                DB::rollBack();
-                return;
-            }
-
             $prescription->update([
                 'status' => 'EN_COURS',
-                'technicien_id' => auth()->id(),
+                'technicien_id' => Auth::id(),
                 'commentaire_biologiste' => null,
                 'date_debut_traitement' => now(),
                 'date_reprise_traitement' => now()
             ]);
+
+            // ✅ AJOUTEZ CETTE LIGNE AUSSI
+            DB::table('prescription_analyse')
+                ->where('prescription_id', $prescriptionId)
+                ->update(['status' => 'EN_COURS', 'updated_at' => now()]);
 
             Log::info('Prescription relancée pour un nouveau traitement', [
                 'prescription_id' => $prescriptionId,

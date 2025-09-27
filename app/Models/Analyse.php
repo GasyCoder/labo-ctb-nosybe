@@ -19,7 +19,9 @@ class Analyse extends Model
         'is_bold',
         'examen_id',
         'type_id',
-        'valeur_ref',
+        'valeur_ref', // valeur de référence temporaire entente de mise à jour
+
+        // nouveaux champs pour valeurs de référence spécifiques
         'valeur_ref_homme',
         'valeur_ref_femme',
         'valeur_ref_enfant_garcon',
@@ -194,4 +196,99 @@ class Analyse extends Model
         }
         return $total;
     }
+
+    /**
+     * Obtenir la valeur de référence selon le genre/civilité du patient
+     */
+    public function getValeurReferenceByPatient($patient = null)
+    {
+        if (!$patient || !$patient->civilite) {
+            return $this->valeur_ref;
+        }
+        
+        $civilite = strtolower(trim($patient->civilite));
+        
+        // Mapping des civilités vers les champs appropriés
+        $mapping = [
+            'monsieur' => 'valeur_ref_homme',
+            'mr' => 'valeur_ref_homme',
+            'm.' => 'valeur_ref_homme',
+            'homme' => 'valeur_ref_homme',
+            
+            'madame' => 'valeur_ref_femme',
+            'mme' => 'valeur_ref_femme',
+            'mme.' => 'valeur_ref_femme',
+            'femme' => 'valeur_ref_femme',
+            
+            'enfant (garçon)' => 'valeur_ref_enfant_garcon',
+            'enfant garçon' => 'valeur_ref_enfant_garcon',
+            'garçon' => 'valeur_ref_enfant_garcon',
+            'garcon' => 'valeur_ref_enfant_garcon',
+            
+            'enfant (fille)' => 'valeur_ref_enfant_fille',
+            'enfant fille' => 'valeur_ref_enfant_fille',
+            'fille' => 'valeur_ref_enfant_fille',
+        ];
+        
+        // Trouver le champ correspondant
+        $field = $mapping[$civilite] ?? null;
+        
+        if ($field && !empty($this->$field)) {
+            return $this->$field;
+        }
+        
+        // Fallback vers la valeur générale
+        return $this->valeur_ref;
+    }
+
+    /**
+     * Obtenir le label de la valeur de référence selon le patient
+     */
+    public function getLabelValeurReferenceByPatient($patient = null)
+    {
+        if (!$patient || !$patient->civilite) {
+            return 'Référence';
+        }
+        
+        $civilite = strtolower(trim($patient->civilite));
+        
+        $labels = [
+            'monsieur' => 'Référence (Homme)',
+            'mr' => 'Référence (Homme)',
+            'm.' => 'Référence (Homme)',
+            'homme' => 'Référence (Homme)',
+            
+            'madame' => 'Référence (Femme)',
+            'mme' => 'Référence (Femme)',
+            'mme.' => 'Référence (Femme)',
+            'femme' => 'Référence (Femme)',
+            
+            'enfant (garçon)' => 'Référence (Garçon)',
+            'enfant garçon' => 'Référence (Garçon)',
+            'garçon' => 'Référence (Garçon)',
+            'garcon' => 'Référence (Garçon)',
+            
+            'enfant (fille)' => 'Référence (Fille)',
+            'enfant fille' => 'Référence (Fille)',
+            'fille' => 'Référence (Fille)',
+        ];
+        
+        return $labels[$civilite] ?? 'Référence';
+    }
+
+    /**
+     * Obtenir la valeur de référence complète avec l'unité selon le patient
+     */
+    public function getValeurReferenceCompleteByPatient($patient = null)
+    {
+        $valeur = $this->getValeurReferenceByPatient($patient);
+        
+        if ($valeur && $this->unite) {
+            return $valeur . ' ' . $this->unite;
+        }
+        
+        return $valeur;
+    }
+
+
 }

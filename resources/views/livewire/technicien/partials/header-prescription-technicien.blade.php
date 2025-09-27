@@ -41,10 +41,10 @@
                 </div>
 
                 <div class="text-slate-600 dark:text-slate-400 text-sm">
-                    {{ $prescription->age }} {{ $prescription->unite_age ?? 'Ans' }}
+                   Âgé de : {{ $prescription->age }} {{ $prescription->unite_age ?? 'Ans' }}
                 </div>
                 <div class="text-slate-600 dark:text-slate-400 text-sm">
-                    Num dossier : {{ str_pad($prescription->patient->id, 5, '0', STR_PAD_LEFT) . 'M' }}
+                    Num dossier : {{ $prescription->patient->numero_dossier}}
                 </div>
             </div>
         </div>

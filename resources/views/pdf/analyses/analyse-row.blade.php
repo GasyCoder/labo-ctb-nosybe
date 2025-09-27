@@ -15,167 +15,64 @@
             @if($level > 0) style="padding-left: {{ $level * 20 }}px;" @endif>
             {{ $analyse->designation }}
         </td>
-        <td class="col-resultat">
+       <td class="col-resultat">
             @if($hasResult)
-                @if(method_exists($resultat, 'isGermeType') && ($resultat->isGermeType() || $resultat->isCultureType()))
-                    {{-- GERMES : Affichage spécial pour GERME/CULTURE --}}
-                    @php 
-                        $selectedOptions = $resultat->resultats_pdf ?? $resultat->resultats;
-                        $autreValeur = $resultat->valeur;
-                    @endphp
-                    
-                    @if(is_array($selectedOptions))
-                        @foreach($selectedOptions as $option)
-                            @if($option === 'Autre' && $autreValeur)
-                                <i>{{ $autreValeur }}</i>
-                            @else
-                                {{ ucfirst(str_replace('-', ' ', $option)) }}
-                            @endif
-                            @if(!$loop->last), @endif
-                        @endforeach
-                    @elseif($selectedOptions)
-                        {{ $selectedOptions }}
-                    @elseif($autreValeur)
-                        <i>{{ $autreValeur }}</i>
-                    @endif
-                    
-                @elseif(method_exists($resultat, 'isLeucocytesType') && $resultat->isLeucocytesType())
-                    {{-- LEUCOCYTES : Utiliser l'accessor du modèle --}}
-                    @php $leucoData = $resultat->leucocytes_data ?? null; @endphp
-                    @if($leucoData && isset($leucoData['valeur']))
-                        {{ $leucoData['valeur'] }} /mm³
-                    @endif
-                @else
-                    {{-- GESTION COMPLÈTE DE TOUS LES TYPES D'ANALYSES --}}
-                    @php
-                        $displayValue = '';
-                        $analyseType = $analyse->type->name ?? '';
-                        
-                        switch($analyseType) {
-                            // TYPES DE SAISIE SIMPLE
-                            case 'INPUT':
-                            case 'DOSAGE':
-                            case 'COMPTAGE':
-                                $displayValue = $resultat->valeur;
-                                break;
-                                
-                            case 'INPUT_SUFFIXE':
-                                $displayValue = $resultat->valeur;
-                                break;
-                                
-                            // TYPES DE SÉLECTION
-                            case 'SELECT':
-                            case 'TEST':
-                                $displayValue = $resultat->resultats ?: $resultat->valeur;
-                                break;
-                                
-                            case 'SELECT_MULTIPLE':
-                                $resultatsArray = $resultat->resultats_pdf ?? $resultat->resultats;
-                                if (is_array($resultatsArray)) {
-                                    $displayValue = implode(', ', $resultatsArray);
-                                } else {
-                                    $displayValue = $resultatsArray;
-                                }
-                                break;
-                                
-                            // TYPES NÉGATIF/POSITIF
-                            case 'NEGATIF_POSITIF_1':
-                                $displayValue = $resultat->valeur;
-                                break;
-                                
-                            case 'NEGATIF_POSITIF_2':
-                                $displayValue = $resultat->valeur; // NEGATIF ou POSITIF
-                                if ($resultat->valeur === 'POSITIF' && $resultat->resultats) {
-                                    $displayValue .= ' (' . $resultat->resultats . ')';
-                                }
-                                break;
-                                
-                            case 'NEGATIF_POSITIF_3':
-                                $displayValue = $resultat->valeur;
-                                if ($resultat->resultats) {
-                                    if (is_array($resultat->resultats)) {
-                                        $resultatsStr = implode(', ', $resultat->resultats);
-                                        $displayValue .= ' (' . $resultatsStr . ')';
-                                    } else {
-                                        $displayValue .= ' (' . $resultat->resultats . ')';
-                                    }
-                                }
-                                break;
-                                
-                            // TYPES ABSENCE/PRÉSENCE
-                            case 'ABSENCE_PRESENCE_2':
-                                $displayValue = $resultat->valeur;
-                                if ($resultat->resultats) {
-                                    $displayValue .= ' (' . $resultat->resultats . ')';
-                                }
-                                break;
-                                
-                            // FLORE VAGINALE
-                            case 'FV':
-                                if ($resultat->resultats) {
-                                    $displayValue = $resultat->resultats;
-                                    
-                                    if ($resultat->valeur && in_array($resultat->resultats, [
-                                        'Flore vaginale équilibrée',
-                                        'Flore vaginale intermédiaire', 
-                                        'Flore vaginale déséquilibrée'
-                                    ])) {
-                                        $displayValue .= ' (Score de Nugent: ' . $resultat->valeur . ')';
-                                    } elseif ($resultat->resultats === 'Autre' && $resultat->valeur) {
-                                        $displayValue = $resultat->valeur;
-                                    }
-                                } elseif ($resultat->valeur) {
-                                    $displayValue = $resultat->valeur;
-                                }
-                                break;
-                                
-                            // LABEL
-                            case 'LABEL':
-                                $displayValue = '';
-                                break;
-                                
-                            // FALLBACK POUR TYPES INCONNUS
-                            default:
-                                if ($resultat->resultats) {
-                                    if (is_array($resultat->resultats)) {
-                                        $displayValue = implode(', ', $resultat->resultats);
-                                    } else {
-                                        $displayValue = $resultat->resultats;
-                                    }
-                                    
-                                    if ($resultat->resultats === 'Autre' && $resultat->valeur) {
-                                        $displayValue = $resultat->valeur;
-                                    }
-                                } elseif ($resultat->valeur) {
-                                    $displayValue = $resultat->valeur;
-                                }
-                                break;
-                        }
-                        
-                        // POST-TRAITEMENT COMMUN
-                        if ($displayValue && $analyse->unite && !str_contains($displayValue, $analyse->unite)) {
-                            $displayValue .= ' ' . $analyse->unite;
-                        }
-                        
-                        if ($displayValue && isset($analyse->suffixe) && $analyse->suffixe && !str_contains($displayValue, $analyse->suffixe)) {
-                            $displayValue .= ' ' . $analyse->suffixe;
-                        }
-                        
-                        if ($resultat->est_pathologique && $displayValue) {
-                            $displayValue = '<strong>' . $displayValue . '</strong>';
-                        }
-                    @endphp
-                    
-                    {!! $displayValue !!}
-                @endif
+                @php
+                    $displayValue = $resultat->display_value_pdf ?? '';
+                @endphp
+                {!! $displayValue !!}
             @endif
         </td>
         <td class="col-valref">
             {{ $analyse->valeur_ref ?? '' }}
         </td>
+
         <td class="col-anteriorite">
-            @if($resultat && isset($resultat->antecedent))
-                {{ $resultat->antecedent }}
+            @if($resultat && $resultat->anteriorite)
+                @php
+                    // ✅ CONSTRUCTION COMPACTE EN UNE LIGNE - TOUT EN NOIR
+                    $affichageAnteriorite = $resultat->anteriorite;
+                    
+                    // Gestion de la date
+                    $dateFormatee = '';
+                    if ($resultat->anteriorite_date) {
+                        if (is_string($resultat->anteriorite_date)) {
+                            $dateFormatee = $resultat->anteriorite_date;
+                        } elseif (is_object($resultat->anteriorite_date) && method_exists($resultat->anteriorite_date, 'format')) {
+                            $dateFormatee = $resultat->anteriorite_date->format('d/m/Y');
+                        } else {
+                            try {
+                                $dateFormatee = \Carbon\Carbon::parse($resultat->anteriorite_date)->format('d/m/Y');
+                            } catch (\Exception $e) {
+                                $dateFormatee = $resultat->anteriorite_date;
+                            }
+                        }
+                    }
+                    
+                    // Ajouter la date entre parenthèses
+                    if ($dateFormatee) {
+                        $affichageAnteriorite .= ' (' . $dateFormatee . ')';
+                    }
+                    
+                    // Gestion de la comparaison
+                    $comparaison = $resultat->anteriorite_comparaison;
+                    $texteComparaison = '';
+                    
+                    if ($comparaison) {
+                        if ($comparaison['tendance'] === 'hausse') {
+                            $texteComparaison = '+' . abs($comparaison['difference']);
+                        } elseif ($comparaison['tendance'] === 'baisse') {
+                            $texteComparaison = '-' . abs($comparaison['difference']);
+                        } else {
+                            $texteComparaison = '=';
+                        }
+                    }
+                @endphp
+                
+                <div style="font-size: 8pt; color: #999; white-space: nowrap;">
+                    {{ $affichageAnteriorite }}{{-- 
+                    --}}@if($texteComparaison), {{ $texteComparaison }}@endif
+                </div>
             @endif
         </td>
     </tr>
@@ -248,7 +145,7 @@
 
             @if($antibiogramme->antibiotiques_intermediaires->isNotEmpty())
                 <tr class="antibiogramme-row">
-                    <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666; font-weight: 200;">
+                    <td style="padding-left: {{ ($level + 2) * 20 }}px;?  font-size: 9pt; color: #666; font-weight: 200;">
                         Intermédiaire :
                     </td>
                     <td colspan="3" style="font-size: 9pt; font-style: italic; color: #ffc107;">

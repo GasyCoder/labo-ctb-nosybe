@@ -2,11 +2,12 @@
 
 namespace App\Livewire\Technicien;
 
+use App\Models\Analyse;
 use Livewire\Component;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Url;
-use App\Models\Analyse;
 use App\Models\Prescription;
+use Livewire\Attributes\Url;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class ShowPrescription extends Component
@@ -103,9 +104,9 @@ class ShowPrescription extends Component
     {
         $prescription = Prescription::findOrFail($prescriptionId);
         
-        // ✅ Mettre EN_COURS quand on clique "Traiter"
         if ($prescription->status === 'EN_ATTENTE') {
             $prescription->update(['status' => 'EN_COURS']);
+            DB::table('prescription_analyse')->where('prescription_id', $prescription->id)->update(['status' => 'EN_COURS', 'updated_at' => now()]);
         }
 
         $userType = Auth::user()->type;

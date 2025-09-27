@@ -42,6 +42,8 @@ namespace App\Models{
  * @property-read mixed $a_des_enfants
  * @property-read mixed $est_parent
  * @property-read mixed $formatted_results
+ * @property-read mixed $prix_recursif
+ * @property-read mixed $prix_total
  * @property-read mixed $result_disponible
  * @property-read mixed $valeur_complete
  * @property-read mixed $valeur_enfant_fille_complete
@@ -531,6 +533,8 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $commentaire_biologiste
+ * @property int|null $updated_by
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Analyse> $analyses
  * @property-read int|null $analyses_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Antibiogramme> $antibiogrammes
@@ -564,6 +568,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription payees()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereAge($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereCommentaireBiologiste($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereDeletedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereId($value)
@@ -578,6 +583,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereUniteAge($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription whereUpdatedBy($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription withTrashed(bool $withTrashed = true)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Prescription withoutTrashed()
  */
@@ -593,6 +599,9 @@ namespace App\Models{
  * @property string|null $valeur Valeur numérique ou texte simple
  * @property string|null $interpretation
  * @property string|null $conclusion
+ * @property string|null $anteriorite Ancien résultat du patient pour comparaison
+ * @property \Illuminate\Support\Carbon|null $anteriorite_date Date de l'ancien résultat
+ * @property int|null $anteriorite_prescription_id ID de la prescription d'origine de l'antériorité
  * @property string $status
  * @property int|null $tube_id
  * @property int|null $famille_id
@@ -603,9 +612,14 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Analyse $analyse
+ * @property-read \App\Models\Prescription|null $anteriorite_prescription
  * @property-read \App\Models\Bacterie|null $bacterie
  * @property-read \App\Models\BacterieFamille|null $famille
+ * @property-read bool $a_anteriorite
+ * @property-read array|null $anteriorite_comparaison
+ * @property-read string|null $anteriorite_formattee
  * @property-read mixed $display_value_pdf
+ * @property-read string $display_value_with_anteriorite
  * @property-read mixed $est_pathologique
  * @property-read mixed $est_valide
  * @property-read mixed $germe_data
@@ -630,6 +644,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat termines()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat valides()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereAnalyseId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereAnteriorite($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereAnterioriteDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereAnterioritePrescriptionId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereBacterieId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereConclusion($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Resultat whereCreatedAt($value)

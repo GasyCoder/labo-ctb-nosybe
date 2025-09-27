@@ -1,4 +1,4 @@
-{{-- livewire.secretaire.prescription.partials.paiement - VERSION UNIFIÉE CRÉATION/ÉDITION --}}
+{{-- livewire.secretaire.prescription.partials.paiement - VERSION MISE À JOUR AVEC date_paiement --}}
 @if($etape === 'paiement')
     <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
         {{-- HEADER SECTION ADAPTATIF --}}
@@ -30,6 +30,30 @@
         </div>
 
         <div class="p-4">
+            {{-- INFORMATION IMPORTANTE SUR LA GESTION DES DATES DE PAIEMENT --}}
+            <div class="mb-4 p-3 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200/50 dark:border-blue-800/50 rounded-lg">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <em class="ni ni-calendar text-blue-500 mr-2 text-sm"></em>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-blue-800 dark:text-blue-200 text-sm mb-1">
+                            Gestion automatique des dates de paiement
+                        </h4>
+                        <div class="text-xs text-blue-600 dark:text-blue-300 space-y-1">
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                <strong>Payé :</strong> Date et heure enregistrées automatiquement ({{ now()->format('d/m/Y H:i') }})
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                                <strong>Non Payé :</strong> Aucune date enregistrée (pourra être ajoutée plus tard)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- ALERTE MODE ÉDITION --}}
             @if($isEditMode)
                 <div class="mb-4 p-3 bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200/50 dark:border-orange-800/50 rounded-lg">
@@ -290,10 +314,9 @@
                                             <em class="ni ni-arrow-down-round text-slate-400 dark:text-slate-500 text-sm"></em>
                                         </div>
                                         <input type="number" 
-                                            wire:model.live="remise_pourcentage" 
+                                            wire:model.live="remise" 
                                             min="0" 
-                                            max="100"
-                                            step="0.1"
+                                            step="100"
                                             placeholder="0"
                                             class="w-full pl-9 pr-3 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm
                                                     bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
@@ -301,12 +324,9 @@
                                                     focus:ring-2 focus:ring-{{ $isEditMode ? 'orange' : 'red' }}-500 focus:border-{{ $isEditMode ? 'orange' : 'red' }}-500 
                                                     transition-colors
                                                     hover:border-{{ $isEditMode ? 'orange' : 'red' }}-300 dark:hover:border-{{ $isEditMode ? 'orange' : 'red' }}-600">
-                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                            <span class="text-gray-500 sm:text-sm">%</span>
-                                        </div>
                                     </div>
                                     <p class="text-xxs text-slate-500 dark:text-slate-400 mt-0.5">
-                                        Pourcentage de remise (0-100%)
+                                        Montant de remise en Ariary
                                     </p>
                                 </div>
                             @endif
@@ -389,36 +409,90 @@
                         </div>
                     </div>
 
-                    {{-- STATUT DU PAIEMENT --}}
+                    {{-- STATUT DU PAIEMENT AVEC GESTION date_paiement --}}
                     <div class="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 mb-4">
                         <h3 class="text-sm font-medium text-slate-800 dark:text-slate-100 mb-3 flex items-center">
                             <em class="ni ni-check-circle mr-1.5 text-purple-500 text-xs"></em>
                             Statut du paiement
                         </h3>
                         
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Marquer comme payé
-                                </span>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                    {{ $paiementStatut ? 'Le paiement sera enregistré comme payé' : 'Le paiement sera enregistré comme non payé' }}
-                                </p>
-                            </div>
-                            
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" wire:model.live="paiementStatut" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        {{-- Options de statut avec descriptions --}}
+                        <div class="space-y-3">
+                            {{-- Option PAYÉ --}}
+                            <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all {{ $paiementStatut ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-600 hover:border-green-300' }}">
+                                <input type="radio" 
+                                       wire:model.live="paiementStatut" 
+                                       value="1" 
+                                       class="sr-only">
+                                <div class="flex items-start w-full">
+                                    <div class="w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center mt-0.5 {{ $paiementStatut ? 'border-green-500 bg-green-500' : 'border-gray-300' }}">
+                                        @if($paiementStatut)
+                                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-medium text-green-700 dark:text-green-300 text-sm">
+                                            <em class="ni ni-check-circle mr-1"></em>
+                                            Paiement effectué
+                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                            ✅ Date de paiement : <strong>{{ now()->format('d/m/Y H:i') }}</strong> (automatique)
+                                        </div>
+                                        <div class="text-xs text-green-600 dark:text-green-400">
+                                            💰 Facture marquée comme payée et comptabilisée
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+
+                            {{-- Option NON PAYÉ --}}
+                            <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer transition-all {{ !$paiementStatut ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-600 hover:border-orange-300' }}">
+                                <input type="radio" 
+                                       wire:model.live="paiementStatut" 
+                                       value="0" 
+                                       class="sr-only">
+                                <div class="flex items-start w-full">
+                                    <div class="w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center mt-0.5 {{ !$paiementStatut ? 'border-orange-500 bg-orange-500' : 'border-gray-300' }}">
+                                        @if(!$paiementStatut)
+                                            <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-medium text-orange-700 dark:text-orange-300 text-sm">
+                                            <em class="ni ni-time-alarm mr-1"></em>
+                                            Paiement en attente
+                                        </div>
+                                        <div class="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                            ⏳ Aucune date de paiement enregistrée
+                                        </div>
+                                        <div class="text-xs text-orange-600 dark:text-orange-400">
+                                            📋 Facture en attente de règlement (modifiable plus tard)
+                                        </div>
+                                    </div>
+                                </div>
                             </label>
                         </div>
-                        
-                        {{-- Indicateur visuel du statut --}}
-                        <div class="mt-2 p-2 rounded {{ $paiementStatut ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200' }}">
+
+                        {{-- Aperçu du résultat --}}
+                        <div class="mt-3 p-3 {{ $paiementStatut ? 'bg-green-50/50 border border-green-200' : 'bg-orange-50/50 border border-orange-200' }} rounded-lg">
                             <div class="flex items-center text-xs">
-                                <span class="w-2 h-2 rounded-full mr-2 {{ $paiementStatut ? 'bg-green-500' : 'bg-orange-500' }}"></span>
-                                <span class="{{ $paiementStatut ? 'text-green-700' : 'text-orange-700' }}">
-                                    {{ $paiementStatut ? 'Paiement confirmé - Facture payée' : 'Paiement en attente - Facture impayée' }}
-                                </span>
+                                <em class="ni ni-{{ $paiementStatut ? 'check-circle' : 'time-alarm' }} mr-2 {{ $paiementStatut ? 'text-green-600' : 'text-orange-600' }}"></em>
+                                <div class="{{ $paiementStatut ? 'text-green-700 dark:text-white' : 'text-orange-700 dark:text-white' }}">
+                                    <div class="font-medium">
+                                        Résultat : {{ $paiementStatut ? 'Facture payée' : 'Facture non payée' }}
+                                    </div>
+                                    <div class="text-xs mt-0.5">
+                                        @if($paiementStatut)
+                                            Date de paiement automatique : {{ now()->format('d/m/Y à H:i') }}
+                                        @else
+                                            Pourra être marqué comme payé ultérieurement
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -434,6 +508,9 @@
                                 Montant insuffisant
                             @else
                                 {{ $isEditMode ? 'Enregistrer les modifications' : 'Finaliser le paiement' }}
+                                @if($paiementStatut)
+                                    (avec date automatique)
+                                @endif
                             @endif
                             @if($montantPaye >= $total)
                                 <em class="ni ni-arrow-right ml-1.5 text-xs"></em>

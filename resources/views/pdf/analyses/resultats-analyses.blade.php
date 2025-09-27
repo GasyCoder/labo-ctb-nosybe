@@ -118,12 +118,10 @@
                     @foreach($examen->analyses as $analyse)
                         {{-- Afficher seulement les analyses parents ou sans parent --}}
                         @if($analyse->level === 'PARENT' || is_null($analyse->parent_id))
-                            @include('pdf.analyses.analyse-row', ['analyse' => $analyse, 'level' => 0])
+                            @include('pdf.analyses.analyse-row', ['analyse' => $analyse, 'level' => 1])
                             
                             {{-- Afficher les enfants --}}
-                            @if($analyse->children && $analyse->children->count() > 0)
-                                @include('pdf.analyses.analyse-children', ['children' => $analyse->children, 'level' => 1])
-                            @endif
+                            @include('pdf.analyses.analyse-children', ['children' => $analyse->children, 'level' => 2])
                         @endif
                     @endforeach
                 </table>

@@ -14,6 +14,11 @@
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-slate-400 transition-colors duration-200">
                     Complétez les analyses ci-dessous
+                    {{-- Affichage optionnel des infos patient --}}
+                    @if($prescription && $prescription->patient)
+                        • Patient: {{ $prescription->patient->nom }} {{ $prescription->patient->prenoms }} 
+                        ({{ $prescription->patient->civilite }})
+                    @endif
                 </p>
             </div>
         </div>
@@ -30,6 +35,7 @@
                             :results="$results"
                             :familles="$familles"
                             :bacteries-by-famille="$bacteriesByFamille"
+                            :patient="$prescription->patient ?? null"
                             wire:key="node-{{ $root->id }}"
                         />
                     </div>

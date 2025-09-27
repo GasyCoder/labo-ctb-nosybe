@@ -13,11 +13,21 @@ use Illuminate\Support\Facades\Storage;
 
 class ResultatPdfShow
 {
+    private $anterioriteService;
+
+       
+    public function __construct(AnterioriteService $anterioriteService)
+    {
+        $this->anterioriteService = $anterioriteService;
+    }
     /**
      * Récupérer les examens avec leurs analyses et résultats validés OU terminés
      */
     private function getValidatedExamens(Prescription $prescription)
     {
+        // ✅ NOUVEAU : Calculer les antériorités avant de récupérer les données
+        $this->anterioriteService->calculerAnteriorites($prescription);
+        
         // 1. Récupérer les résultats selon le statut de la prescription
         $query = Resultat::where('prescription_id', $prescription->id);
         
@@ -33,10 +43,15 @@ class ResultatPdfShow
             });
         }
         
-        $validatedResultats = $query->with(['analyse' => function($query) {
-            $query->with(['type', 'examen'])
-                  ->orderBy('ordre', 'asc');
-        }])->get();
+        // ✅ MODIFIÉ : Charger les relations d'antériorité
+        $validatedResultats = $query->with([
+            'analyse' => function($query) {
+                $query->with(['type' => function($q) {
+                    $q->withDefault(['name' => 'UNKNOWN']);
+                }, 'examen'])->orderBy('ordre', 'asc');
+            },
+            'anteriorite_prescription' // ✅ NOUVEAU : Charger la prescription d'antériorité
+        ])->get();
 
         if ($validatedResultats->isEmpty()) {
             return collect();
@@ -61,11 +76,11 @@ class ResultatPdfShow
                 });
         })->with(['enfantsRecursive' => function($query) use ($analysesIds) {
                 $query->whereIn('id', $analysesIds)
-                    ->with('type') // ← AJOUTEZ cette ligne
+                    ->with('type')
                     ->orderBy('ordre', 'asc')
                     ->with(['enfantsRecursive' => function($q) use ($analysesIds) {
                         $q->whereIn('id', $analysesIds)
-                            ->with('type') // ← AJOUTEZ cette ligne aussi
+                            ->with('type')
                             ->orderBy('ordre', 'asc');
                     }]);
             }])->orderBy('ordre', 'asc')->get();
@@ -82,7 +97,7 @@ class ResultatPdfShow
             ->get()
             ->groupBy('analyse_id');
 
-        // 5. Associer les résultats aux analyses
+        // 5. Associer les résultats aux analyses (INCHANGÉ mais avec antériorités incluses)
         $analyses = $analyses->map(function($analyse) use ($validatedResultats, $antibiogrammes, $prescription) {
 
             $resultatsAnalyse = $validatedResultats->where('analyse_id', $analyse->id);
@@ -131,7 +146,6 @@ class ResultatPdfShow
                     } else {
                         $child->resultats = $resultatsEnfant;
                     }
-
 
                     // Antibiogrammes pour enfants
                     $antibiogrammesEnfant = $antibiogrammes->get($child->id, collect())->map(function($antibiogramme) {
@@ -192,7 +206,7 @@ class ResultatPdfShow
             return $analyse;
         });
 
-        // 6. Regrouper et ordonner les examens
+        // 6. Regrouper et ordonner les examens (INCHANGÉ)
         return Examen::whereHas('analyses', function($query) use ($analyses) {
             $query->whereIn('id', $analyses->pluck('id'));
         })
@@ -225,11 +239,15 @@ class ResultatPdfShow
         });
     }
 
+
     /**
      * Récupérer les examens avec tous les résultats saisis
      */
     private function getAllResultsExamens(Prescription $prescription)
     {
+        // 1. Récupérer tous les résultats saisis
+       $this->anterioriteService->calculerAnteriorites($prescription);
+        
         // 1. Récupérer tous les résultats saisis
         $allResultats = Resultat::where('prescription_id', $prescription->id)
             ->where(function($query) {
@@ -237,15 +255,19 @@ class ResultatPdfShow
                       ->where('valeur', '!=', '')
                       ->orWhereNotNull('resultats');
             })
-            ->with(['analyse' => function($query) {
-                $query->with(['type', 'examen'])
-                      ->orderBy('ordre', 'asc');
-            }])
+            ->with([
+                'analyse' => function($query) {
+                    $query->with(['type', 'examen'])
+                          ->orderBy('ordre', 'asc');
+                },
+                'anteriorite_prescription' // ✅ NOUVEAU : Charger la prescription d'antériorité
+            ])
             ->get();
 
         if ($allResultats->isEmpty()) {
             return collect();
         }
+
 
         // 2. Récupérer les IDs d'analyses
         $analysesIds = $allResultats->pluck('analyse_id')->unique();
@@ -390,7 +412,7 @@ class ResultatPdfShow
      */
     public function generateFinalPDF(Prescription $prescription)
     {
-        // CORRECTION : Accepter les statuts TERMINE et VALIDE
+        // Vérifications existantes...
         if (!in_array($prescription->status, [Prescription::STATUS_VALIDE, Prescription::STATUS_TERMINE])) {
             throw new \Exception('La prescription doit être terminée ou validée pour générer le PDF final');
         }
@@ -398,13 +420,11 @@ class ResultatPdfShow
         $hasResults = false;
         
         if ($prescription->status === Prescription::STATUS_VALIDE) {
-            // Pour prescriptions validées : vérifier les résultats validés
             $hasResults = Resultat::where('prescription_id', $prescription->id)
                 ->where('status', 'VALIDE')
                 ->whereNotNull('validated_by')
                 ->exists();
         } else {
-            // Pour prescriptions terminées : vérifier tous les résultats saisis
             $hasResults = Resultat::where('prescription_id', $prescription->id)
                 ->where(function($query) {
                     $query->whereNotNull('valeur')
@@ -469,12 +489,18 @@ class ResultatPdfShow
         $prefix = $type === 'final' ? 'resultats-final' : 'apercu-resultats';
         $filename = $prefix . '-' . $prescription->reference . '-' . $timestamp . '.pdf';
 
+        // ✅ NOUVEAU : Statistiques d'antériorités pour le PDF
+        $totalAnteriorites = Resultat::where('prescription_id', $prescription->id)
+            ->whereNotNull('anteriorite')
+            ->count();
+
         $data = [
             'prescription' => $prescription,
             'examens' => $examens,
             'type_pdf' => $type,
-            'laboratoire_name' => config('app.laboratoire_name', 'LABORATOIRE LA REFERENCE'),
+            'laboratoire_name' => config('app.laboratoire_name', 'LABORATOIRE D\'ANALYSE CTB NOSYBE'),
             'date_generation' => now()->format('d/m/Y H:i'),
+            'total_anteriorites' => $totalAnteriorites, // ✅ NOUVEAU
         ];
 
         $pdf = PDF::loadView('pdf.analyses.resultats-analyses', $data);
@@ -483,8 +509,53 @@ class ResultatPdfShow
         $path = 'pdfs/' . $filename;
         Storage::disk('public')->put($path, $pdf->output());
 
+        // ✅ NOUVEAU : Log des antériorités générées
+        if ($totalAnteriorites > 0) {
+        }
+
         return Storage::disk('public')->url($path);
     }
+
+
+    /**
+     * Forcer le recalcul des antériorités avant génération PDF
+     */
+    public function generatePDFWithFreshAnteriorites(Prescription $prescription, string $type = 'final')
+    {
+        // Forcer le recalcul des antériorités
+        $this->anterioriteService->calculerAnteriorites($prescription);
+        
+        if ($type === 'preview') {
+            return $this->generatePreviewPDF($prescription);
+        }
+        
+        return $this->generateFinalPDF($prescription);
+    }
+
+    /**
+     * Obtenir les statistiques d'antériorités pour une prescription
+     */
+    public function getAnterioriteStats(Prescription $prescription): array
+    {
+        $resultats = Resultat::where('prescription_id', $prescription->id)->get();
+        
+        $totalResultats = $resultats->count();
+        $resultatsAvecAnteriorite = $resultats->whereNotNull('anteriorite')->count();
+        
+        $analyses = $resultats->whereNotNull('anteriorite')
+            ->groupBy('analyse.designation')
+            ->map(function($group) {
+                return $group->count();
+            });
+
+        return [
+            'total_resultats' => $totalResultats,
+            'avec_anteriorite' => $resultatsAvecAnteriorite,
+            'pourcentage' => $totalResultats > 0 ? round(($resultatsAvecAnteriorite / $totalResultats) * 100, 1) : 0,
+            'analyses_avec_anteriorite' => $analyses->toArray()
+        ];
+    }
+
 
     /**
      * Vérifier si on peut générer le PDF final - CORRIGÉ

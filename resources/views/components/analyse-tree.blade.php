@@ -1,8 +1,15 @@
-@props(['analyse'])
+@props([
+    'analyse',
+    'patient' => null // Nouveau prop pour le patient
+])
 
 @php
   $typeLabel = $analyse->type?->name ?? '—';
   $enfants = $analyse->enfantsRecursive ?? collect();
+  
+  // Utiliser les méthodes du modèle pour obtenir la valeur de référence selon le patient
+  $valeurRef = $analyse->getValeurReferenceByPatient($patient);
+  $labelValeurRef = $analyse->getLabelValeurReferenceByPatient($patient);
 @endphp
 
 <div class="relative">
@@ -72,18 +79,18 @@
                         </div>
                     @endif
                     
-                    {{-- Valeurs de référence --}}
-                    @if($analyse->valeur_ref)
+                    {{-- Valeurs de référence selon le patient --}}
+                    @if($valeurRef)
                         <div class="mb-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                             <div class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wider">Valeur de référence</span>
+                                <span class="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wider">{{ $labelValeurRef }}</span>
                             </div>
                             <div class="mt-1 flex items-center gap-1">
                                 <span class="text-sm font-semibold text-green-700 dark:text-green-300">
-                                    {{ $analyse->valeur_ref }}
+                                    {{ $valeurRef }}
                                 </span>
                                 @if($analyse->unite)
                                     <span class="text-sm text-green-600 dark:text-green-400">{{ $analyse->unite }}</span>
@@ -117,7 +124,7 @@
                         </span>
                     @endif
                     
-                    @if($analyse->unite && !$analyse->valeur_ref)
+                    @if($analyse->unite && !$valeurRef)
                         <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                             {{ $analyse->unite }}
                         </span>
@@ -140,7 +147,7 @@
         @if($enfants->count())
             <div class="mt-4 space-y-3 pb-2">
                 @foreach($enfants as $child)
-                    <x-analyse-tree :analyse="$child" />
+                    <x-analyse-tree :analyse="$child" :patient="$patient" />
                 @endforeach
             </div>
         @endif

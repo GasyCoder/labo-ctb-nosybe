@@ -187,13 +187,6 @@ class AntibiogrammeTable extends Component
                     'analyse_id'      => $this->analyseId,
                     'bacterie_id'     => $this->bacterieId,
                 ]);
-
-                Log::info('Antibiogramme créé ou trouvé', [
-                    'antibiogramme_id' => $this->antibiogramme->id,
-                    'prescription_id'  => $this->prescriptionId,
-                    'analyse_id'       => $this->analyseId,
-                    'bacterie_id'      => $this->bacterieId,
-                ]);
             }
 
             // Ajouter ou mettre à jour le résultat
@@ -219,13 +212,6 @@ class AntibiogrammeTable extends Component
             }
 
             DB::commit();
-
-            Log::info('Antibiotique ajouté/mis à jour dans l\'antibiogramme', [
-                'antibiogramme_id' => $this->antibiogramme->id,
-                'antibiotique_id'  => $this->newAntibiotique,
-                'resultat_id'      => $resultatAntibiotique->id,
-                'was_created'      => $resultatAntibiotique->wasRecentlyCreated,
-            ]);
 
             // Reset champs formulaire
             $this->reset(['newAntibiotique', 'newInterpretation', 'newDiametre']);
@@ -296,12 +282,6 @@ class AntibiogrammeTable extends Component
             $updateValue = ($field === 'diametre_mm') ? ($value ?: null) : $value;
             $resultat->update([$field => $updateValue]);
 
-            Log::info('Résultat d\'antibiotique mis à jour', [
-                'resultat_id' => $resultatId,
-                'field'       => $field,
-                'new_value'   => $updateValue,
-            ]);
-
             // Recharger localement
             $this->loadResultats();
 
@@ -347,10 +327,6 @@ class AntibiogrammeTable extends Component
             $remainingResults = ResultatAntibiotique::where('antibiogramme_id', $antibiogrammeId)->count();
 
             if ($remainingResults === 0) {
-                Log::info('Suppression de l\'antibiogramme vide', [
-                    'antibiogramme_id' => $antibiogrammeId
-                ]);
-
                 // si le modèle est chargé, delete puis null
                 if ($this->antibiogramme && $this->antibiogramme->id === $antibiogrammeId) {
                     $this->antibiogramme->delete();
@@ -362,13 +338,6 @@ class AntibiogrammeTable extends Component
             }
 
             DB::commit();
-
-            Log::info('Résultat d\'antibiotique supprimé', [
-                'resultat_id'           => $resultatId,
-                'antibiotique'          => $antibiotiqueName,
-                'antibiogramme_supprime'=> $remainingResults === 0,
-            ]);
-
             // Recharger localement
             $this->loadResultats();
 

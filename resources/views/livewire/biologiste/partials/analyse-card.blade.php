@@ -97,25 +97,14 @@
                                 <div class="flex items-center gap-2">
                                     {{-- Bouton Valider (si statut TERMINE) --}}
                                     @if($prescription->status === 'TERMINE')
-                                        <button wire:click="validateAnalyse({{ $prescription->id }})" 
+                                        <button wire:click="openConfirmModal({{ $prescription->id }})" 
                                                 wire:loading.attr="disabled"
-                                                wire:target="validateAnalyse({{ $prescription->id }})"
                                                 class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center justify-center gap-2">
                                             
-                                            <span wire:loading.remove wire:target="validateAnalyse({{ $prescription->id }})" class="inline-flex items-center gap-2">
-                                                <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                </svg>
-                                                <span>Valider</span>
-                                            </span>
-
-                                            <span wire:loading wire:target="validateAnalyse({{ $prescription->id }})" class="inline-flex items-center gap-2">
-                                                <svg class="animate-spin w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                <span>Validation...</span>
-                                            </span>
+                                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span>Valider</span>
                                         </button>
                                     @endif
 
@@ -202,7 +191,7 @@
         <div class="text-center py-12">
             <div
                 class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-microscope text-2xl text-gray-400"></i>
+                <em class="ni ni-virus text-3xl"></em>
             </div>
             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Aucune analyse trouvée</h3>
             <p class="text-gray-500 dark:text-gray-400">

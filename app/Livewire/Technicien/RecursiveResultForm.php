@@ -91,7 +91,7 @@ class RecursiveResultForm extends Component
 
     public function mount(int $prescriptionId, ?int $parentId = null): void
     {
-        $this->prescription = Prescription::findOrFail($prescriptionId);
+        $this->prescription = Prescription::with(['patient'])->findOrFail($prescriptionId);
         $this->parentId     = $parentId;
 
         // Messages d'accueil existants...
@@ -244,11 +244,6 @@ class RecursiveResultForm extends Component
 
             $this->results[$analyseId] = $payload;
         }
-
-        Log::info('Hydratation terminée', [
-            'prescription_id' => $this->prescription->id,
-            'results_count'   => count($this->results),
-        ]);
     }
 
     private function looksLikeJson(?string $s): bool
@@ -585,7 +580,7 @@ class RecursiveResultForm extends Component
     {
         DB::beginTransaction();
         try {
-            // 1) Appliquer d’abord toutes les sync en attente
+            // 1) Appliquer d'abord toutes les sync en attente
             foreach (array_keys($this->pendingSync) as $analyseIdDirty) {
                 if (!empty($this->pendingSync[$analyseIdDirty])) {
                     $this->syncAntibiogrammes($analyseIdDirty);
@@ -595,7 +590,15 @@ class RecursiveResultForm extends Component
             // 2) Nettoyage logique GERME (si standard only)
             $this->cleanupBeforeSave();
 
-            // 3) Persister tous les Resultat (hors création/suppression ABG)
+            // 3) Récupérer les analyses principales pour la table pivot
+            $principalAnalyseIds = DB::table('prescription_analyse')
+                ->where('prescription_id', $this->prescription->id)
+                ->pluck('analyse_id')
+                ->toArray();
+
+            // 4) Persister tous les Resultat (hors création/suppression ABG)
+            $updatedAnalyseIds = [];
+            
             foreach ($this->results as $analyseId => $data) {
                 $analyse = Analyse::with('type')->find($analyseId);
                 if (!$analyse) continue;
@@ -616,6 +619,7 @@ class RecursiveResultForm extends Component
                             'status'    => 'EN_COURS',
                         ]
                     );
+                    $updatedAnalyseIds[] = $analyseId;
                     continue;
                 }
 
@@ -638,8 +642,31 @@ class RecursiveResultForm extends Component
                         'bacterie_id'    => $bacterie_id ?: null,
                     ]
                 );
+                $updatedAnalyseIds[] = $analyseId;
             }
 
+            // ✅ NOUVEAU : Mettre à jour la table pivot pour les analyses principales qui ont été modifiées
+            if (!empty($principalAnalyseIds) && !empty($updatedAnalyseIds)) {
+                $pivotToUpdate = array_intersect($principalAnalyseIds, $updatedAnalyseIds);
+                
+                if (!empty($pivotToUpdate)) {
+                    $pivotUpdatedCount = DB::table('prescription_analyse')
+                        ->where('prescription_id', $this->prescription->id)
+                        ->whereIn('analyse_id', $pivotToUpdate)
+                        ->update([
+                            'status' => \App\Models\AnalysePrescription::STATUS_EN_COURS,
+                            'updated_at' => now()
+                        ]);
+
+                    Log::info('Statuts pivot mis à jour lors de la saisie', [
+                        'prescription_id' => $this->prescription->id,
+                        'pivot_updated_count' => $pivotUpdatedCount,
+                        'principal_analyse_ids' => $pivotToUpdate
+                    ]);
+                }
+            }
+
+            // ✅ NOUVEAU : Mettre à jour le statut de la prescription si nécessaire
             if ($this->prescription->status === 'EN_ATTENTE') {
                 $this->prescription->update(['status' => 'EN_COURS']);
             }
@@ -647,23 +674,22 @@ class RecursiveResultForm extends Component
             DB::commit();
 
             // toast/flash (Laracasts ou fallback)
-            $this->flashSuccess('Résultats sauvegardés. (Les antibiogrammes ne bougent que sur « Synchroniser ».)');
+            $this->flashSuccess('Résultats sauvegardés avec mise à jour des statuts.');
 
-            // au cas où d’autres composants Livewire doivent se rafraîchir avant le redirect
+            // au cas où d'autres composants Livewire doivent se rafraîchir avant le redirect
             $this->dispatch('refreshSidebar');
 
-            // 🔁 rafraîchissement global : redirige vers l’URL courante
+            // 🔁 rafraîchissement global : redirige vers l'URL courante
             return $this->redirectRoute(
                 'technicien.prescription.show',
                 ['prescription' => $this->prescription->id],
                 navigate: true
             );
 
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('saveAll error', ['e' => $e->getMessage()]);
-            $this->flashError('Erreur lors de l’enregistrement : ' . $e->getMessage());
+            $this->flashError('Erreur lors de l\'enregistrement : ' . $e->getMessage());
         }
     }
 

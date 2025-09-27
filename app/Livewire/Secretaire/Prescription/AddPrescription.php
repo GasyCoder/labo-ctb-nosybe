@@ -917,25 +917,37 @@ class AddPrescription extends Component
             // Utiliser sync() pour associer uniquement les IDs
             $prescription->analyses()->sync($analysesExistantes);
             
-            // 3. Ne plus associer les prélèvements via table pivot car elle n'existe plus
-            // Les prélèvements seront gérés directement via les tubes
-            
-            // 4. Enregistrer le paiement
+            // 3. Enregistrer le paiement avec la nouvelle logique date_paiement
             $paymentMethod = PaymentMethod::where('code', $this->modePaiement)->first();
             
             if (!$paymentMethod) {
                 throw new \Exception('Méthode de paiement invalide: ' . $this->modePaiement);
             }
             
-            Paiement::create([
+            // ✅ NOUVELLE LOGIQUE AVEC date_paiement
+            $paiementData = [
                 'prescription_id' => $prescription->id,
                 'montant' => $this->total,
                 'payment_method_id' => $paymentMethod->id,
                 'recu_par' => Auth::user()->id,
                 'status' => $this->paiementStatut
+            ];
+            
+            // Si le paiement est marqué comme payé, ajouter automatiquement la date
+            if ($this->paiementStatut) {
+                $paiementData['date_paiement'] = now();
+            }
+            
+            $paiement = Paiement::create($paiementData);
+            
+            Log::info('Paiement créé avec date automatique', [
+                'paiement_id' => $paiement->id,
+                'status' => $this->paiementStatut,
+                'date_paiement' => $paiement->date_paiement,
+                'montant' => $this->total
             ]);
             
-            // 5. Générer les tubes directement si prélèvements présents
+            // 4. Générer les tubes directement si prélèvements présents
             if (!empty($this->prelevementsSelectionnes)) {
                 $this->tubesGeneres = $this->genererTubesDirectement($prescription);
                 $this->allerEtape('tubes');
@@ -948,7 +960,14 @@ class AddPrescription extends Component
             // Vider la session après succès
             $this->viderSession();
             
-            flash()->success('Prescription enregistrée avec succès!');
+            $messageSucces = 'Prescription enregistrée avec succès!';
+            if ($this->paiementStatut) {
+                $messageSucces .= ' Paiement marqué comme payé avec date automatique.';
+            } else {
+                $messageSucces .= ' Paiement enregistré comme non payé.';
+            }
+            
+            flash()->success($messageSucces);
             
             Log::info('Prescription créée avec succès', [
                 'prescription_id' => $prescription->id,
@@ -956,6 +975,7 @@ class AddPrescription extends Component
                 'patient_id' => $this->patient->id,
                 'montant_total' => $this->total,
                 'paiement_status' => $this->paiementStatut,
+                'date_paiement' => $paiement->date_paiement,
                 'analyses_count' => count($analyseIds),
                 'prelevements_count' => count($this->prelevementsSelectionnes)
             ]);
@@ -969,13 +989,49 @@ class AddPrescription extends Component
                 'patient_id' => $this->patient?->id,
                 'prescripteur_id' => $this->prescripteurId,
                 'analyses_panier' => array_keys($this->analysesPanier ?? []),
-                'total' => $this->total
+                'total' => $this->total,
+                'paiement_status' => $this->paiementStatut
             ]);
             
             flash()->error('Erreur lors de l\'enregistrement: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Méthode pour changer le statut de paiement avec gestion automatique de la date
+     */
+    public function changerStatutPaiement($nouveauStatut)
+    {
+        $this->paiementStatut = $nouveauStatut;
+        
+        // Information à l'utilisateur sur la gestion automatique de la date
+        if ($nouveauStatut) {
+            flash()->info('Paiement sera marqué comme payé avec date automatique lors de l\'enregistrement.');
+        } else {
+            flash()->info('Paiement sera marqué comme non payé (sans date).');
+        }
+        
+        $this->sauvegarderSession();
+    }
+
+
+    /**
+     * Méthode pour obtenir le libellé du statut de paiement
+     */
+    public function getStatutPaiementLibelle()
+    {
+        return $this->paiementStatut ? 'Payé' : 'Non Payé';
+    }
+
+    /**
+     * Méthode pour obtenir la couleur du statut de paiement
+     */
+    public function getStatutPaiementCouleur()
+    {
+        return $this->paiementStatut ? 'green' : 'red';
+    }
+
+    
     /**
      * Génère les tubes directement sans passer par la table pivot prelevement_prescription
      */

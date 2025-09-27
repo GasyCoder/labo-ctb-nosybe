@@ -2,7 +2,6 @@
 <div class="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 mt-8">
     {{-- Header optimisé avec dark mode --}}
     @include('livewire.technicien.partials.header-prescription-technicien')
-
     {{-- Main Content --}}
     <div class="flex min-h-screen">
         {{-- Sidebar améliorée --}}
@@ -14,7 +13,6 @@
                     wire:key="sidebar-{{ $prescription->id }}" />
             </div>
         </div>
-
         {{-- Main Panel --}}
         <div class="flex-1 bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
             <div class="p-6">
@@ -28,7 +26,6 @@
                                 :key="'recursive-form-'.$selectedParentId" />
                         </div>
                     </div>
-
                 {{-- EMPTY STATE - Invite à sélectionner --}}
                 @else
                     <div class="text-center p-6 rounded-lg shadow-sm transition-colors duration-200">

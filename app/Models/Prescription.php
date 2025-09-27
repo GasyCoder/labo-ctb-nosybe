@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -141,6 +142,117 @@ class Prescription extends Model
         $total = $this->tubes->count();
         $termines = $this->tubes->where('statut', 'ANALYSE_TERMINEE')->count();
         return $total > 0 ? round(($termines / $total) * 100) : 0;
+    }
+
+    /**
+     * Marquer la prescription à refaire avec réinitialisation complète
+     */
+    public function marquerARefaire($commentaire = null, $userId = null)
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Vérifier le statut actuel
+            if (!in_array($this->status, [self::STATUS_VALIDE, self::STATUS_TERMINE])) {
+                throw new \Exception('Cette prescription ne peut pas être remise à refaire. Statut actuel : ' . $this->status);
+            }
+
+            // Mettre à jour la prescription
+            $this->update([
+                'status' => self::STATUS_A_REFAIRE,
+                'commentaire_biologiste' => $commentaire,
+                'updated_by' => $userId ?: Auth::id()
+            ]);
+
+            // Récupérer toutes les analyses avec résultats
+            $allAnalyseIds = $this->resultats()
+                ->whereNull('deleted_at')
+                ->pluck('analyse_id')
+                ->unique()
+                ->toArray();
+
+            // Récupérer les analyses principales (dans prescription_analyse)
+            $principalAnalyseIds = DB::table('prescription_analyse')
+                ->where('prescription_id', $this->id)
+                ->pluck('analyse_id')
+                ->toArray();
+
+            // Mettre à jour la table pivot pour les analyses principales
+            if (!empty($principalAnalyseIds)) {
+                DB::table('prescription_analyse')
+                    ->where('prescription_id', $this->id)
+                    ->whereIn('analyse_id', $principalAnalyseIds)
+                    ->update([
+                        'status' => AnalysePrescription::STATUS_A_REFAIRE,
+                        'updated_at' => now()
+                    ]);
+            }
+
+            // Réinitialiser tous les résultats (parent + enfants)
+            $resetCount = $this->resultats()
+                ->whereIn('analyse_id', $allAnalyseIds)
+                ->update([
+                    'validated_by' => null,
+                    'validated_at' => null,
+                    'status' => 'EN_ATTENTE',
+                    'updated_at' => now()
+                ]);
+
+            DB::commit();
+
+            // Log de l'action
+            \Log::info('Prescription remise à refaire', [
+                'prescription_id' => $this->id,
+                'reference' => $this->reference,
+                'commentaire' => $commentaire,
+                'user_id' => $userId ?: Auth::id(),
+                'reset_results_count' => $resetCount,
+                'total_analyse_ids' => count($allAnalyseIds),
+                'principal_analyse_ids' => $principalAnalyseIds
+            ]);
+
+            return [
+                'success' => true,
+                'message' => "Prescription {$this->reference} marquée à refaire ({$resetCount} résultats réinitialisés)",
+                'reset_count' => $resetCount
+            ];
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            \Log::error('Erreur lors de la mise à refaire de la prescription', [
+                'prescription_id' => $this->id,
+                'reference' => $this->reference,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            throw new \Exception('Erreur lors de la mise à refaire : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Vérifier si la prescription peut être remise à refaire
+     */
+    public function peutEtreRemiseARefaire(): bool
+    {
+        return in_array($this->status, [self::STATUS_VALIDE, self::STATUS_TERMINE]);
+    }
+
+    /**
+     * Obtenir le nombre d'analyses avec résultats
+     */
+    public function getNombreAnalysesAvecResultats(): int
+    {
+        return $this->resultats()
+            ->whereNull('deleted_at')
+            ->where(function($query) {
+                $query->whereNotNull('valeur')
+                    ->where('valeur', '!=', '')
+                    ->orWhereNotNull('resultats');
+            })
+            ->distinct('analyse_id')
+            ->count();
     }
 
     /**

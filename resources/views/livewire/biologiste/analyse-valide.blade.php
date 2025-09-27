@@ -15,7 +15,7 @@
                  
                     <!-- Date actuelle -->
                     <div class="text-sm text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-calendar mr-1"></i>
+                        <em class="text-xl ni ni-calender-date"></em>
                         {{ now()->format('d/m/Y') }}
                     </div>
                 </div>
@@ -87,14 +87,8 @@
                     <div class="flex items-center space-x-3">
                         <!-- Filtres avancés -->
                         <button wire:click="toggleFilters" class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            <i class="fas fa-filter mr-2"></i>
+                           <em class="text-xl ni ni-filter"></em>
                             Filtres
-                        </button>
-                        
-                        <!-- Export -->
-                        <button class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-download mr-2"></i>
-                            Export
                         </button>
                     </div>
                 </div>
@@ -176,7 +170,7 @@
         </div>
     </div>
 </div>
-
+@include('livewire.biologiste.partials.modal-confirm')
 @push('scripts')
     <script>
     document.addEventListener('livewire:init', () => {
@@ -186,3 +180,4 @@
     });
     </script>
 @endpush
+

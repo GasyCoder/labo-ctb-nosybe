@@ -3,12 +3,64 @@
     'results' => [],
     'familles' => [],
     'bacteriesByFamille' => [],
+    'patient' => null, // Nouveau prop pour le patient
 ])
 
 @php
     $type = strtoupper($node->type->name ?? '');
     $path = "results.{$node->id}";
     $get = fn($k,$d=null)=> data_get($results, "{$node->id}.{$k}", $d);
+    
+    // Fonction pour obtenir la valeur de référence selon le genre du patient
+    $getValeurReference = function() use ($node, $patient) {
+        if (!$patient) return $node->valeur_ref;
+        
+        $civilite = strtolower($patient->civilite ?? '');
+        
+        switch ($civilite) {
+            case 'monsieur':
+                return $node->valeur_ref_homme ?: $node->valeur_ref;
+            case 'madame':
+                return $node->valeur_ref_femme ?: $node->valeur_ref;
+            case 'enfant (garçon)':
+            case 'enfant garçon':
+            case 'garçon':
+                return $node->valeur_ref_enfant_garcon ?: $node->valeur_ref;
+            case 'enfant (fille)':
+            case 'enfant fille':
+            case 'fille':
+                return $node->valeur_ref_enfant_fille ?: $node->valeur_ref;
+            default:
+                return $node->valeur_ref;
+        }
+    };
+    
+    // Fonction pour obtenir le label de la valeur de référence
+    $getValeurReferenceLabel = function() use ($patient) {
+        if (!$patient) return 'Référence';
+        
+        $civilite = strtolower($patient->civilite ?? '');
+        
+        switch ($civilite) {
+            case 'monsieur':
+                return 'Référence (Homme)';
+            case 'madame':
+                return 'Référence (Femme)';
+            case 'enfant (garçon)':
+            case 'enfant garçon':
+            case 'garçon':
+                return 'Référence (Garçon)';
+            case 'enfant (fille)':
+            case 'enfant fille':
+            case 'fille':
+                return 'Référence (Fille)';
+            default:
+                return 'Référence';
+        }
+    };
+    
+    $valeurRef = $getValeurReference();
+    $labelValeurRef = $getValeurReferenceLabel();
 @endphp
 
 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6 mb-4 hover:shadow-md transition-shadow duration-200">
@@ -55,14 +107,14 @@
             @endif
         </div>
 
-        {{-- Valeurs de référence optimisées --}}
-        @if($node->valeur_ref || $node->unite || $node->suffixe)
+        {{-- Valeurs de référence optimisées selon le genre --}}
+        @if($valeurRef || $node->unite || $node->suffixe)
             <div class="flex-shrink-0 ml-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
                 <div class="text-xs space-y-1">
-                    @if($node->valeur_ref)
+                    @if($valeurRef)
                         <div class="flex items-center gap-2">
-                            <span class="text-slate-500 dark:text-slate-400">Référence:</span>
-                            <span class="font-medium text-green-600 dark:text-green-400">{{ $node->valeur_ref }}</span>
+                            <span class="text-slate-500 dark:text-slate-400">{{ $labelValeurRef }}:</span>
+                            <span class="font-medium text-green-600 dark:text-green-400">{{ $valeurRef }}</span>
                         </div>
                     @endif
                     @if($node->unite)
@@ -91,6 +143,7 @@
                     :results="$results"
                     :familles="$familles"
                     :bacteries-by-famille="$bacteriesByFamille"
+                    :patient="$patient"
                     wire:key="node-{{ $child->id }}"
                 />
             @endforeach
@@ -112,6 +165,11 @@
                         <div class="space-y-2">
                             <label class="block text-xs text-slate-700 dark:text-slate-300">
                                 Valeur {{ $node->unite ? "({$node->unite})" : '' }}
+                                @if($valeurRef)
+                                    <span class="ml-2 text-green-600 dark:text-green-400 font-medium">
+                                        ({{ $labelValeurRef }}: {{ $valeurRef }}{{ $node->unite ? ' ' . $node->unite : '' }})
+                                    </span>
+                                @endif
                             </label>
                             <input type="text" wire:model.blur="{{ $path }}.valeur"
                                    class="w-full px-4 py-2.5 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 transition-colors"
@@ -366,6 +424,11 @@
                         <div class="space-y-2">
                             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
                                 Valeur {{ $node->unite ? "({$node->unite})" : '' }}
+                                @if($valeurRef)
+                                    <span class="ml-2 text-green-600 dark:text-green-400 font-medium text-xs">
+                                        ({{ $labelValeurRef }}: {{ $valeurRef }}{{ $node->unite ? ' ' . $node->unite : '' }})
+                                    </span>
+                                @endif
                             </label>
                             <div class="flex">
                                 <input type="text" wire:model.blur="{{ $path }}.valeur"
@@ -480,7 +543,14 @@
 
                 @default
                     <div class="space-y-2">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Résultat</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Résultat
+                            @if($valeurRef)
+                                <span class="ml-2 text-green-600 dark:text-green-400 font-medium text-xs">
+                                    ({{ $labelValeurRef }}: {{ $valeurRef }}{{ $node->unite ? ' ' . $node->unite : '' }})
+                                </span>
+                            @endif
+                        </label>
                         
                         {{-- Si valeurs prédéfinies existent --}}
                         @if($node->formatted_results && is_array($node->formatted_results) && count($node->formatted_results))

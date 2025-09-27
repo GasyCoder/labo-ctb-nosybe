@@ -98,9 +98,6 @@ class AnalysePrescription extends Model
 
         $this->status = $newStatus;
         $this->save();
-
-        // Mettre à jour le statut de la prescription parente si nécessaire
-        $this->prescription->updateStatus();
     }
 
     public function marquerTermine()

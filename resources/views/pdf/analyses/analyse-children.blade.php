@@ -4,7 +4,7 @@
         $resultat = $child->resultats->first();
         $hasResult = $resultat && ($resultat->valeur || $resultat->resultats);
         $isPathologique = $resultat && $resultat->est_pathologique;
-        $isInfoLine = !$hasResult && $child->designation;
+        $isInfoLine = $hasResult && $child->designation;
         
         // Vérifier la présence d'antibiogrammes pour les enfants
         $hasAntibiogrammes = false;
@@ -301,8 +301,8 @@
         @endif
 
         {{-- RÉCURSION : Traiter les sous-enfants --}}
-        @if($child->children && $child->children->count() > 0)
-            @include('pdf.analyses.analyse-children', ['children' => $child->children, 'level' => $level + 1])
-        @endif
+        {{-- @if($child->children && $child->children->count() > 0)
+            @include('pdf.analyses.analyse-children', ['children' => $child->children, 'level' => $level + 3])
+        @endif    --}}
     @endif
 @endforeach
