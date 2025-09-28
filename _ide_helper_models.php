@@ -23,11 +23,11 @@ namespace App\Models{
  * @property bool $is_bold
  * @property int|null $examen_id
  * @property int|null $type_id
+ * @property string|null $valeur_ref
  * @property string|null $valeur_ref_homme
  * @property string|null $valeur_ref_femme
  * @property string|null $valeur_ref_enfant_garcon
  * @property string|null $valeur_ref_enfant_fille
- * @property string|null $valeur_ref
  * @property string|null $unite
  * @property string|null $suffixe
  * @property array<array-key, mixed>|null $valeurs_predefinies
