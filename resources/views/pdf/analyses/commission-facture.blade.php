@@ -136,10 +136,10 @@
     </div>
     <div class="col">
         <strong>Émetteur</strong>
-        Nom : CTB NOSY BE<br>
-        Adresse : 123 Rue Principale, Nosy Be, Madagascar<br>
-        Téléphone : +261 32 12 345 67<br>
-        Email : contact@laboctb-nosybe.mg
+        Nom : CBDC NOSY BE<br>
+        Adresse : Immeuble ARO, 1ère étage, Nosy Be Hell Ville<br>
+        Téléphone : 032 11 450 65<br>
+        Email : laboratoirenosybe@gmail.com
     </div>
 </div>
 
@@ -209,7 +209,7 @@
 
         <!-- Pied de page -->
         <div class="footer">
-            CTB NOSY BE | Facture des Commissions | {{ date('Y') }}
+            CBDC NOSY BE | Facture des Commissions | {{ date('Y') }}
         </div>
     </div>
 </body>
