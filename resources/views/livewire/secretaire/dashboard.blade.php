@@ -1,3 +1,4 @@
+{{-- livewire/secretaire/dashboard.blade.php --}}
 {{-- Cards de statistiques refactorisées avec UI/UX améliorée --}}
 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-6">
     
@@ -47,8 +48,10 @@
         </div>
     </div>
 
-    {{-- Analyses Payées --}}
-    <div class="group bg-gradient-to-br from-white to-emerald-50/50 dark:from-slate-800 dark:to-slate-800/80 rounded-lg shadow-sm border border-emerald-100 dark:border-slate-700 p-3 sm:p-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+    {{-- 🔥 MODIFIÉ : Analyses Payées (CLIQUABLE) --}}
+    <div wire:click="filterByPaymentStatus('paye')" 
+         class="group bg-gradient-to-br from-white to-emerald-50/50 dark:from-slate-800 dark:to-slate-800/80 rounded-lg shadow-sm border border-emerald-100 dark:border-slate-700 p-3 sm:p-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer
+         {{ $paymentFilter === 'paye' ? 'ring-2 ring-emerald-500 shadow-emerald-200' : '' }}">
         <div class="flex flex-col items-center text-center space-y-2">
             <div class="p-2 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/50 dark:to-emerald-800/50 rounded-lg group-hover:scale-110 transition-transform duration-300">
                 <em class="ni ni-check-circle text-emerald-600 dark:text-emerald-400 text-lg"></em>
@@ -64,13 +67,15 @@
         </div>
         <div class="mt-2 pt-2 border-t border-emerald-100 dark:border-slate-700">
             <span class="text-xs text-slate-500 dark:text-slate-400 block text-center">
-                Paiements reçus
+                {{ $paymentFilter === 'paye' ? '✓ Filtre actif' : 'Cliquer pour filtrer' }}
             </span>
         </div>
     </div>
 
-    {{-- Analyses Non Payées --}}
-    <div class="group bg-gradient-to-br from-white to-red-50/50 dark:from-slate-800 dark:to-slate-800/80 rounded-lg shadow-sm border border-red-100 dark:border-slate-700 p-3 sm:p-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+    {{-- 🔥 MODIFIÉ : Analyses Non Payées (CLIQUABLE) --}}
+    <div wire:click="filterByPaymentStatus('non_paye')" 
+         class="group bg-gradient-to-br from-white to-red-50/50 dark:from-slate-800 dark:to-slate-800/80 rounded-lg shadow-sm border border-red-100 dark:border-slate-700 p-3 sm:p-4 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer
+         {{ $paymentFilter === 'non_paye' ? 'ring-2 ring-red-500 shadow-red-200' : '' }}">
         <div class="flex flex-col items-center text-center space-y-2">
             <div class="p-2 bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 rounded-lg group-hover:scale-110 transition-transform duration-300">
                 <em class="ni ni-alert-circle text-red-600 dark:text-red-400 text-lg"></em>
@@ -86,7 +91,7 @@
         </div>
         <div class="mt-2 pt-2 border-t border-red-100 dark:border-slate-700">
             <span class="text-xs text-slate-500 dark:text-slate-400 block text-center">
-                En attente paiement
+                {{ $paymentFilter === 'non_paye' ? '✓ Filtre actif' : 'Cliquer pour filtrer' }}
             </span>
         </div>
     </div>

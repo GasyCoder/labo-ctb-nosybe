@@ -35,7 +35,10 @@ class PrescriptionIndex extends Component
     public $countPaye = 0;
     public $countNonPaye = 0;
 
-    // 💰 NOUVELLES PROPRIÉTÉS POUR CONFIRMATION PAIEMENT
+    // 🔥 NOUVELLE PROPRIÉTÉ POUR LE FILTRE DE PAIEMENT
+    public $paymentFilter = null; // 'paye', 'non_paye', 'sans_paiement', ou null
+
+    // 💰 PROPRIÉTÉS POUR CONFIRMATION PAIEMENT
     public $showConfirmPaymentModal = false;
     public $showConfirmUnpaymentModal = false;
     public $selectedPrescriptionForPayment = null;
@@ -80,6 +83,7 @@ class PrescriptionIndex extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'tab' => ['except' => 'actives'],
+        'paymentFilter' => ['except' => null], // 🔥 AJOUT DU FILTRE DANS QUERY STRING
     ];
 
     public $tab = 'actives';
@@ -117,6 +121,7 @@ class PrescriptionIndex extends Component
     public function switchTab($tab)
     {
         $this->tab = $tab;
+        $this->paymentFilter = null; // 🔥 RÉINITIALISER LE FILTRE LORS DU CHANGEMENT D'ONGLET
         $this->resetPage();
     }
 
@@ -130,6 +135,71 @@ class PrescriptionIndex extends Component
         $this->search = '';
         $this->resetPage();
     }
+
+    // =====================================
+    // 🔥 NOUVELLES MÉTHODES POUR LE FILTRE DE PAIEMENT
+    // =====================================
+
+    /**
+     * Filtre les prescriptions par statut de paiement
+     */
+    public function filterByPaymentStatus($status)
+    {
+        // Toggle : si on clique sur le même filtre, on le désactive
+        if ($status === 'tous' || $status === $this->paymentFilter) {
+            $this->paymentFilter = null;
+        } else {
+            $this->paymentFilter = $status;
+        }
+        
+        $this->resetPage(); // Réinitialiser la pagination
+    }
+
+    /**
+     * Réinitialise le filtre de paiement
+     */
+    public function clearPaymentFilter()
+    {
+        $this->paymentFilter = null;
+        $this->resetPage();
+    }
+
+    /**
+     * Applique les filtres de paiement sur la requête
+     */
+    protected function applyPaymentFilter($query)
+    {
+        if (!$this->paymentFilter) {
+            return $query;
+        }
+
+        switch ($this->paymentFilter) {
+            case 'paye':
+                // Prescriptions avec au moins un paiement marqué comme payé
+                $query->whereHas('paiements', function($q) {
+                    $q->where('status', true);
+                });
+                break;
+                
+            case 'non_paye':
+                // Prescriptions avec au moins un paiement marqué comme non payé
+                $query->whereHas('paiements', function($q) {
+                    $q->where('status', false);
+                });
+                break;
+                
+            case 'sans_paiement':
+                // Prescriptions sans aucun paiement enregistré
+                $query->doesntHave('paiements');
+                break;
+        }
+
+        return $query;
+    }
+
+    // =====================================
+    // FIN DES NOUVELLES MÉTHODES
+    // =====================================
 
     /**
      * Refresh all statistics counts including payment stats
@@ -264,7 +334,6 @@ class PrescriptionIndex extends Component
         }
     }
 
-
     /**
      * Demander confirmation pour marquer comme payé
      */
@@ -274,7 +343,6 @@ class PrescriptionIndex extends Component
         $this->paymentAction = 'pay';
         $this->showConfirmPaymentModal = true;
     }
-
 
     /**
      * Exécuter le marquage comme payé après confirmation
@@ -364,7 +432,6 @@ class PrescriptionIndex extends Component
         $this->showConfirmUnpaymentModal = true;
     }
 
-
     /**
      * Marquer un paiement comme payé (avec date automatique)
      */
@@ -394,8 +461,6 @@ class PrescriptionIndex extends Component
             session()->flash('error', 'Erreur lors du marquage du paiement.');
         }
     }
-
-    
 
     /**
      * Marquer un paiement comme non payé (supprime la date)
@@ -646,21 +711,37 @@ class PrescriptionIndex extends Component
                 });
         };
 
+        // 🔥 AJOUT DU FILTRE DE PAIEMENT DANS LES REQUÊTES
         $activePrescriptions = (clone $baseQuery)
             ->whereIn('status', ['EN_ATTENTE', 'EN_COURS', 'TERMINE'])
-            ->where($searchCondition)
+            ->where($searchCondition);
+        
+        // Appliquer le filtre de paiement
+        $activePrescriptions = $this->applyPaymentFilter($activePrescriptions);
+        
+        $activePrescriptions = $activePrescriptions
             ->latest()
             ->paginate(15);
 
         $validePrescriptions = (clone $baseQuery)
             ->where('status', 'VALIDE')
-            ->where($searchCondition)
+            ->where($searchCondition);
+        
+        // Appliquer le filtre de paiement
+        $validePrescriptions = $this->applyPaymentFilter($validePrescriptions);
+        
+        $validePrescriptions = $validePrescriptions
             ->latest()
             ->paginate(15, ['*'], 'valide_page');
 
         $deletedPrescriptions = (clone $baseQuery)
             ->onlyTrashed()
-            ->where($searchCondition)
+            ->where($searchCondition);
+        
+        // Appliquer le filtre de paiement
+        $deletedPrescriptions = $this->applyPaymentFilter($deletedPrescriptions);
+        
+        $deletedPrescriptions = $deletedPrescriptions
             ->latest()
             ->paginate(15, ['*'], 'deleted_page');
 
