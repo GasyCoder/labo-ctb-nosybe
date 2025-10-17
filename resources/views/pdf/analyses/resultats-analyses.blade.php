@@ -1,4 +1,4 @@
-{{-- resources/views/pdf/analyses/resultats-analyses.blade.php - LIMITE CORRIGÉE --}}
+{{-- resources/views/pdf/analyses/resultats-analyses.blade.php - CORRIGÉ --}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,15 +11,6 @@
         $patientFullName = trim(($prescription->patient->civilite ?? '') . ' ' . 
                                 ($prescription->patient->nom ?? 'N/A') . ' ' . 
                                 ($prescription->patient->prenom ?? ''));
-        
-        // LIMITE CORRIGÉE : Plus réaliste pour DomPDF
-        $hauteurCumulee = 0;
-        $limitePage = 720; // Augmenté ! (~15cm réels)
-        
-        // Hauteur initiale plus précise
-        $hauteurCumulee += 160; // Logo + header + patient info
-        
-        $sautEffectue = false;
     @endphp
 
     {{-- En-tête avec logo (première page seulement) --}}
@@ -30,109 +21,62 @@
     <div class="red-line"></div>
     
     <div class="content-wrapper">
-        {{-- Informations patient (première page) --}}
+        {{-- Informations patient --}}
         @include('pdf.analyses.header')
         
-        {{-- Contenu des examens avec limite corrigée --}}
-        @foreach($examens as $examen)
-            @php
-                $hasValidResults = $examen->analyses->some(function($analyse) {
-                    return $analyse->resultats->isNotEmpty() ||
-                           ($analyse->children && $analyse->children->some(function($child) {
-                               return $child->resultats->isNotEmpty();
-                           })) ||
-                           ($analyse->antibiogrammes && $analyse->antibiogrammes->isNotEmpty());
-                });
-                
-                if (!$hasValidResults) continue;
-                
-                // Estimation plus conservative de la hauteur
-                $hauteurExamen = 30; // Titre de section
-                
-                // Compter plus précisément les lignes
-                $nombreLignes = 0;
-                foreach($examen->analyses as $analyse) {
-                    if($analyse->level === 'PARENT' || is_null($analyse->parent_id)) {
-                        if($analyse->resultats->isNotEmpty()) {
-                            $nombreLignes++;
-                            
-                            // Enfants
-                            if($analyse->children && $analyse->children->count() > 0) {
-                                $nombreLignes += $analyse->children->filter(function($child) {
-                                    return $child->resultats->isNotEmpty();
-                                })->count();
-                            }
-                            
-                            // Antibiogrammes
-                            if($analyse->antibiogrammes && $analyse->antibiogrammes->isNotEmpty()) {
-                                $nombreLignes += $analyse->antibiogrammes->count() * 3; // 3 lignes par antibiogramme
-                            }
-                        }
-                    }
-                }
-                
-                $hauteurExamen += $nombreLignes * 15; // 15px par ligne
-                
-                // DÉCISION plus conservative
-                $needsPageBreak = false;
-                if (!$sautEffectue && ($hauteurCumulee + $hauteurExamen) > ($limitePage + 50)) {
-                    // Vérification supplémentaire : ne pas sauter si c'est le premier examen
-                    if ($loop->index > 0 && $hauteurCumulee > 250 && ($hauteurCumulee + $hauteurExamen) > $limitePage) {
-                        $needsPageBreak = true;
-                        $sautEffectue = true;
-                        $hauteurCumulee = 50;
-                    }
-                }
-                
-                $hauteurCumulee += $hauteurExamen;
-            @endphp
+{{-- ✅ Boucle examens --}}
+@foreach($examens as $examen)
+    @php
+        $hasValidResults = $examen->analyses->some(function($analyse) {
+            return $analyse->resultats->isNotEmpty() ||
+                   ($analyse->children && $analyse->children->some(fn($child) => $child->resultats->isNotEmpty())) ||
+                   ($analyse->antibiogrammes && $analyse->antibiogrammes->isNotEmpty());
+        });
 
-            @if($hasValidResults)
-                {{-- SAUT seulement si vraiment nécessaire --}}
-                @if($needsPageBreak)
-                    <div style="page-break-before: always; margin-top: 0; margin-bottom: 10px; text-align: center; border-bottom: 0.5px solid #0b48eeff; padding-bottom: 10px;">
-                        <div style="font-weight: bold; font-size: 10pt; margin-bottom: 3px;">
-                            Résultats de {{ $patientFullName }}
-                        </div>
-                        <div style="font-size: 8pt; color: #666;">
-                            Dossier n° {{ $prescription->patient->numero_dossier ?? $prescription->reference }} du {{ $prescription->created_at->format('d/m/Y') }}
-                        </div>
-                    </div>
+        if (!$hasValidResults) continue;
+    @endphp
+
+    {{-- ✅ Contenu de chaque examen --}}
+    <div class="examen-wrapper">
+        <table class="main-table">
+            <tr>
+                <td class="col-designation section-title">{{ strtoupper($examen->name) }}</td>
+                <td class="col-resultat header-cols">Résultat</td>
+                <td class="col-valref header-cols">Val Réf</td>
+                <td class="col-anteriorite header-cols">Antériorité</td>
+            </tr>
+        </table>
+
+        <div class="red-line"></div>
+        <div class="spacing"></div>
+
+        <table class="main-table">
+            @foreach($examen->analyses as $analyse)
+                @if($analyse->level === 'PARENT' || is_null($analyse->parent_id))
+                    @include('pdf.analyses.analyse-row', ['analyse' => $analyse, 'level' => 1])
+                    @if($analyse->children && $analyse->children->count() > 0)
+                        @include('pdf.analyses.analyse-children', ['children' => $analyse->children, 'level' => 2])
+                    @endif
                 @endif
+            @endforeach
+        </table>
 
-                {{-- En-tête du tableau --}}
-                <table class="main-table">
-                    <tr>
-                        <td class="col-designation section-title">{{ strtoupper($examen->name) }}</td>
-                        <td class="col-resultat header-cols">Résultat</td>
-                        <td class="col-valref header-cols">Val Réf</td>
-                        <td class="col-anteriorite header-cols">Antériorité</td>
-                    </tr>
-                </table>
+        @include('pdf.analyses.conclusion-examen', ['examen' => $examen])
+    </div>
+@endforeach
+
+{{-- ✅ Une seule fois à la fin du document --}}
+<div class="mini-separator" style="page-break-inside: avoid; margin-top:10px;">
+    <div style="text-align: center; margin: 8px 0; padding: 5px 0; border-top: 0.5px solid #e0e0e0;">
+        <div style="font-size: 8pt; color: #042379ff;">
+            {{ $patientFullName }} - Dossier n° {{ $prescription->patient->numero_dossier ?? $prescription->reference }}
+        </div>
+    </div>
+</div>
+
+
+
                 
-                <div class="red-line"></div>
-                <div class="spacing"></div>
-
-                {{-- Contenu principal --}}
-                <table class="main-table">
-                    @foreach($examen->analyses as $analyse)
-                        {{-- Afficher seulement les analyses parents ou sans parent --}}
-                        @if($analyse->level === 'PARENT' || is_null($analyse->parent_id))
-                            @include('pdf.analyses.analyse-row', ['analyse' => $analyse, 'level' => 1])
-                            
-                            {{-- Afficher les enfants --}}
-                            @include('pdf.analyses.analyse-children', ['children' => $analyse->children, 'level' => 2])
-                        @endif
-                    @endforeach
-                </table>
-
-                {{-- Conclusions pour cet examen --}}
-                @include('pdf.analyses.conclusion-examen', ['examen' => $examen])
-                
-                <div class="spacing"></div>
-            @endif
-        @endforeach
-
         {{-- Signature --}}
         <div class="signature">
             <img src="{{ public_path('assets/images/signe.png') }}" alt="Signature" style="max-width: 80px;">

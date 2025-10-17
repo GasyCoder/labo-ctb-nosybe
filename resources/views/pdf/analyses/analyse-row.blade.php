@@ -1,4 +1,4 @@
-{{-- resources/views/pdf/analyses/analyse-row.blade.php - VERSION COMPLÈTE CORRIGÉE --}}
+{{-- resources/views/pdf/analyses/analyse-row.blade.php --}}
 @php
     $resultat = $analyse->resultats->first();
     $hasResult = $resultat && ($resultat->valeur || $resultat->resultats);
@@ -15,7 +15,7 @@
             @if($level > 0) style="padding-left: {{ $level * 20 }}px;" @endif>
             {{ $analyse->designation }}
         </td>
-       <td class="col-resultat">
+        <td class="col-resultat">
             @if($hasResult)
                 @php
                     $displayValue = $resultat->display_value_pdf ?? '';
@@ -26,14 +26,11 @@
         <td class="col-valref">
             {{ $analyse->valeur_ref ?? '' }}
         </td>
-
         <td class="col-anteriorite">
             @if($resultat && $resultat->anteriorite)
                 @php
-                    // ✅ CONSTRUCTION COMPACTE EN UNE LIGNE - TOUT EN NOIR
                     $affichageAnteriorite = $resultat->anteriorite;
                     
-                    // Gestion de la date
                     $dateFormatee = '';
                     if ($resultat->anteriorite_date) {
                         if (is_string($resultat->anteriorite_date)) {
@@ -49,12 +46,10 @@
                         }
                     }
                     
-                    // Ajouter la date entre parenthèses
                     if ($dateFormatee) {
                         $affichageAnteriorite .= ' (' . $dateFormatee . ')';
                     }
                     
-                    // Gestion de la comparaison
                     $comparaison = $resultat->anteriorite_comparaison;
                     $texteComparaison = '';
                     
@@ -70,8 +65,7 @@
                 @endphp
                 
                 <div style="font-size: 8pt; color: #999; white-space: nowrap;">
-                    {{ $affichageAnteriorite }}{{-- 
-                    --}}@if($texteComparaison), {{ $texteComparaison }}@endif
+                    {{ $affichageAnteriorite }}@if($texteComparaison), {{ $texteComparaison }}@endif
                 </div>
             @endif
         </td>
@@ -145,7 +139,7 @@
 
             @if($antibiogramme->antibiotiques_intermediaires->isNotEmpty())
                 <tr class="antibiogramme-row">
-                    <td style="padding-left: {{ ($level + 2) * 20 }}px;?  font-size: 9pt; color: #666; font-weight: 200;">
+                    <td style="padding-left: {{ ($level + 2) * 20 }}px; font-size: 9pt; color: #666; font-weight: 200;">
                         Intermédiaire :
                     </td>
                     <td colspan="3" style="font-size: 9pt; font-style: italic; color: #ffc107;">
@@ -174,12 +168,9 @@
     {{-- CONCLUSION spécifique du résultat --}}
     @if($hasResult && $resultat && isset($resultat->conclusion) && !empty($resultat->conclusion))
         <tr class="conclusion-row">
-            <td style="padding-left: {{ ($level + 1) * 20 }}px; font-size: 9pt; color: #666; font-style: italic;">
-               {!! nl2br(e($resultat->conclusion)) !!}
-            </td>
-            {{-- <td colspan="3" style="font-size: 9pt; line-height: 1.3;">
+            <td colspan="4" style="padding-left: {{ ($level + 1) * 20 }}px; font-size: 9pt; color: #666; font-style: italic;">
                 {!! nl2br(e($resultat->conclusion)) !!}
-            </td> --}}
+            </td>
         </tr>
     @endif
 @endif

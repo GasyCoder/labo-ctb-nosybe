@@ -15,7 +15,7 @@
             }
         }
         
-        // Vérifier les enfants aussi
+        // Vérifier les enfants
         if($analyse->children && $analyse->children->isNotEmpty()) {
             foreach($analyse->children as $child) {
                 if($child->resultats->isNotEmpty()) {
@@ -48,6 +48,18 @@
         }
     }
     
-    // Supprimer les doublons de conclusions
+    // Supprimer les doublons
     $conclusionsExamen = $conclusionsExamen->unique('conclusion');
 @endphp
+{{-- 
+@if($conclusionsExamen->isNotEmpty())
+    <div class="conclusion-examen">
+        <div class="conclusion-examen-title">Conclusion :</div>
+        <div class="conclusion-examen-content">
+            @foreach($conclusionsExamen as $conclusion)
+                {!! nl2br(e($conclusion['conclusion'])) !!}
+                @if(!$loop->last)<br>@endif
+            @endforeach
+        </div>
+    </div>
+@endif --}}
